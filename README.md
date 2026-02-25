@@ -1,3 +1,10 @@
+## The Team
+Project Manager:   
+Frontend developers: Emily and Zharinna  
+Backend developers: Zharinna and Halena  
+Database specialist: Tim  
+Software tester: Halena  
+
 ## Project Links  
 Jira: https://capstoneteam.atlassian.net/jira/software/projects/SCRUM/boards/1  
 
