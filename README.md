@@ -1,5 +1,5 @@
 ## The Team
-Project Manager:   
+Project Manager: Emily  
 Frontend developers: Emily and Zharinna  
 Backend developers: Zharinna and Halena  
 Database specialist: Tim  
