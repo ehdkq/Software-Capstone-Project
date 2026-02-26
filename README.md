@@ -17,4 +17,6 @@ Project Charter: https://docs.google.com/document/d/1SJPNfa6N23FdG4-C6IEalG4hsdl
 
 Use Cases: https://docs.google.com/document/d/1kJ4plMJ0aFsEqYib2heLA-6oCuoEI5Pi3MWy_HBWhVw/edit?usp=sharing   
 
-Estimated Effort: https://docs.google.com/spreadsheets/d/1MiQinaodJCTwhgcauvE2SLWGV_9SV3TRY3I2goL2Lxg/edit?usp=sharing 
+Estimated Effort: https://docs.google.com/spreadsheets/d/1MiQinaodJCTwhgcauvE2SLWGV_9SV3TRY3I2goL2Lxg/edit?usp=sharing   
+
+Project Visibility Sheet: https://docs.google.com/spreadsheets/d/1FK0pRbLKka9XGYaE2Zx8vaIjjadXNO-c2gEi3XSDwN4/edit?gid=0#gid=0   
