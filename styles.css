@@ -1,0 +1,152 @@
+body {
+  margin: 0;
+  font-family: system-ui, Arial, sans-serif;
+}
+
+.site-header {
+  position: sticky;
+  top: 0;
+  background: #97dbff;
+  border-bottom: 1px solid #e5e5e5;
+  z-index: 1000;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 10px;
+  color: white;
+  flex-wrap: nowrap;
+}
+.nav-links {
+  margin-left: auto;
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+}
+.nav-links a {
+  white-space: nowrap;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  margin-right: 12px;
+}
+
+.logo {
+  height: 48px;
+  width: auto;
+  display: block;
+  
+}
+
+.nav a {
+  text-decoration: none;
+  color: inherit;
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+
+.nav a:hover {
+  background: rgba(0,0,0,0.06);
+}
+
+
+
+.home-information {
+  h1 {
+    font-size: 4vw;
+    padding-top: 5px;
+    padding-bottom: 0px;
+    padding-left: 5px;
+    padding-right: 5px;
+    text-align: center;
+  }
+  h3 {
+    font-size: 1vw;
+    padding: 0vw;
+    text-align: center;
+    text-decoration: underline;
+  }
+  .bio {
+    text-align: center;
+    padding-top: 2vw;
+  }
+}
+
+.bottom-home {
+  display: flex;
+  padding: 15px;
+  p {
+    padding-right: 15px;
+    
+  }
+  a {
+    padding: 10px;
+    flex-direction: row;
+  }
+}
+
+.login-credentials {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  
+  h1 {
+    padding-top: 10px;
+    font-size: 2vw;
+    width: 100%;
+    text-align: center;
+  }
+  p {
+    text-align: center;
+    font-size: 1vw;
+  }
+  #email-login, #password-login {
+    max-width: 200px;
+    width: 30vw;
+    text-align: left;
+  }
+  .form-row input {
+    width: 10vw;
+  }
+}
+
+.login-body {
+  margin: 0;
+  min-height: 100vh;
+}
+.login-credentials {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+.content-box {
+  
+  width: 100%;
+  max-width: 500px;
+  padding: 30px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0,0,0,.8);
+}
+.register-body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  text-align: center;
+}
+
+main {
+  padding: 24px;
+}

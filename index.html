@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Home</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+      body {
+        background-color: #edf0f0;
+      }
+    </style>
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="nav">
+      <a class="brand" href="index.html">
+        <img src="Budgie (1).png" alt="Commerce Bank Home" class="logo" height="100"></a>
+      <div class="nav-links">
+        <a href="about.html">About</a>
+        <a href="open-account.html">Open an Account</a>
+        <a href="login.html">Log In</a>
+        <a href="features.html">Features</a>
+        <a href="llm-help.html">AI Help</a>
+      </div>
+                
+    </nav>
+  </header>
+
+  <main>
+    
+    <script>
+      const out = document.getElementById("out");
+      out.textContent = "Script started ✅";
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+      
+
+      function show(msg, obj) {
+        out.textContent = msg + (obj ? "\n\n" + JSON.stringify(obj, null, 2) : "");
+      }
+
+      window.addEventListener("error", (e) =>
+        show("JS error ❌", { message: e.message })
+      );
+      window.addEventListener("unhandledrejection", (e) =>
+        show("Promise error ❌", { reason: String(e.reason) })
+      );
+
+      const SUPABASE_URL = "https://izexxryxkqcgezdfjqlg.supabase.co";
+      const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6ZXh4cnl4a3FjZ2V6ZGZqcWxnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2MDg3MTksImV4cCI6MjA4NzE4NDcxOX0.JFNhaVRwTpZ4LJ8_La1dbb466Trjag_irF_ny_pKYxg";
+
+      if (!window.supabase) {
+        show("Supabase library did NOT load ❌ (CDN blocked/offline?)");
+      } else {
+        show("Supabase library loaded ✅");
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        (async () => {
+          show("Querying Supabase… ⏳");
+
+          // 👇 CHANGE THIS to a real table name (example: "transactions")
+          const { data, error } = await supabase.from("accounts").select("*").limit(5);
+
+          if (error) show("Supabase returned an error ❌", error);
+          else show("Success ✅ Data:", data);
+        })();
+      }
+    </script>
+    <div class="home-information">
+      <h1>Welcome to the Budgie: The Smart Budget Helper!</h1>
+      <h3><i>Please be aware that not all financial advice may be accurate.</i></h3>
+      <p class="bio">
+        Welcome to Budgie! Our goal is to help people learn to <b><i>budget</i></b>
+        and <b><i>plan</i></b> for the future!
+      </p>
+    </div>
+  </main>
+
+  <div class="bottom-home">
+    <p >Learn more about us below!</p>
+    
+    <a href="developers.html">Developers</a>
+    <a href="ai-information.html">AI Info</a>
+  </div>
+</body>
+</html>
