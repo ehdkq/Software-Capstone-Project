@@ -23,12 +23,19 @@ def verify_login(email, passw):
         for user in users.data:
             e = user.get('email')
             p = user.get('password_hash')
-            if e == email and p == passw:
-                return True
+            if e == email:
+                byte_pwd = passw.encode('utf-8')
+                salt_bytes = user.get('password_salt').encode('utf-8')
+                pw_hash_bytes = bcrypt.hashpw(byte_pwd, salt_bytes)
+                pw_hash = pw_hash_bytes.decode('utf-8')
+
+                if pw_hash == p:
+                    return True
             
         return False
     
     except Exception as e:
+        print('error: ', e)
         return False
 
 # Create's a user account
@@ -188,6 +195,7 @@ def update_password(email, newpass):
 def forgot_password_email(email):
     #TODO'''
 
+# TEST QUERIES
 #print(verify_login('custosdfsdf@example.com', 'WyAH03DADiIJGThvBkyby2sMUMRgDd9Dg17yccD6JyE='))
 #print(create_account('backendtest2@test.com', 'test1233'))
 #print(delete_account('9a246eb6-ab5c-4350-b65a-149883eccee4'))
@@ -208,3 +216,6 @@ print(add_transaction('080691cf-dd78-428e-a4ba-98e442940d6c', d))'''
 #print(delete_transaction('fcd4123c-b2f5-4d38-8e66-9e3381242397'))
 
 #print(update_password('backendtest1@test.com', 'TestABCD'))
+
+#print(create_account('backendtest2@test.com', 'test1234'))
+#print(verify_login('backendtest2@test.com', 'test1234'))
