@@ -48,6 +48,23 @@
                     <br>
                     </div>
                 <input type="submit" id="login-button">
+                <p id="error-message"></p>
+                <script>
+                    document.getElementById("content-box").addEventListener("submit", function(event) {
+                        event.preventDefault();
+
+                        const username = document.getElementById("email-login").value;
+                        const password = document.getElementById("password-login").value;
+                        const errorMessage = document.getElementById("error-message")
+
+                        if (username === "admin" && password==="1234") {
+                            window.location.href = "dashboard.html";
+                        }
+                        else {
+                            errorMessage.textContent = "Invalid username or password";
+                        }
+                    });
+                </script>
                 </div>
             </div>
 
