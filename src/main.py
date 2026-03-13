@@ -69,16 +69,16 @@ def create_account(email, passw):
         return False
 
 # Deletes the users account
-# Pre: takes a userID as a parameter
+# Pre: takes an email as a parameter
 # Post: returns True if the account was deleted, false otherwise
 @app.get("/account/delete-account")
-def delete_account(userID):
+def delete_account(email):
     try:
         users = supabase.table("users").select("*").execute()
 
         for user in users.data:
-            if user.get('user_id') == userID:
-                supabase.table("users").delete().eq("user_id",userID).execute()
+            if user.get('email') == email:
+                supabase.table("users").delete().eq("email", email).execute()
                 return True
         
         return False
@@ -104,16 +104,16 @@ def get_transactions(user_id):
         return False
 
 # Adds a transaction to the user's account
-# Pre: takes the user ID, transaction amount, transaction type, merchant ID, merchant name, 
+# Pre: takes the user email, transaction amount, transaction type, merchant ID, merchant name, 
 #      merchant code, a description, and a recurring T/F as parameters
 # Post: returns true if the transaction was added, false otherwise
 @app.get("/transactions/add-transaction")
-def add_transaction(user_id, amount, t_type, m_id, m_name, m_code, desc, recurr):
+def add_transaction(email, amount, t_type, m_id, m_name, m_code, desc, recurr):
     try:
 
         users = supabase.table("users").select("*").execute()
         for user in users.data:
-            if user.get('user_id') == user_id:
+            if user.get('email') == email:
                 acc_id = user.get('account_id')
                 
                 data = {
