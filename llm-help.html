@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="styles.css">
+    <title>AI Help - Budgie</title>
+</head>
+<body class="chat-body">
+    
+    <header class="site-header">
+        <nav class="nav">
+            <a class="brand" href="index.html">
+                <img src="Budgie (1).png" alt="Commerce Bank Home" class="logo" height="100"></a>
+            <div class="nav-links">
+                <a href="about.html">About</a>
+                <a href="open-account.html">Open an Account</a>
+                <a href="login.html">Log In</a>
+                <a href="dashboard.html">Dashboard</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="chat-main-content">
+        <div class="chat-container">
+            <div class="chat-header">
+                <img src="sleepy-budgie.png" alt="Budgie" class="chat-avatar">
+                <div>
+                    <h3 style="margin: 0; color: #333;">Budgie AI</h3>
+                    <p style="margin: 0; font-size: 0.8rem; color: #666;">Online</p>
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chat-messages">
+                <div class="message-wrapper ai-wrapper">
+                    <div class="message ai-message">
+                        Hello! I'm Budgie. I can help you understand your spending or give you budgeting tips. What's on your mind?
+                    </div>
+                </div>
+            </div>
+
+            <form class="chat-input-area" id="chat-form">
+                <input type="text" id="chat-input" placeholder="Ask about your budget..." autocomplete="off" required>
+                <button type="submit" class="send-btn">Send</button>
+            </form>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <a href="index.html" class="footer-brand">
+                <img src="sleepy-budgie.png" alt="Sleepy Budgie" class="logo" height="100"></a>
+            <div class="footer-links">
+                <a href="about.html">About</a>
+                <a href="features.html">Features</a>
+                <a href="login.html">Login</a>
+                <a href="open-account.html">Sign Up</a>
+                <a href="developers.html">Developers</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const chatForm = document.getElementById('chat-form');
+        const chatInput = document.getElementById('chat-input');
+        const chatMessages = document.getElementById('chat-messages');
+
+        function getBudgieResponse(userText) {
+            const text = userText.toLowerCase();
+            
+            if (text.includes('balance') || text.includes('money')) {
+                return "Based on your dashboard, your current balance is $4,250.00. You're doing great!";
+            } else if (text.includes('grocery') || text.includes('food')) {
+                return "A good rule of thumb is to spend about 10-15% of your take-home pay on groceries. Have you checked out Aldi or local farmer's markets?";
+            } else if (text.includes('hi') || text.includes('hello')) {
+                return "Hi there! Ready to tackle your finances today?";
+            } else {
+                return "That's an interesting question! Since I'm still learning, I might not have the exact answer yet, but tracking your expenses is always a good first step.";
+            }
+        }
+
+        function appendMessage(text, sender) {
+            const wrapper = document.createElement('div');
+            wrapper.classList.add('message-wrapper');
+            wrapper.classList.add(sender === 'user' ? 'user-wrapper' : 'ai-wrapper');
+
+            const bubble = document.createElement('div');
+            bubble.classList.add('message');
+            bubble.classList.add(sender === 'user' ? 'user-message' : 'ai-message');
+            bubble.textContent = text;
+
+            wrapper.appendChild(bubble);
+            chatMessages.appendChild(wrapper);
+
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        chatForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const messageText = chatInput.value.trim();
+            if (!messageText) return;
+            appendMessage(messageText, 'user');
+            chatInput.value = '';
+
+            setTimeout(() => {
+                const response = getBudgieResponse(messageText);
+                appendMessage(response, 'ai');
+            }, 600);
+        });
+    </script>
+</body>
+</html>
