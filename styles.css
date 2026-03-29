@@ -192,3 +192,181 @@ main {
   padding: 24px;
   flex: 1;
 }
+
+/* --- Dashboard Specific Styles --- */
+
+.dashboard-body {
+    background-color: #edf0f0; /* Matching the background from your index.html */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.dashboard-main-content {
+    flex: 1;
+    padding: 40px 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.dashboard-header-text {
+    margin-bottom: 30px;
+}
+
+.dashboard-header-text h2 {
+    margin: 0 0 5px 0;
+}
+
+/* 2x2 Grid Layout */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+}
+
+/* The Cards */
+.dashboard-card {
+    background: white;
+    border-radius: 16px; /* Rounded edges */
+    padding: 24px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtle resting shadow */
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth animation setup */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Hover Effects */
+.dashboard-card:hover {
+    transform: translateY(-5px); /* Moves the card up slightly */
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.1), 0 4px 8px rgba(0, 0, 0, 0.05); /* Larger shadow makes it 'pop' */
+}
+
+.dashboard-card h3 {
+    margin-top: 0;
+    color: #333;
+    border-bottom: 2px solid #edf0f0;
+    padding-bottom: 10px;
+}
+
+.card-amount {
+    font-size: 2.5rem;
+    color: #2c3e50;
+    margin: 10px 0;
+}
+
+.transaction-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.transaction-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+/* Simple CSS Progress Bar */
+.progress-bar-bg {
+    background-color: #edf0f0;
+    border-radius: 8px;
+    height: 12px;
+    width: 100%;
+    margin-top: 10px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    background-color: #97dbff; /* Using your header color for consistency */
+    height: 100%;
+    border-radius: 8px;
+}
+
+.ai-teaser-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f0f8ff 100%);
+}
+
+.action-btn {
+    margin-top: auto;
+    display: inline-block;
+    background-color: #97dbff;
+    color: #333;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.action-btn:hover {
+    background-color: #7bc5f0;
+}
+
+/* Mobile Responsiveness: Stacks into a 1-column layout on small screens */
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Transaction Form & List Styles */
+.transaction-form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.transaction-form input, 
+.transaction-form select {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    flex: 1;
+}
+
+.transaction-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.delete-btn {
+    background: #ff4d4d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.delete-btn:hover {
+    background: #cc0000;
+}
+
+.upload-section {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+/* --- Updated Card 4 Styles (Bigger Image) --- */
+
+.ai-teaser-card {
+    background: white; /* Ensure solid white background to blend the image */
+}
+
+.ai-assistant-img {
+    max-width: 100%; /* Keeps it from overflowing the card horizontally */
+    height: auto;     /* Maintains aspect ratio */
+    display: block;   /* Allows centering with margin: auto */
+    margin: 10px auto; /* Centers the image */
+
+    /* CHANGED: Removed the 'max-height: 150px;' rule. 
+       This allows the image to scale up and fill the width of the card. */
+}
