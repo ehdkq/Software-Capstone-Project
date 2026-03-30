@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+    <html>
+        <head>
+            <title>Login Page</title>
+            <link rel="stylesheet" href="/css/styles.css">
+            <style>
+                * {
+                    box-sizing: border-box;
+                }
+                body {
+                    margin: 0;
+                    background-image: url("/images/Untitled design (1).png");
+                    background-size: cover;
+                    background-position: center;
+                    background-repeat: no-repeat;
+                    min-height: 100vh;
+                }
+                
+            </style>
+        </head>
+        <header class="site-header">
+            <nav class="nav">
+                <a class="brand" href="index.html">
+                    <img src="/images/Budgie (1).png" alt="Commerce Bank Home" class="logo" height="100"></a>
+                <div class="nav-links">
+                    <a href="about.html">About</a>
+                    <a href="open-account.html">Open an Account</a>
+                    <a href="login.html">Log In</a>
+                    <a href="features.html">Features</a>
+                    <a href="llm-help.html">AI Help</a>
+                </div>
+                
+            </nav>
+        </header>
+
+        <body class="login-body">
+            <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+            <div class="login-credentials">
+                <div class="content-box">
+                    <h1>Welcome Back! Please log in below.</h1>
+                    <p><i>Please log in using your credentials below.</i></p>
+                    <br>
+                    
+                    <form id="login-form">
+                        <div class="form-row">
+                            <label for="email-login">Email:</label>
+                            <input type="email" id="email-login" required>
+                            <br><br>
+                            <label for="password-login">Password:</label>
+                            <input type="password" id="password-login" required>
+                        <br><br>
+                        </div>
+                        <button type="submit" id="login-button" class="action-btn" style="padding: 10px 20px; cursor: pointer;">Log In</button>
+                    </form>
+                    
+                    <p id="error-message" style="color: red; margin-top: 15px;"></p>
+                </div>
+            </div>
+
+            <body class="login-body">
+            <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+            <div class="login-credentials">
+                <div class="content-box">
+                    <h1>Welcome Back! Please log in below.</h1>
+                    <p><i>Please log in using your credentials below.</i></p>
+                    <br>
+                    
+                    <form id="login-form">
+                        <div class="form-row">
+                            <label for="email-login">Email:</label>
+                            <input type="email" id="email-login" required>
+                            <br><br>
+                            <label for="password-login">Password:</label>
+                            <input type="password" id="password-login" required>
+                        <br><br>
+                        </div>
+                        <button type="submit" id="login-button" class="action-btn" style="padding: 10px 20px; cursor: pointer;">Log In</button>
+                    </form>
+                    
+                    <p id="error-message" style="color: red; margin-top: 15px;"></p>
+                </div>
+            </div>
+
+            <script>
+                // 🛑 PASTE YOUR SUPABASE URL AND KEY HERE 🛑
+                const SUPABASE_URL = "https://izexxryxkqcgezdfjqlg.supabase.co";
+                const SUPABASE_KEY = "sb_publishable_4F8U5q77q5yDs2xYLVsUKA_cPuVOHCc";
+                
+                // CHANGED: We are calling it mySupabase so the browser doesn't crash!
+                const mySupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+                document.getElementById("login-form").addEventListener("submit", async function(event) {
+                    event.preventDefault(); 
+
+                    const email = document.getElementById("email-login").value;
+                    const password = document.getElementById("password-login").value;
+                    const errorMessage = document.getElementById("error-message");
+                    const loginBtn = document.getElementById("login-button");
+
+                    // Set loading state and clear old errors
+                    loginBtn.textContent = "Logging in...";
+                    loginBtn.style.pointerEvents = "none";
+                    errorMessage.textContent = "";
+
+                    // Talk to Supabase to log the user in (using mySupabase)
+                    const { data, error } = await mySupabase.auth.signInWithPassword({
+                        email: email,
+                        password: password,
+                    });
+
+                    if (error) {
+                        // If wrong password or not verified yet
+                        errorMessage.textContent = error.message;
+                        loginBtn.textContent = "Log In";
+                        loginBtn.style.pointerEvents = "auto";
+                    } else {
+                        // Success!
+                        loginBtn.style.backgroundColor = "#4CAF50";
+                        loginBtn.style.color = "white";
+                        loginBtn.textContent = "✔ Success!";
+                        
+                        setTimeout(() => {
+                            window.location.href = "dashboard.html";
+                        }, 1000);
+                    }
+                });
+            </script>
+        </body>
+        </body>
+    </html>
