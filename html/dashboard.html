@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="css/styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <title>Dashboard - Budgie</title>
 </head>
@@ -12,7 +12,7 @@
     <header class="site-header">
         <nav class="nav">
             <a class="brand" href="index.html">
-                <img src="/images/Budgie (1).png" alt="Commerce Bank Home" class="logo" height="100"></a>
+                <img src="images/Budgie (1).png" alt="Commerce Bank Home" class="logo" height="100"></a>
             <div class="nav-links">
                 <a href="about.html">About</a>
                 <a href="open-account.html">Open an Account</a>
@@ -104,7 +104,7 @@
                 <div class="dashboard-card ai-teaser-card">
                     <h3>Ask Budgie AI</h3>
                     <p>Have a question about your spending? Budgie is here to help.</p>
-                    <img src="/images/budgie-ai.png" alt ="Budgie AI Assistant" class="ai-assistant-img">
+                    <img src="images/budgie-ai.png" alt ="Budgie AI Assistant" class="ai-assistant-img">
                     <a href="llm-help.html" class="action-btn">Chat Now</a>
                 </div>
             </div>
@@ -118,7 +118,7 @@
     <footer class="footer">
         <div class="footer-content">
             <a href="index.html" class="footer-brand">
-                <img src="/images/sleepy-budgie.png" alt="Sleepy Budgie" class="logo" height="100"></a>
+                <img src="images/sleepy-budgie.png" alt="Sleepy Budgie" class="logo" height="100"></a>
             <div class="footer-links">
                 <a href="about.html">About</a>
                 <a href="features.html">Features</a>
@@ -131,7 +131,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <!--
     <script>
         // ==========================================
         // PART 1: SUPABASE AUTH & SECURITY LOGIC
@@ -142,12 +141,12 @@
         const SUPABASE_KEY = "sb_publishable_4F8U5q77q5yDs2xYLVsUKA_cPuVOHCc";
         const mySupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        async function secureDashboard() {
-            // Check if user is logged in
-            const { data: { session }, error } = await mySupabase.auth.getSession();
+        function secureDashboard() {
+            // checks the custom login session when directed to the dashboard after successful login
+            const isLoggedIn = localStorage.getItem("isLoggedIn");
 
-            // Boot to login if no session
-            if (!session) {
+            // if login session not in localStorage, stay on the login screen 
+            if (isLoggedIn !== "true") {
                 window.location.replace("login.html");
                 return; 
             }
@@ -155,16 +154,20 @@
             // Un-hide the body because they are allowed to be here
             document.getElementById("body-wrapper").style.display = "block";
 
+            // Welcome login page with buttons 
+            document.getElementById("user-greeting-new").textContent = "Welcome to Budgie!";
+            document.getElementById("new-user-welcome").style.display = "block";
+
             // Grab their first name from the database metadata
-            const user = session.user;
-            const firstName = user.user_metadata.first_name || "there"; 
+            //const user = session.user;
+            //const firstName = user.user_metadata.first_name || "there"; 
             
             // Personalize the greetings
-            document.getElementById("user-greeting-new").textContent = `Welcome to Budgie, ${firstName}!`;
-            document.getElementById("dynamic-greeting").textContent = `Welcome back, ${firstName}!`;
+            //document.getElementById("user-greeting-new").textContent = `Welcome to Budgie, ${firstName}!`;
+            //document.getElementById("dynamic-greeting").textContent = `Welcome back, ${firstName}!`;
 
             // For now, we will show the Blank Slate first since you wanted to test it!
-            document.getElementById("new-user-welcome").style.display = "block";
+            //document.getElementById("new-user-welcome").style.display = "block";
         }
 
         // Run security check on load
@@ -178,9 +181,13 @@
 
         // Logout Functions
         async function handleLogout() {
-            await mySupabase.auth.signOut();
+            // remove login session from localStorage 
+            localStorage.removeItem("isLoggedIn");
+
+            // go back to login when clicking on logout on dashboard
             window.location.href = "login.html";
         }
+
         document.getElementById("logout-btn-new").addEventListener("click", handleLogout);
         document.getElementById("logout-btn-existing").addEventListener("click", handleLogout);
 
@@ -398,6 +405,6 @@
         document.getElementById('display-balance').innerText = '$0.00';
         renderTransactions();
     </script>
--->
+
 </body>
 </html>

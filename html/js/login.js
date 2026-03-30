@@ -1,12 +1,18 @@
-const loginForm = document.getElementById('login-form');
+const loginBtn = document.getElementById('login-button');
 
-loginForm.addEventListener("submit", (event) => {
+// Event listener for when user enters email and password then clicks on submit button
+loginBtn.addEventListener("click", (event) => {
     event.preventDefault();
+    event.stopPropagation();
 
     const emailLogin = document.getElementById('email-login').value;
     const passwordLogin = document.getElementById('password-login').value;
 
-    const url = new URL('http://127.0.0.1:8000/login'); // Likely will change this for when hosting on server (Netlify)
+    // Loading State 
+    loginBtn.textContent = "Logging in...";
+    loginBtn.style.pointerEvents = "none";
+
+    const url = new URL('http://127.0.0.1:8000/login'); // Likely will change this for when hosting on Netlify
     url.searchParams.append('email', emailLogin);
     url.searchParams.append('passw', passwordLogin)
 
@@ -19,17 +25,31 @@ loginForm.addEventListener("submit", (event) => {
         }
     })
     
-    // Complete Promise, likely change for when dashboard is added
+    // Complete Promise
     .then(response => response.json())
     .then(data => {
-        console.log("Success", data);
-        // TODOl: Redirect to the profile dashboard page
-        //alert("Successful Login");
-        console.log("Redirecting now...");
-        window.location.href = 'dashboard.html';
+        if (data === true) {
+            localStorage.setItem("isLoggedIn", "true");
+
+            // UI flow for a successful login
+            loginBtn.style.backgroundColor = "#4CAF50";
+            loginBtn.style.color = "white";
+            loginBtn.textContent = "✔ Success!";
+
+            // delay redirect
+            setTimeout(() => {
+                window.location.href = "dashboard.html";
+            }, 1000);
+        } else {
+            // reset button if login fails 
+            alert("Unsuccessful Login");
+            loginBtn.textContent = "Log In";
+            loginBtn.style.pointerEvents = "auto";
+        }
     })
     .catch((error) => {
-        console.error('Error', error);
-        alert('Unsuccessful Login');
+        console.error('Error in login:', error);
+        loginBtn.textContent = "Log In";
+        loginBtn.style.pointerEvents = "auto";
     });
 });
