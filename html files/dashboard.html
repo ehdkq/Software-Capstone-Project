@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Dashboard - Budgie</title>
+</head>
+<body class="dashboard-body" id="body-wrapper" style="display: none;">
+    
+    <header class="site-header">
+        <nav class="nav">
+            <a class="brand" href="index.html">
+                <img src="/images/Budgie (1).png" alt="Commerce Bank Home" class="logo" height="100"></a>
+            <div class="nav-links">
+                <a href="about.html">About</a>
+                <a href="open-account.html">Open an Account</a>
+                <a href="login.html">Log In</a>
+                <a href="features.html">Features</a>
+                <a href="llm-help.html">AI Help</a>
+            </div>
+        </nav>
+    </header>
+
+    <div id="new-user-welcome" style="display: none; text-align: center; padding: 100px 20px; font-family: sans-serif; min-height: 60vh;">
+        <h1 id="user-greeting-new" style="color: #333; font-size: 2.5rem;">Welcome to Budgie!</h1>
+        <p style="margin: 20px 0; font-size: 1.2rem; color: #666;">Your dashboard is currently empty. Let's set up your first budget!</p>
+        
+        <div style="display: flex; justify-content: center; gap: 15px; margin-top: 30px;">
+            <button id="start-budgeting-btn" class="action-btn" style="padding: 10px 25px; font-size: 1.1rem; cursor: pointer;">Start Budgeting</button>
+            <button id="logout-btn-new" class="action-btn" style="background-color: #ff4c4c; padding: 10px 25px; border: none; color: white; border-radius: 5px; cursor: pointer; font-size: 1.1rem;">Log Out</button>
+        </div>
+    </div>
+
+    <div id="existing-dashboard" style="display: none;">
+        <main class="dashboard-main-content">
+            <div class="dashboard-header-text">
+                <h2 id="dynamic-greeting">Welcome back!</h2>
+                <p>Here is your financial overview.</p>
+            </div>
+            
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <h3>Total Balance</h3>
+                    
+                    <div style="display: flex; align-items: center; gap: 15px; margin: 10px 0;">
+                        <h2 class="card-amount" id="display-balance" style="margin: 0;">$4,250.00</h2>
+                        <button onclick="toggleBalanceEdit()" class="action-btn" style="padding: 5px 10px; font-size: 0.8rem;">Edit</button>
+                    </div>
+                    <div id="edit-balance-form" style="display: none; margin-bottom: 20px;">
+                        <div style="display: flex; gap: 10px;">
+                            <input type="number" id="new-balance-input" step="0.01" placeholder="Enter new balance" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+                            <button onclick="saveBalance()" class="action-btn" style="padding: 5px 15px;">Save</button>
+                        </div>
+                    </div>
+                    
+                    <h3 style="margin-top: 15px; padding-bottom: 10px;">Budget Goals</h3>
+                    
+                    <form id="goal-form" class="transaction-form" style="margin-bottom: 15px;">
+                        <select id="g-category" required>
+                            <option value="Groceries">Groceries</option>
+                            <option value="Dining">Dining Out</option>
+                            <option value="Utilities">Utilities</option>
+                            <option value="Entertainment">Entertainment</option>
+                        </select>
+                        <input type="number" id="g-amount" placeholder="Target limit ($)" step="0.01" required>
+                        <button type="submit" class="action-btn" style="margin-top:0;">Add / Update</button>
+                    </form>
+
+                    <div id="goals-list">
+                        </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3>Manage Transactions</h3>
+                    <form id="transaction-form" class="transaction-form">
+                        <input type="text" id="t-desc" placeholder="Description (e.g. Target)" required>
+                        <select id="t-type">
+                            <option value="Groceries">Groceries</option>
+                            <option value="Dining">Dining Out</option>
+                            <option value="Utilities">Utilities</option>
+                            <option value="Entertainment">Entertainment</option>
+                        </select>
+                        <input type="number" id="t-amount" placeholder="Amount ($)" step="0.01" required>
+                        <button type="submit" id="t-submit-btn" class="action-btn" style="margin-top:0;">Add</button>
+                    </form>
+                    
+                    <ul class="transaction-list" id="transaction-list">
+                        </ul>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3>Spending Breakdown</h3>
+                    <div class="upload-section">
+                        <label for="statement-upload">Upload Bank Statement (CSV):</label>
+                        <input type="file" id="statement-upload" accept=".csv">
+                    </div>
+                    <div class="chart-container" style="position: relative; height:250px; width:100%">
+                        <canvas id="spending-chart"></canvas>
+                    </div>
+                </div>
+
+                <div class="dashboard-card ai-teaser-card">
+                    <h3>Ask Budgie AI</h3>
+                    <p>Have a question about your spending? Budgie is here to help.</p>
+                    <img src="/images/budgie-ai.png" alt ="Budgie AI Assistant" class="ai-assistant-img">
+                    <a href="llm-help.html" class="action-btn">Chat Now</a>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 40px; margin-bottom: 20px;">
+                <button id="logout-btn-existing" class="action-btn" style="background-color: #ff4c4c; padding: 10px 20px; border: none; color: white; border-radius: 5px; cursor: pointer;">Log Out Safely</button>
+            </div>
+        </main>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <a href="index.html" class="footer-brand">
+                <img src="/images/sleepy-budgie.png" alt="Sleepy Budgie" class="logo" height="100"></a>
+            <div class="footer-links">
+                <a href="about.html">About</a>
+                <a href="features.html">Features</a>
+                <a href="login.html">Login</a>
+                <a href="open-account.html">Sign Up</a>
+                <a href="developers.html">Developers</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // ==========================================
+        // PART 1: SUPABASE AUTH & SECURITY LOGIC
+        // ==========================================
+        
+        // 🛑 PASTE YOUR SUPABASE URL AND KEY HERE 🛑
+        const SUPABASE_URL = "https://izexxryxkqcgezdfjqlg.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_4F8U5q77q5yDs2xYLVsUKA_cPuVOHCc";
+        const mySupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function secureDashboard() {
+            // Check if user is logged in
+            const { data: { session }, error } = await mySupabase.auth.getSession();
+
+            // Boot to login if no session
+            if (!session) {
+                window.location.replace("login.html");
+                return; 
+            }
+
+            // Un-hide the body because they are allowed to be here
+            document.getElementById("body-wrapper").style.display = "block";
+
+            // Grab their first name from the database metadata
+            const user = session.user;
+            const firstName = user.user_metadata.first_name || "there"; 
+            
+            // Personalize the greetings
+            document.getElementById("user-greeting-new").textContent = `Welcome to Budgie, ${firstName}!`;
+            document.getElementById("dynamic-greeting").textContent = `Welcome back, ${firstName}!`;
+
+            // For now, we will show the Blank Slate first since you wanted to test it!
+            document.getElementById("new-user-welcome").style.display = "block";
+        }
+
+        // Run security check on load
+        secureDashboard();
+
+        // UI Flow: Click to transition from Blank Slate to the main Dashboard
+        document.getElementById("start-budgeting-btn").addEventListener("click", function() {
+            document.getElementById("new-user-welcome").style.display = "none";
+            document.getElementById("existing-dashboard").style.display = "block";
+        });
+
+        // Logout Functions
+        async function handleLogout() {
+            await mySupabase.auth.signOut();
+            window.location.href = "login.html";
+        }
+        document.getElementById("logout-btn-new").addEventListener("click", handleLogout);
+        document.getElementById("logout-btn-existing").addEventListener("click", handleLogout);
+
+
+       // ==========================================
+        // PART 2: YOUR ORIGINAL DASHBOARD LOGIC (Made Blank!)
+        // ==========================================
+
+        // --- 1. Balance Logic ---
+        let currentBalance = 0.00; // Set default to 0!
+
+        function toggleBalanceEdit() {
+            const form = document.getElementById('edit-balance-form');
+            if (form.style.display === 'none' || form.style.display === '') {
+                form.style.display = 'block';
+                document.getElementById('new-balance-input').value = currentBalance.toFixed(2);
+            } else {
+                form.style.display = 'none';
+            }
+        }
+
+        function saveBalance() {
+            const newVal = parseFloat(document.getElementById('new-balance-input').value);
+            if (!isNaN(newVal)) {
+                currentBalance = newVal;
+                document.getElementById('display-balance').innerText = '$' + currentBalance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                toggleBalanceEdit(); 
+            }
+        }
+
+        // --- 2. Goals Management Logic ---
+        let goals = []; // Empty the default goals array!
+        
+        const goalForm = document.getElementById('goal-form');
+        const goalsList = document.getElementById('goals-list');
+
+        goalForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const category = document.getElementById('g-category').value;
+            const target = parseFloat(document.getElementById('g-amount').value);
+
+            const existingIndex = goals.findIndex(g => g.category === category);
+            if(existingIndex >= 0) {
+                goals[existingIndex].target = target;
+            } else {
+                goals.push({ id: Date.now(), category, target });
+            }
+            
+            goalForm.reset();
+            renderGoals();
+        });
+
+        function deleteGoal(id) {
+            goals = goals.filter(g => g.id !== id);
+            renderGoals();
+        }
+
+        function renderGoals() {
+            goalsList.innerHTML = '';
+            
+            // BLANK STATE CHECK: If no goals exist, show the message!
+            if (goals.length === 0) {
+                goalsList.innerHTML = '<p style="text-align: center; color: #888; font-style: italic; margin-top: 15px;">Let\'s make your first goal!</p>';
+                return; // Stop the function here so it doesn't try to draw empty bars
+            }
+
+            let spentTotals = { 'Groceries': 0, 'Dining': 0, 'Utilities': 0, 'Entertainment': 0 };
+            transactions.forEach(t => {
+                if(spentTotals[t.type] !== undefined) {
+                    spentTotals[t.type] += t.amount;
+                }
+            });
+
+            goals.forEach(g => {
+                const spent = spentTotals[g.category] || 0;
+                let percent = (spent / g.target) * 100;
+                let barColor = '#97dbff'; 
+                
+                if (percent >= 100) {
+                    percent = 100; 
+                    barColor = '#ff4d4d'; 
+                }
+
+                const goalDiv = document.createElement('div');
+                goalDiv.style.marginBottom = '15px';
+                goalDiv.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                        <span><strong>${g.category}</strong>: $${spent.toFixed(2)} / $${g.target.toFixed(2)}</span>
+                        <button onclick="deleteGoal(${g.id})" class="delete-btn" style="padding: 2px 6px; font-size: 0.75rem;">X</button>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" style="width: ${percent}%; background-color: ${barColor};"></div>
+                    </div>
+                `;
+                goalsList.appendChild(goalDiv);
+            });
+        }
+
+        // --- 3. Transaction Management Logic ---
+        let transactions = []; // Ensure this starts empty
+        let editingTransactionId = null; 
+        
+        const transactionForm = document.getElementById('transaction-form');
+        const transactionList = document.getElementById('transaction-list');
+        const tSubmitBtn = document.getElementById('t-submit-btn');
+
+        transactionForm.addEventListener('submit', function(e) {
+            e.preventDefault(); 
+            const desc = document.getElementById('t-desc').value;
+            const type = document.getElementById('t-type').value;
+            const amount = parseFloat(document.getElementById('t-amount').value);
+
+            if (editingTransactionId !== null) {
+                const index = transactions.findIndex(t => t.id === editingTransactionId);
+                if (index !== -1) {
+                    transactions[index] = { id: editingTransactionId, desc, type, amount };
+                }
+                editingTransactionId = null; 
+                tSubmitBtn.textContent = 'Add'; 
+            } else {
+                transactions.push({ id: Date.now(), desc, type, amount });
+            }
+            
+            transactionForm.reset();
+            renderTransactions();
+        });
+
+        function editTransaction(id) {
+            const transactionToEdit = transactions.find(t => t.id === id);
+            
+            if (transactionToEdit) {
+                document.getElementById('t-desc').value = transactionToEdit.desc;
+                document.getElementById('t-type').value = transactionToEdit.type;
+                document.getElementById('t-amount').value = transactionToEdit.amount;
+                
+                editingTransactionId = id;
+                tSubmitBtn.textContent = 'Update';
+            }
+        }
+
+        function deleteTransaction(id) {
+            transactions = transactions.filter(t => t.id !== id);
+            
+            if (editingTransactionId === id) {
+                transactionForm.reset();
+                editingTransactionId = null;
+                tSubmitBtn.textContent = 'Add';
+            }
+            
+            renderTransactions();
+        }
+
+        function renderTransactions() {
+            transactionList.innerHTML = '';
+
+            // BLANK STATE CHECK: If no transactions exist, show the message!
+            if (transactions.length === 0) {
+                transactionList.innerHTML = '<p style="text-align: center; color: #888; font-style: italic; margin-top: 15px;">No transactions yet. Add your first one above!</p>';
+            } else {
+                transactions.forEach(t => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <span><strong>${t.desc}</strong> (${t.type})</span>
+                        <span>$${t.amount.toFixed(2)} 
+                            <button onclick="editTransaction(${t.id})" style="background-color: #f0ad4e; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; margin-left: 10px;">Edit</button>
+                            <button onclick="deleteTransaction(${t.id})" class="delete-btn">X</button>
+                        </span>
+                    `;
+                    transactionList.appendChild(li);
+                });
+            }
+            
+            updateChartData(); 
+            renderGoals(); 
+        }
+
+        // --- 4. Pie Chart Logic ---
+        const ctx = document.getElementById('spending-chart').getContext('2d');
+        let spendingChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Groceries', 'Dining', 'Utilities', 'Entertainment'],
+                datasets: [{
+                    data: [0, 0, 0, 0], 
+                    backgroundColor: ['#97dbff', '#ffb3ba', '#bae1ff', '#baffc9']
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        function updateChartData() {
+            let totals = { 'Groceries': 0, 'Dining': 0, 'Utilities': 0, 'Entertainment': 0 };
+            transactions.forEach(t => {
+                if(totals[t.type] !== undefined) totals[t.type] += t.amount;
+            });
+            spendingChart.data.datasets[0].data = Object.values(totals);
+            spendingChart.update();
+        }
+
+        // --- 5. Mock File Upload Simulation ---
+        document.getElementById('statement-upload').addEventListener('change', function(e) {
+            if(e.target.files.length > 0) {
+                alert("File selected! Loading mock data to demonstrate the chart and goals update.");
+                transactions = [
+                    { id: 1, desc: "Schnucks", type: "Groceries", amount: 120.50 },
+                    { id: 2, desc: "Evergy", type: "Utilities", amount: 85.00 },
+                    { id: 3, desc: "AMC Theaters", type: "Entertainment", amount: 35.00 },
+                    { id: 4, desc: "Chipotle", type: "Dining", amount: 24.50 }
+                ];
+                renderTransactions();
+            }
+        });
+
+        // Initialize UI on first load (Forces the balance text to say $0.00 immediately)
+        document.getElementById('display-balance').innerText = '$0.00';
+        renderTransactions();
+    </script>
+</body>
+</html>
