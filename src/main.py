@@ -3,8 +3,18 @@ from db import supabase
 from datetime import datetime
 import bcrypt
 import uuid
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins (use specific URLs in production)
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers
+)
 
 # pull from db: response = supabase.table("TABLE_NAME").select("* (ALL)").execute()
 # write to db: response = supabase.table("TABLE_NAME").insert(data - typically a dict).execute()
