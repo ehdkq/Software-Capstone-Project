@@ -35,7 +35,6 @@
             </nav>
         </header>
 
-        <body>
             <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
             <div class="register-body">
@@ -86,57 +85,7 @@
                 </div>
             </div>
 
-            <body>
-            <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-            <div class="register-body">
-                <div class="content-box">
-                    
-                    <div class="register-credentials" id="signup-section">
-                        <h1>Sign Up for an Account Today!</h1>
-                        <h3><i>For more information about the tool, click <a href="about.html">here</a>!</i></h3>
-                        <br>
-                        
-                        <form id="register-form">
-                            <label for="first-name">First Name:</label>
-                            <input type="text" id="first-name" required>
-                            <br>
-                            <label for="last-name">Last Name:</label>
-                            <input type="text" id="last-name" required>
-                            <br><br>
-                            
-                            <label for="email-address">Email Address:</label>
-                            <input type="email" id="email-address" required>
-                            <br>
-                            
-                            <label for="password-input">Password:</label>
-                            <input type="password" id="password-input" required>
-                            <br>
-                            
-                            <label for="reenter-password">Re-enter Password</label>
-                            <input type="password" id="reenter-password" required>
-                            <p style="font-size: 0.85rem; color: #555;"><i>Password must contain at least 8 characters, an uppercase letter, a number, and a special character.</i></p>
-                    
-                            <br>
-                            <button type="submit" id="account-submit" class="action-btn" style="padding: 10px 20px; cursor: pointer;">Sign Up</button>
-                            <p id="signup-error" style="color: red; margin-top: 10px;"></p>
-                        </form>
-                    </div>
-
-                    <div id="verify-section" style="display: none; text-align: center;">
-                        <h1>Check your email!</h1>
-                        <p>We sent a 6-digit verification code to <strong id="display-email"></strong>.</p>
-                        <form id="verify-form" style="margin-top: 20px;">
-                            <input type="text" id="verification-code" placeholder="Enter 6-digit code" required style="padding: 10px; font-size: 1.2rem; text-align: center; letter-spacing: 2px; width: 200px;">
-                            <br><br>
-                            <button type="submit" class="action-btn" style="padding: 10px 20px;">Verify Account</button>
-                            <p id="verify-error" style="color: red; margin-top: 10px;"></p>
-                        </form>
-                    </div>
-
-                </div>
-            </div>
-
+            <!--
             <script>
                 // 🛑 PASTE YOUR SUPABASE URL AND KEY HERE 🛑
                 const SUPABASE_URL = "https://izexxryxkqcgezdfjqlg.supabase.co";
@@ -224,6 +173,8 @@
                     }
                 });
             </script>
+        -->
         </body>
+        <script src="/js/createAccount.js"></script>
         </body>
     </html>

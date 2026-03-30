@@ -208,7 +208,8 @@ def forgot_password_email(email):
 # TEST QUERIES
 #print(verify_login('custosdfsdf@example.com', 'WyAH03DADiIJGThvBkyby2sMUMRgDd9Dg17yccD6JyE='))
 #print(create_account('backendtest2@test.com', 'test1233'))
-#print(delete_account('9a246eb6-ab5c-4350-b65a-149883eccee4'))
+#print(delete_account('usertest2@test.com'))
+#print(delete_account('usertest@test.com'))
 #print(forgot_password('dfd'))
 
 #print(get_transactions('080691cf-dd78-428e-a4ba-98e442940d6c'))

@@ -1,7 +1,6 @@
-const loginBtn = document.getElementById('login-button');
+const loginForm = document.getElementById('login-form');
 
-// Event listener for when user enters email and password then clicks on submit button
-loginBtn.addEventListener("click", (event) => {
+loginForm.addEventListener("submit", (event) => {
     event.preventDefault();
 
     const emailLogin = document.getElementById('email-login').value;
@@ -25,7 +24,9 @@ loginBtn.addEventListener("click", (event) => {
     .then(data => {
         console.log("Success", data);
         // TODOl: Redirect to the profile dashboard page
-        alert("Successful Login");
+        //alert("Successful Login");
+        console.log("Redirecting now...");
+        window.location.href = 'dashboard.html';
     })
     .catch((error) => {
         console.error('Error', error);
