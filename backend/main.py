@@ -210,6 +210,7 @@ def forgot_password_email(email):
 #print(create_account('backendtest2@test.com', 'test1233'))
 #print(delete_account('usertest2@test.com'))
 #print(delete_account('usertest@test.com'))
+#print(delete_account('usertest3@test.com'))
 #print(forgot_password('dfd'))
 
 #print(get_transactions('080691cf-dd78-428e-a4ba-98e442940d6c'))
