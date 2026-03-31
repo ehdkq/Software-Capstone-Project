@@ -28,13 +28,17 @@ loginBtn.addEventListener("click", (event) => {
     // Complete Promise
     .then(response => response.json())
     .then(data => {
-        if (data === true) {
+        // Check for the new response format: {success: true/false, user_id: "..."}
+        if (data.success === true && data.user_id) {
+            // Store login session and user information
             localStorage.setItem("isLoggedIn", "true");
+            localStorage.setItem("userId", data.user_id);
+            localStorage.setItem("userEmail", emailLogin);
 
             // UI flow for a successful login
             loginBtn.style.backgroundColor = "#4CAF50";
             loginBtn.style.color = "white";
-            loginBtn.textContent = "✔ Success!";
+            loginBtn.textContent = "√ Success!";
 
             // delay redirect
             setTimeout(() => {

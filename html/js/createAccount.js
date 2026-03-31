@@ -26,7 +26,7 @@ createAccountBtn.addEventListener("click", (event) => {
 
     // send data to FastApi endpoint 
     fetch(url , {
-        method: 'GET',
+        method: 'POST',
         headers: {
             'Accept': 'application/json'
         }
@@ -40,8 +40,11 @@ createAccountBtn.addEventListener("click", (event) => {
     .then(data => {
         if (data === true) {
             console.log("Success:", data);
-            alert("Account Created Successfully! You can now log in.");
-            // TODO: Redirect to login page
+            
+            // delay redirect
+            setTimeout(() => {
+                window.location.href = "login.html";
+            }, 1000);
         } else {
             alert("Account creation failed. The email might already be in use.");
         }
