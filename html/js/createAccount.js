@@ -1,14 +1,10 @@
-// TODO: Plan to push ONLY relevant information to teams github page
-// 1) login and creatAccount javascript files 
-// 2) Mention changes in the main.py of full integration between html, javascript, python to get to the backend 
-
-const createAccountBtn = document.getElementById('account-submit');
+ const createAccountBtn = document.getElementById('account-submit');
 
 // Created the event listener for user clicking on submit button in creating an account
 createAccountBtn.addEventListener("click", (event) => {
     event.preventDefault();
 
-    // TODO
+    // TODO: need refactor  file to direct to the dashboard after creation of a new account
     // const firstName = document.getElementById('first-name').value;
     // const lastName = document.getElementById('last-name').value;
 
@@ -16,7 +12,7 @@ createAccountBtn.addEventListener("click", (event) => {
     const newPassword = document.getElementById('password-input').value;
     const reEnterPassword = document.getElementById('reenter-password').value;
 
-    const url = new URL("http://127.0.0.1:8000/create-account");
+    const url = new URL("http://127.0.0.1:8000/create-account"); // Likely will change this for when hosting on Netlify
     url.searchParams.append('email',emailAddress);
     url.searchParams.append('passw',newPassword);
 
