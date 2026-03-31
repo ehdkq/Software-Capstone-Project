@@ -3,16 +3,49 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/html/css/styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <title>Dashboard - Budgie</title>
+    <style>
+        /* Floating Profile Circle (Bottom Right) */
+        #profile-circle {
+            display: none; /* Hidden until logged in */
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            height: 60px;
+            background-color: #97dbff;
+            color: white;
+            border-radius: 50%;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.8rem;
+            border: 3px solid #fff;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+            transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
+        }
+
+        #profile-circle:hover {
+            transform: translateY(-5px) scale(1.05);
+            background-color: #75c5f0;
+            box-shadow: 0 12px 20px rgba(0,0,0,0.3);
+        }
+    </style>
 </head>
 <body class="dashboard-body" id="body-wrapper">
     
+    <a href="/html/settings.html" id="profile-circle" title="Account Settings">
+        <span id="profile-initial">U</span>
+    </a>
+
     <header class="site-header">
         <nav class="nav">
             <a class="brand" href="index.html">
-                <img src="/images/Budgie (1).png" alt="Commerce Bank Home" class="logo" height="100"></a>
+                <img src="/html/images/Budgie (1).png" alt="Budgie Home" class="logo" height="100"></a>
             <div class="nav-links">
                 <a href="about.html">About</a>
                 <a href="open-account.html">Open an Account</a>
@@ -33,7 +66,7 @@
         </div>
     </div>
 
-    <div id="existing-dashboard" style="display: none;">
+    <div id="existing-dashboard" style="display: block;">
         <main class="dashboard-main-content">
             <div class="dashboard-header-text">
                 <h2 id="dynamic-greeting">Welcome back!</h2>
@@ -45,7 +78,7 @@
                     <h3>Total Balance</h3>
                     
                     <div style="display: flex; align-items: center; gap: 15px; margin: 10px 0;">
-                        <h2 class="card-amount" id="display-balance" style="margin: 0;">$4,250.00</h2>
+                        <h2 class="card-amount" id="display-balance" style="margin: 0;">$0.00</h2>
                         <button onclick="toggleBalanceEdit()" class="action-btn" style="padding: 5px 10px; font-size: 0.8rem;">Edit</button>
                     </div>
                     <div id="edit-balance-form" style="display: none; margin-bottom: 20px;">
@@ -104,7 +137,7 @@
                 <div class="dashboard-card ai-teaser-card">
                     <h3>Ask Budgie AI</h3>
                     <p>Have a question about your spending? Budgie is here to help.</p>
-                    <img src="/images/budgie-ai.png" alt ="Budgie AI Assistant" class="ai-assistant-img">
+                    <img src="/html/images/budgie-ai.png" alt ="Budgie AI Assistant" class="ai-assistant-img">
                     <a href="llm-help.html" class="action-btn">Chat Now</a>
                 </div>
             </div>
@@ -118,7 +151,7 @@
     <footer class="footer">
         <div class="footer-content">
             <a href="index.html" class="footer-brand">
-                <img src="/images/sleepy-budgie.png" alt="Sleepy Budgie" class="logo" height="100"></a>
+                <img src="/html/images/sleepy-budgie.png" alt="Sleepy Budgie" class="logo" height="100"></a>
             <div class="footer-links">
                 <a href="about.html">About</a>
                 <a href="features.html">Features</a>
@@ -131,66 +164,65 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <!--
     <script>
-        // ==========================================
-        // PART 1: SUPABASE AUTH & SECURITY LOGIC
-        // ==========================================
+        /* ==========================================
+           PART 1: SUPABASE AUTH & SECURITY LOGIC
+           (Commented out to allow Python Login to work)
+        ========================================== 
         
-        // 🛑 PASTE YOUR SUPABASE URL AND KEY HERE 🛑
         const SUPABASE_URL = "https://izexxryxkqcgezdfjqlg.supabase.co";
         const SUPABASE_KEY = "sb_publishable_4F8U5q77q5yDs2xYLVsUKA_cPuVOHCc";
         const mySupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         async function secureDashboard() {
-            // Check if user is logged in
             const { data: { session }, error } = await mySupabase.auth.getSession();
-
-            // Boot to login if no session
             if (!session) {
                 window.location.replace("login.html");
                 return; 
             }
-
-            // Un-hide the body because they are allowed to be here
             document.getElementById("body-wrapper").style.display = "block";
-
-            // Grab their first name from the database metadata
             const user = session.user;
             const firstName = user.user_metadata.first_name || "there"; 
-            
-            // Personalize the greetings
             document.getElementById("user-greeting-new").textContent = `Welcome to Budgie, ${firstName}!`;
             document.getElementById("dynamic-greeting").textContent = `Welcome back, ${firstName}!`;
-
-            // For now, we will show the Blank Slate first since you wanted to test it!
             document.getElementById("new-user-welcome").style.display = "block";
         }
-
-        // Run security check on load
         secureDashboard();
 
-        // UI Flow: Click to transition from Blank Slate to the main Dashboard
         document.getElementById("start-budgeting-btn").addEventListener("click", function() {
             document.getElementById("new-user-welcome").style.display = "none";
             document.getElementById("existing-dashboard").style.display = "block";
         });
 
-        // Logout Functions
         async function handleLogout() {
             await mySupabase.auth.signOut();
             window.location.href = "login.html";
         }
         document.getElementById("logout-btn-new").addEventListener("click", handleLogout);
         document.getElementById("logout-btn-existing").addEventListener("click", handleLogout);
+        
+        ========================================== */
 
-
-       // ==========================================
-        // PART 2: YOUR ORIGINAL DASHBOARD LOGIC (Made Blank!)
+        // ==========================================
+        // PART 2: YOUR ORIGINAL DASHBOARD LOGIC 
         // ==========================================
 
+        // --- 0. Python Login Initialization ---
+        const localUser = localStorage.getItem("userEmail");
+        if (localUser) {
+            // Set the greeting name
+            const name = localUser.split('@')[0];
+            document.getElementById("dynamic-greeting").textContent = `Welcome back, ${name}!`;
+            document.getElementById("user-greeting-new").textContent = `Welcome, ${name}!`;
+            
+            // Show and populate the floating profile circle
+            const profileCircle = document.getElementById("profile-circle");
+            profileCircle.style.display = "flex";
+            document.getElementById("profile-initial").textContent = name.charAt(0).toUpperCase();
+        }
+
         // --- 1. Balance Logic ---
-        let currentBalance = 0.00; // Set default to 0!
+        let currentBalance = 0.00; 
 
         function toggleBalanceEdit() {
             const form = document.getElementById('edit-balance-form');
@@ -212,7 +244,7 @@
         }
 
         // --- 2. Goals Management Logic ---
-        let goals = []; // Empty the default goals array!
+        let goals = []; 
         
         const goalForm = document.getElementById('goal-form');
         const goalsList = document.getElementById('goals-list');
@@ -241,10 +273,9 @@
         function renderGoals() {
             goalsList.innerHTML = '';
             
-            // BLANK STATE CHECK: If no goals exist, show the message!
             if (goals.length === 0) {
                 goalsList.innerHTML = '<p style="text-align: center; color: #888; font-style: italic; margin-top: 15px;">Let\'s make your first goal!</p>';
-                return; // Stop the function here so it doesn't try to draw empty bars
+                return; 
             }
 
             let spentTotals = { 'Groceries': 0, 'Dining': 0, 'Utilities': 0, 'Entertainment': 0 };
@@ -280,7 +311,7 @@
         }
 
         // --- 3. Transaction Management Logic ---
-        let transactions = []; // Ensure this starts empty
+        let transactions = []; 
         let editingTransactionId = null; 
         
         const transactionForm = document.getElementById('transaction-form');
@@ -336,7 +367,6 @@
         function renderTransactions() {
             transactionList.innerHTML = '';
 
-            // BLANK STATE CHECK: If no transactions exist, show the message!
             if (transactions.length === 0) {
                 transactionList.innerHTML = '<p style="text-align: center; color: #888; font-style: italic; margin-top: 15px;">No transactions yet. Add your first one above!</p>';
             } else {
@@ -394,10 +424,18 @@
             }
         });
 
-        // Initialize UI on first load (Forces the balance text to say $0.00 immediately)
+        // Initialize UI on first load
         document.getElementById('display-balance').innerText = '$0.00';
         renderTransactions();
+
+        // --- 6. Logout Logic ---
+        function handleLogout() {
+            localStorage.removeItem("userEmail"); 
+            window.location.href = "login.html";
+        }
+        document.getElementById("logout-btn-new").addEventListener("click", handleLogout);
+        document.getElementById("logout-btn-existing").addEventListener("click", handleLogout);
+
     </script>
--->
 </body>
 </html>

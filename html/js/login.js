@@ -25,6 +25,7 @@ loginForm.addEventListener("submit", (event) => {
         console.log("Success", data);
         // TODOl: Redirect to the profile dashboard page
         //alert("Successful Login");
+        
         console.log("Redirecting now...");
         window.location.href = 'dashboard.html';
     })

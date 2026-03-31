@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/html/css/styles.css">
+    <title>Features - Budgie</title>
+    <style>
+        /* Specific styles for the Features Grid */
+        .features-hero {
+            text-align: center;
+            padding: 60px 20px;
+            background: linear-gradient(135.2deg, #eef2f3 0%, #97dbff 100%);
+            color: #333;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: -40px auto 60px; /* Pulls grid up into the hero slightly */
+            padding: 0 20px;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            border: 1px solid #eee;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(151, 219, 255, 0.4);
+            border-color: #97dbff;
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .feature-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .cta-section {
+            text-align: center;
+            padding: 80px 20px;
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body class="dashboard-body">
+    
+    <header class="site-header">
+        <nav class="nav">
+            <a class="brand" href="index.html">
+                <img src="/html/images/Budgie (1).png" alt="Budgie Home" class="logo" height="100"></a>
+            <div class="nav-links">
+                <a href="about.html">About</a>
+                <a href="open-account.html">Open an Account</a>
+                <a href="login.html">Log In</a>
+                <a href="features.html" class="active">Features</a>
+                <a href="llm-help.html">AI Help</a>
+            </div>
+        </nav>
+    </header>
+
+    <section class="features-hero">
+        <h1>Features that help you fly.</h1>
+        <p>Managing your money doesn't have to be a drag. Explore the tools Budgie offers.</p>
+    </section>
+
+    <main class="features-grid">
+        <div class="feature-card" onclick="location.href='open-account.html'">
+            <span class="feature-icon">💰</span>
+            <h3>Real-Time Tracking</h3>
+            <p>See your balance update the second you spend. No more waiting for "pending" transactions to clear your mind.</p>
+        </div>
+
+        <div class="feature-card" onclick="location.href='open-account.html'">
+            <span class="feature-icon">🎯</span>
+            <h3>Smart Budget Goals</h3>
+            <p>Set visual targets for groceries, dining, and more. Our progress bars let you know exactly how much "fun money" is left.</p>
+        </div>
+
+        <div class="feature-card" onclick="location.href='open-account.html'">
+            <span class="feature-icon">📊</span>
+            <h3>Spending Insights</h3>
+            <p>Interactive pie charts break down your habits. Discover where your money goes so you can decide where it should go.</p>
+        </div>
+
+        <div class="feature-card" onclick="location.href='open-account.html'">
+            <span class="feature-icon">📂</span>
+            <h3>Easy Data Import</h3>
+            <p>Already have a bank? Upload your CSV statements directly to Budgie and watch your dashboard come to life instantly.</p>
+        </div>
+
+        <div class="feature-card" onclick="location.href='llm-help.html'">
+            <span class="feature-icon">🦜</span>
+            <h3>Budgie AI</h3>
+            <p>Have a question like "Can I afford dinner out tonight?" Ask Budgie. Our AI analyzes your trends to give you honest answers.</p>
+        </div>
+
+        <div class="feature-card" onclick="location.href='open-account.html'">
+            <span class="feature-icon">🔒</span>
+            <h3>Bank-Grade Security</h3>
+            <p>Your data is encrypted and stored in secure relational databases. You're the only one with the keys to your cage.</p>
+        </div>
+    </main>
+
+    <section class="cta-section">
+        <h2>Ready to take control?</h2>
+        <p>Join thousands of others who are budgeting better with Budgie.</p>
+        <br>
+        <a href="open-account.html" class="action-btn" style="padding: 15px 40px; font-size: 1.2rem;">Get Started for Free</a>
+    </section>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <a href="index.html" class="footer-brand">
+                <img src="/html/images/sleepy-budgie.png" alt="Sleepy Budgie" class="logo" height="100"></a>
+            <div class="footer-links">
+                <a href="about.html">About</a>
+                <a href="features.html">Features</a>
+                <a href="login.html">Login</a>
+                <a href="open-account.html">Sign Up</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

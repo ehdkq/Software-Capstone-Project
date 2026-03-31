@@ -1,24 +1,169 @@
 <!DOCTYPE html>
-<html>
-    <body>
-        <head>
-            <link rel="stylesheet" href="/css/styles.css">
-        </head>
-        <header class="site-header">
-            <nav class="nav">
-                <a class="brand" href="index.html">
-                    <img src="/images/Budgie (1).png" alt="Commerce Bank Home" class="logo" height="100"></a>
-                <div class="nav-links">
-                    <a href="about.html">About</a>
-                    <a href="open-account.html">Open an Account</a>
-                    <a href="login.html">Log In</a>
-                    <a href="features.html">Features</a>
-                    <a href="llm-help.html">AI Help</a>
-                </div>
-                
-            </nav>
-        </header>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/html/css/styles.css">
+    <title>Meet the Developers - Budgie</title>
+    <style>
+        .dev-hero {
+            text-align: center;
+            padding: 60px 20px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #eee;
+        }
 
+        .team-container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        /* The "Zig-Zag" Row */
+        .member-row {
+            display: flex;
+            align-items: center;
+            gap: 50px;
+            margin-bottom: 80px;
+        }
+
+        /* This magic line flips every second row automatically! */
+        .member-row:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+
+        .member-photo {
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .member-photo img {
+            width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            object-fit: cover;
+            border: 4px solid #97dbff;
+        }
+
+        .member-info {
+            flex: 1;
+        }
+
+        .member-info h2 {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .member-info .role {
+            display: inline-block;
+            background-color: #97dbff;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .member-info p {
+            line-height: 1.8;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        /* Mobile optimization: Stack them vertically when screen is small */
+        @media (max-width: 768px) {
+            .member-row, .member-row:nth-child(even) {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body class="dashboard-body">
+    
+    <header class="site-header">
+        <nav class="nav">
+            <a class="brand" href="index.html">
+                <img src="/html/images/Budgie (1).png" alt="Budgie Home" class="logo" height="100"></a>
+            <div class="nav-links">
+                <a href="about.html">About</a>
+                <a href="open-account.html">Open an Account</a>
+                <a href="login.html">Log In</a>
+                <a href="features.html">Features</a>
+                <a href="developers.html" class="active">Developers</a>
+            </div>
+        </nav>
+    </header>
+
+    <section class="dev-hero">
+        <h1>The Minds Behind Budgie</h1>
+        <p>A small team with big dreams of financial clarity for everyone.</p>
+    </section>
+
+    <main class="team-container">
         
-    </body>
+        <div class="member-row">
+            <div class="member-photo">
+                <img src="/images/member1.jpg" alt="Developer Name">
+            </div>
+            <div class="member-info">
+                <span class="role">Project Manager/HTML Developer</span>
+                <h2>Emily Henderson</h2>
+                <p>Focused on the structural integrity of the application. Passionate about writing clean, efficient code and ensuring the "plumbing" of the database stays leak-free.</p>
+            </div>
+        </div>
+
+        <div class="member-row">
+            <div class="member-photo">
+                <img src="/images/member2.jpg" alt="Developer Name">
+            </div>
+            <div class="member-info">
+                <span class="role">Database Visionary</span>
+                <h2>Tim Templeton</h2>
+                <p>Creating the look and feel of Budgie. Dedicated to making complex financial data look beautiful, intuitive, and accessible for users of all backgrounds.</p>
+            </div>
+        </div>
+
+        <div class="member-row">
+            <div class="member-photo">
+                <img src="/images/member3.jpg" alt="Developer Name">
+            </div>
+            <div class="member-info">
+                <span class="role">Backend/JavaScript Specialist</span>
+                <h2>Zharinna Subido</h2>
+                <p>The guardian of data. Expert in relational database management, triggers, and ensuring that every transaction is securely and accurately recorded.</p>
+            </div>
+        </div>
+
+        <div class="member-row">
+            <div class="member-photo">
+                <img src="/images/member4.jpg" alt="Developer Name">
+            </div>
+            <div class="member-info">
+                <span class="role">Backend Expert</span>
+                <h2>Halena Aquino-Dunkin</h2>
+                <p>Keeping the "Budgie Cage" locked tight. Focused on user authentication, API security, and protecting the private financial lives of our community.</p>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <a href="index.html" class="footer-brand">
+                <img src="/images/sleepy-budgie.png" alt="Sleepy Budgie" class="logo" height="100"></a>
+            <div class="footer-links">
+                <a href="about.html">About</a>
+                <a href="features.html">Features</a>
+                <a href="login.html">Login</a>
+                <a href="developers.html">Developers</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
 </html>
