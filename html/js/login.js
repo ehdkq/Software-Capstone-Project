@@ -52,7 +52,7 @@ loginBtn.addEventListener("click", (event) => {
         }
     })
     .catch((error) => {
-        console.error('Error in login:', error);
+        //console.error('Error in login:', error);
         loginBtn.textContent = "Log In";
         loginBtn.style.pointerEvents = "auto";
     });
