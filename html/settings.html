@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/css/styles.css">
+    <title>Settings - Budgie</title>
+    <style>
+        /* Specific layout for the Settings Page */
+        .settings-container {
+            display: flex;
+            max-width: 1000px;
+            margin: 40px auto;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            min-height: 60vh;
+        }
+
+        /* Sidebar Styling */
+        .settings-sidebar {
+            width: 250px;
+            background-color: #f8f9fa;
+            border-right: 1px solid #eee;
+            padding: 20px 0;
+        }
+
+        .settings-nav-item {
+            padding: 15px 25px;
+            cursor: pointer;
+            color: #555;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .settings-nav-item:hover {
+            background-color: #eef2f3;
+            color: #97dbff;
+        }
+
+        .settings-nav-item.active {
+            background-color: #97dbff;
+            color: white;
+            border-left: 5px solid #333;
+        }
+
+        /* Content Area Styling */
+        .settings-content {
+            flex: 1;
+            padding: 40px;
+        }
+
+        .tab-content {
+            display: none; /* Hidden by default */
+        }
+
+        .tab-content.active {
+            display: block; /* Show active tab */
+        }
+
+        .danger-zone {
+            margin-top: 40px;
+            padding: 20px;
+            border: 2px solid #ff4c4c;
+            border-radius: 8px;
+            background-color: #fff5f5;
+        }
+
+        .danger-zone h3 {
+            color: #ff4c4c;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body class="dashboard-body" id="body-wrapper" style="display: none;">
+    
+    <header class="site-header">
+        <nav class="nav">
+            <a class="brand" href="dashboard.html">
+                <img src="/images/Budgie (1).png" alt="Budgie Home" class="logo" height="100"></a>
+            <div class="nav-links">
+                <a href="dashboard.html">Dashboard</a>
+                <a href="about.html">About</a>
+                <a href="llm-help.html">AI Help</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="settings-container">
+        <div class="settings-sidebar">
+            <div class="settings-nav-item active" onclick="showTab('profile')">Profile</div>
+            <div class="settings-nav-item" onclick="showTab('security')">Account Security</div>
+            <div class="settings-nav-item" onclick="showTab('preferences')">Preferences</div>
+        </div>
+
+        <div class="settings-content">
+            
+            <div id="profile" class="tab-content active">
+                <h2>Profile Settings</h2>
+                <p>Manage your public display information.</p>
+                <hr>
+                <br>
+                <label>First Name</label>
+                <input type="text" id="set-first-name" placeholder="Loading..." style="width: 100%; padding: 10px; margin: 10px 0;">
+                
+                <label>Last Name</label>
+                <input type="text" id="set-last-name" placeholder="Loading..." style="width: 100%; padding: 10px; margin: 10px 0;">
+                
+                <button class="action-btn" style="margin-top: 20px;">Update Profile</button>
+            </div>
+
+            <div id="security" class="tab-content">
+                <h2>Account Security</h2>
+                <p>Manage your account password and status.</p>
+                <hr>
+                
+                <div class="danger-zone">
+                    <h3>The Danger Zone</h3>
+                    <p>Once you delete your account, there is no going back. All your transactions, goals, and account balances will be permanently wiped.</p>
+                    <button id="delete-btn" class="action-btn" style="background-color: #ff4c4c;">Delete My Account Permanently</button>
+                </div>
+            </div>
+
+            <div id="preferences" class="tab-content">
+                <h2>Preferences</h2>
+                <p>Customize your Budgie experience.</p>
+                <hr>
+                <br>
+                <label>Currency Display</label>
+                <select style="width: 100%; padding: 10px; margin: 10px 0;">
+                    <option>USD ($)</option>
+                    <option>EUR (€)</option>
+                    <option>GBP (£)</option>
+                </select>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // --- 1. SETUP ---
+        const SUPABASE_URL = "https://izexxryxkqcgezdfjqlg.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_4F8U5q77q5yDs2xYLVsUKA_cPuVOHCc";
+        const mySupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // --- 2. SECURITY GUARD ---
+        async function checkSession() {
+            const { data: { session } } = await mySupabase.auth.getSession();
+            if (!session) { window.location.replace("login.html"); return; }
+            document.getElementById("body-wrapper").style.display = "block";
+            
+            // Populate profile fields
+            const { data: customer } = await mySupabase.from('customers').select('first_name, last_name').eq('user_id', session.user.id).single();
+            if (customer) {
+                document.getElementById('set-first-name').value = customer.first_name;
+                document.getElementById('set-last-name').value = customer.last_name;
+            }
+        }
+        checkSession();
+
+        // --- 3. TAB SWITCHING LOGIC ---
+        function showTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            // Deactivate all sidebar links
+            document.querySelectorAll('.settings-nav-item').forEach(nav => nav.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(tabId).classList.add('active');
+            // Highlight selected sidebar link
+            event.currentTarget.classList.add('active');
+        }
+
+        // --- 4. DELETE ACCOUNT LOGIC ---
+        document.getElementById('delete-btn').onclick = async function() {
+            const confirmName = confirm("Are you sure? This action is permanent.");
+            if (!confirmName) return;
+
+            const { error } = await mySupabase.rpc('delete_user');
+
+            if (error) {
+                alert("Deletion failed: " + error.message);
+            } else {
+                alert("Account successfully deleted. We're sorry to see you go!");
+                window.location.href = "index.html";
+            }
+        };
+    </script>
+</body>
+</html>
