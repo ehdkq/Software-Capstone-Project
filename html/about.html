@@ -1,84 +1,122 @@
 <!DOCTYPE html>
-    <html>
-        <head>
-            <link rel="stylesheet" href="/html/css/styles.css">
-            <Title>About</Title>
-            <style>
-                h1 {
-                    text-align: center;
-                    padding-top: 20px;
-                }
-                p {
-                    text-align: center;
-                }
-                .about-info {
-                    text-align: center;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    gap: 10px;
-                }
-                .smart-birb {
-                    width: 180px;
-                    height: auto;
-                }
-                .about-info p {
-                    display: flex;
-                    margin: 0;
-                    max-width: 80vw;
-                    text-align: center;
-                    justify-content: center;
-                    align-items: flex-start;
-                }
-            </style>
-        </head>
-        <header class="site-header">
-            <nav class="nav">
-                <a class="brand" href="index.html">
-                    <img src="/html/images/Budgie (1).png" alt="Commerce Bank Home" class="logo" height="100"></a>
-                <div class="nav-links">
-                    <a href="about.html">About</a>
-                    <a href="open-account.html">Open an Account</a>
-                    <a href="login.html">Log In</a>
-                    <a href="features.html">Features</a>
-                    <a href="llm-help.html">AI Help</a>
-                </div>
-                
-            </nav>
-        </header>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>About - Budgie</title>
+    <link rel="stylesheet" href="/html/css/styles.css">
+    <style>
+        /* Forces the footer to the bottom of the screen */
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #edf0f0; 
+        }
 
-        <body>
-            <div class="about-info">
-                <h1>Welcome to the Budgie Smart Budget Helper!</h1>
-                <br>
-                <h2>About the Tool:</h2>
-                <p>Budgie is a smart budgeting app designed to make managing money simple, approachable, and even a little fun. Inspired by the small but clever budgie bird, the app helps users track their finances, set meaningful goals, and build healthier financial habits. 
-                    Users can securely connect their bank accounts or manually enter transactions to monitor spending and stay on top of their budget.
-                </p>
-                <img src="/html/images/smart birb.png" class="smart-birb">
-                <p>
-                    Budgie goes beyond basic budgeting by helping users set and work toward personalized goals - whether that's paying off debt, saving for a vacation, or building an emergency fund. 
-                    An integrated AI chatbot provides guidance, answers budgeting questions, and offers helpful insights to keep users on track.
-                </p>
-                <p>
-                    With an intuitive interface and supportive tools, Budgie aims to make financial planning feel less overwhelming and more empowering.
-                </p>
+        /* Expands to fill empty space, pushing the footer down */
+        main {
+            flex: 1; 
+            display: flex;
+            align-items: center; /* Centers everything vertically */
+            padding: 40px 20px;
+        }
+
+        /* The invisible layout container (No box or shadows!) */
+        .about-info {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 800px;
+            margin: 0 auto; 
+        }
+
+        .about-info h1 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 2.5rem;
+        }
+
+        .about-info h2 {
+            margin: 0 0 25px 0;
+            color: rgb(151, 219, 255);
+            text-decoration: underline;
+            font-size: 1.4rem;
+            font-weight: normal;
+        }
+
+        .about-info p {
+            margin: 0 0 20px 0;
+            line-height: 1.6;
+            color: #555;
+            font-size: 1.25rem;
+        }
+
+        .smart-birb {
+            width: 180px;
+            height: auto;
+            margin: 15px 0 35px 0;
+            transition: transform 0.3s ease;
+        }
+
+        .smart-birb:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+
+<body>
+    <header class="site-header">
+        <nav class="nav">
+            <a class="brand" href="index.html">
+                <img src="/html/images/Budgie (1).png" alt="Budgie Home" class="logo" height="100">
+            </a>
+            <div class="nav-links">
+                <a href="about.html">About</a>
+                <a href="open-account.html">Open an Account</a>
+                <a href="login.html">Log In</a>
+                <a href="features.html">Features</a>
+                <a href="llm-help.html">AI Help</a>
             </div>
-        </body>
+        </nav>
+    </header>
 
-        <footer class="footer">
-            <div class="footer-content">
-                <a href="index.html" class="footer-brand">
-                    <img src="/html/images/sleepy-budgie.png" alt="Sleepy Budgie" class="logo" height="100"></a>
-             <div class="footer-links">
+    <main>
+        <div class="about-info">
+            <h1>Welcome to the Budgie Smart Budget Helper!</h1>
+            
+            <h2>About the Tool</h2>
+            <p>
+                Budgie is a smart budgeting app designed to make managing money simple, approachable, and even a little fun. Inspired by the small but clever budgie bird, the app helps users track their finances, set meaningful goals, and build healthier financial habits. Users can securely connect their bank accounts or manually enter transactions to monitor spending and stay on top of their budget.
+            </p>
+            
+            <img src="/html/images/smart birb.png" class="smart-birb" alt="Smart Budgie Bird">
+            
+            <p>
+                Budgie goes beyond basic budgeting by helping users set and work toward personalized goals - whether that's paying off debt, saving for a vacation, or building an emergency fund. An integrated AI chatbot provides guidance, answers budgeting questions, and offers helpful insights to keep users on track.
+            </p>
+            
+            <p>
+                With an intuitive interface and supportive tools, Budgie aims to make financial planning feel less overwhelming and more empowering.
+            </p>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <a href="index.html" class="footer-brand">
+                <img src="/html/images/sleepy-budgie.png" alt="Sleepy Budgie" class="logo" height="100">
+            </a>
+            <div class="footer-links">
                 <a href="about.html">About</a>
                 <a href="features.html">Features</a>
                 <a href="login.html">Login</a>
                 <a href="open-account.html">Sign Up</a>
                 <a href="developers.html">Developers</a>
             </div>
-            </div>
-
-        </footer>
-    </html>
+        </div>
+    </footer>
+</body>
+</html>

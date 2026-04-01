@@ -3,116 +3,116 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Home</title>
+    <title>Home - Budgie</title>
     <link rel="stylesheet" href="/html/css/styles.css">
     <style>
-      body {
-        background-color: #edf0f0;
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh;
-      }
-      main {
-        padding: 24px;
-        flex: 1;
-      }
-      .home-information {
-        padding: 10px;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-      }
-      .home-information h1 {
-        margin-bottom: 0;
-      }
-      
+        /* INVISIBLE LAYOUT ONLY - No fonts or colors here! */
+        body {
+            background-color: #edf0f0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center; /* This perfectly centers your content vertically */
+        }
+
+        .home-information {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
     </style>
 </head>
 
 <body>
-  <header class="site-header">
-    <nav class="nav">
-      <a class="brand" href="index.html">
-        <img src="/html/images/Budgie (1).png" alt="Commerce Bank Home" class="logo" height="100"></a>
-      <div class="nav-links">
-        <a href="about.html">About</a>
-        <a href="open-account.html">Open an Account</a>
-        <a href="login.html">Log In</a>
-        <a href="features.html">Features</a>
-        <a href="llm-help.html">AI Help</a>
-      </div>
-                
-    </nav>
-  </header>
+    <header class="site-header">
+        <nav class="nav">
+            <a class="brand" href="index.html">
+                <img src="/html/images/Budgie (1).png" alt="Budgie Home" class="logo" height="100">
+            </a>
+            <div class="nav-links">
+                <a href="about.html">About</a>
+                <a href="open-account.html">Open an Account</a>
+                <a href="login.html">Log In</a>
+                <a href="features.html">Features</a>
+                <a href="llm-help.html">AI Help</a>
+            </div>
+        </nav>
+    </header>
 
-  <main>
-    
-    <script>
-      const out = document.getElementById("out");
-      out.textContent = "Script started ✅";
-    </script>
+    <main>
+        
+        <div id="out" style="display: none;"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        <script>
+            const out = document.getElementById("out");
+            out.textContent = "Script started ✅";
+        </script>
 
-    <script>
-      
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-      function show(msg, obj) {
-        out.textContent = msg + (obj ? "\n\n" + JSON.stringify(obj, null, 2) : "");
-      }
+        <script>
+            function show(msg, obj) {
+                out.textContent = msg + (obj ? "\n\n" + JSON.stringify(obj, null, 2) : "");
+            }
 
-      window.addEventListener("error", (e) =>
-        show("JS error ❌", { message: e.message })
-      );
-      window.addEventListener("unhandledrejection", (e) =>
-        show("Promise error ❌", { reason: String(e.reason) })
-      );
+            window.addEventListener("error", (e) =>
+                show("JS error ❌", { message: e.message })
+            );
+            window.addEventListener("unhandledrejection", (e) =>
+                show("Promise error ❌", { reason: String(e.reason) })
+            );
 
-      const SUPABASE_URL = "https://izexxryxkqcgezdfjqlg.supabase.co";
-      const SUPABASE_KEY = "sb_publishable_4F8U5q77q5yDs2xYLVsUKA_cPuVOHCc";
+            // 🛑 PASTE YOUR SUPABASE URL AND KEY HERE 🛑
+            const SUPABASE_URL = "https://izexxryxkqcgezdfjqlg.supabase.co";
+            const SUPABASE_KEY = "sb_publishable_4F8U5q77q5yDs2xYLVsUKA_cPuVOHCc";
 
-      if (!window.supabase) {
-        show("Supabase library did NOT load ❌ (CDN blocked/offline?)");
-      } else {
-        show("Supabase library loaded ✅");
+            if (!window.supabase) {
+                show("Supabase library did NOT load ❌ (CDN blocked/offline?)");
+            } else {
+                show("Supabase library loaded ✅");
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        (async () => {
-          show("Querying Supabase… ⏳");
+                (async () => {
+                    show("Querying Supabase… ⏳");
+                    const { data, error } = await supabase.from("accounts").select("*").limit(5);
+                    if (error) show("Supabase returned an error ❌", error);
+                    else show("Success ✅ Data:", data);
+                })();
+            }
+        </script>
 
-          // 👇 CHANGE THIS to a real table name (example: "transactions")
-          const { data, error } = await supabase.from("accounts").select("*").limit(5);
-
-          if (error) show("Supabase returned an error ❌", error);
-          else show("Success ✅ Data:", data);
-        })();
-      }
-    </script>
-    <div class="home-information">
-      <h1>Welcome to the Budgie: The Smart Budget Helper!</h1>
-      <h3><i>Please be aware that not all financial advice may be accurate.</i></h3>
-      <p class="bio">
-        Welcome to Budgie! Our goal is to help people learn to <b><i>budget</i></b>
-        and <b><i>plan</i></b> for the future!
-      </p>
-    </div>
-  </main>
-
-  <footer class="footer">
-    <div class="footer-content">
-        <a href="index.html" class="footer-brand">
-            <img src="/html/images/sleepy-budgie.png" alt="Sleepy Budgie" class="logo" height="100"></a>
-        <div class="footer-links">
-            <a href="about.html">About</a>
-            <a href="features.html">Features</a>
-            <a href="login.html">Login</a>
-            <a href="open-account.html">Sign Up</a>
-            <a href="developers.html">Developers</a>
+        <div class="home-information">
+            <h1>Welcome to Budgie: The Smart Budget Helper!</h1>
+            <h3><i>Please be aware that not all financial advice may be accurate.</i></h3>
+            <p class="bio">
+                Welcome to Budgie! Our goal is to help people learn to <b><i>budget</i></b> and <b><i>plan</i></b> for the future!
+            </p>
+            
+            <a href="open-account.html" class="action-btn" style="padding: 15px 35px; font-size: 1.2rem; text-decoration: none; margin-top: 20px;">Get Started</a>
         </div>
-    </div>
+    </main>
 
-</footer>
-  
+    <footer class="footer">
+        <div class="footer-content">
+            <a href="index.html" class="footer-brand">
+                <img src="/html/images/sleepy-budgie.png" alt="Sleepy Budgie" class="logo" height="100">
+            </a>
+            <div class="footer-links">
+                <a href="about.html">About</a>
+                <a href="features.html">Features</a>
+                <a href="login.html">Login</a>
+                <a href="open-account.html">Sign Up</a>
+                <a href="developers.html">Developers</a>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>
