@@ -56,8 +56,9 @@ def verify_login(email, passw):
 # Create's a user account
 # Pre: takes user email and password as parameters
 # Post: returns True if the account was successfully created, False otherwise
+# Create's a user account along with customer and account rows
 @app.post("/create-account")
-def create_account(email, passw):
+def create_account(email, passw, firstN, lastN):
     byte_pwd = passw.encode('utf-8')
     salt_bytes = bcrypt.gensalt()
     pw_hash_bytes = bcrypt.hashpw(byte_pwd, salt_bytes)
@@ -65,41 +66,84 @@ def create_account(email, passw):
     pw_hash = pw_hash_bytes.decode('utf-8')
     now_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 
-    data = {
-        'user_id': str(uuid.uuid4()), 
-        'email': email, 
-        'password_hash': pw_hash, 
-        'password_salt': salt, 
-        'role': 'customer', 
-        'created_at': now_timestamp, 
+    user_id = str(uuid.uuid4())
+    account_id = str(uuid.uuid4())
+    customer_id = str(uuid.uuid4())
+
+    user_data = {
+        'user_id': user_id,
+        'email': email,
+        'password_hash': pw_hash,
+        'password_salt': salt,
+        'role': 'customer',
+        'created_at': now_timestamp,
         'password_updated_at': now_timestamp,
-        'account_id': str(uuid.uuid4())
-        }
+        'account_id': account_id
+    }
+
+    customer_data = {
+        'customer_id': customer_id,
+        'user_id': user_id,
+        'first_name': firstN,
+        'last_name': lastN,
+        'created_at': now_timestamp
+    }
+
+    account_data = {
+        'account_id': account_id,
+        'customer_id': customer_id,
+        'account_type': 'checking',
+        'balance': 0.0,
+        'created_at': now_timestamp
+    }
 
     try:
-        supabase.table("users").insert(data).execute()
-        return True
+        # Insert user
+        supabase.table("users").insert(user_data).execute()
+        # Insert customer
+        supabase.table("customers").insert(customer_data).execute()
+        # Insert account
+        supabase.table("accounts").insert(account_data).execute()
+
+        return {"success": True, "user_id": user_id, "customer_id": customer_id, "account_id": account_id}
     except Exception as e:
-        print(e)
-        return False
+        print("Error creating account:", e)
+        return {"success": False, "error": str(e)}
+
 
 # Deletes the users account
 # Pre: takes an email as a parameter
-# Post: returns True if the account was deleted, false otherwise
+# Post: returns True if the account was deleted, false otherwise@app.post("/account/delete-account")
 @app.post("/account/delete-account")
 def delete_account(email):
     try:
-        users = supabase.table("users").select("*").execute()
+        users_resp = supabase.table("users").select("*").eq("email", email).execute()
+        if not users_resp.data or len(users_resp.data) == 0:
+            return {"success": False, "error": "User not found"}
 
-        for user in users.data:
-            if user.get('email') == email:
-                supabase.table("users").delete().eq("email", email).execute()
-                return True
-        
-        return False
+        user = users_resp.data[0]
+        account_id = user.get("account_id")
+        user_id = user.get("user_id")
+
+        # Delete transactions tied to the account
+        supabase.table("transactions").delete().eq("account_id", account_id).execute()
+
+        # Delete goals tied to the account
+        supabase.table("goals").delete().eq("account_id", account_id).execute()
+
+        # Delete account row
+        supabase.table("accounts").delete().eq("account_id", account_id).execute()
+
+        # Delete customer row
+        supabase.table("customers").delete().eq("user_id", user_id).execute()
+
+        # Delete user row
+        supabase.table("users").delete().eq("user_id", user_id).execute()
+
+        return {"success": True}
     except Exception as e:
-
-        return False
+        print("Error deleting account:", e)
+        return {"success": False, "error": str(e)}
 
 # Gets all transactions tied to the specified user
 # Pre: takes a user ID as a parameter
