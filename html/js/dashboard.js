@@ -501,29 +501,41 @@ async function getCurrentBalance() {
     return parseFloat(text.replace('$', '')) || 0;
 }
 
-const editBalanceBtn = document.getElementById('edit-balance-btn');
-if (editBalanceBtn) {
-    editBalanceBtn.addEventListener('click', async () => {
-        const currentBalance = await getCurrentBalance();
+function toggleBalanceEdit() {
+    const form = document.getElementById('edit-balance-form');
+    const input = document.getElementById('new-balance-input');
+    const currentText = document.getElementById('display-balance').innerText;
 
-        const newBalanceInput = prompt("Enter new balance:", currentBalance);
+    const currentBalance = parseFloat(currentText.replace('$', '')) || 0;
 
-        if (newBalanceInput === null) return;
+    if (form.style.display === 'none' || form.style.display === '') {
+        form.style.display = 'block';
+        input.value = currentBalance;
+        input.focus();
+    } else {
+        form.style.display = 'none';
+    }
+}
 
-        const parsed = parseFloat(newBalanceInput);
-        if (isNaN(parsed)) {
-            alert("Invalid number");
-            return;
-        }
+async function saveBalance() {
+    const input = document.getElementById('new-balance-input');
+    const newBalance = parseFloat(input.value);
 
-        const success = await updateBalanceInBackend(parsed);
+    if (isNaN(newBalance)) {
+        alert("Please enter a valid number");
+        return;
+    }
 
-        if (success) {
-            await loadBalance();
-        } else {
-            alert("Failed to update balance");
-        }
-    });
+    const success = await updateBalanceInBackend(newBalance);
+
+    if (success) {
+        await loadBalance();
+
+        // Hide form after saving
+        document.getElementById('edit-balance-form').style.display = 'none';
+    } else {
+        alert("Failed to update balance");
+    }
 }
 
 // --- 5. Mock File Upload Simulation ---
