@@ -5,6 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/html/css/styles.css">
     <title>AI Help - Budgie</title>
+    <style>
+        .message p {
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        .message p:last-child {
+            margin-bottom: 0;
+        }
+        .message ul, .message ol {
+            margin-top: 5px;
+            margin-bottom: 10px;
+            padding-left: 20px;
+        }
+    </style>
 </head>
 <body class="chat-body">
     
@@ -60,25 +74,13 @@
         </div>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
         const chatForm = document.getElementById('chat-form');
         const chatInput = document.getElementById('chat-input');
         const chatMessages = document.getElementById('chat-messages');
 
-        function getBudgieResponse(userText) {
-            const text = userText.toLowerCase();
-            
-            if (text.includes('balance') || text.includes('money')) {
-                return "Based on your dashboard, your current balance is $4,250.00. You're doing great!";
-            } else if (text.includes('grocery') || text.includes('food')) {
-                return "A good rule of thumb is to spend about 10-15% of your take-home pay on groceries. Have you checked out Aldi or local farmer's markets?";
-            } else if (text.includes('hi') || text.includes('hello')) {
-                return "Hi there! Ready to tackle your finances today?";
-            } else {
-                return "That's an interesting question! Since I'm still learning, I might not have the exact answer yet, but tracking your expenses is always a good first step.";
-            }
-        }
-
+        // Helper function to append messages to the screen
         function appendMessage(text, sender) {
             const wrapper = document.createElement('div');
             wrapper.classList.add('message-wrapper');
@@ -87,26 +89,88 @@
             const bubble = document.createElement('div');
             bubble.classList.add('message');
             bubble.classList.add(sender === 'user' ? 'user-message' : 'ai-message');
-            bubble.textContent = text;
+            
+            // If it has text right away, format it. Otherwise, leave it blank (for the typing effect).
+            if (text) {
+                if (sender === 'ai') {
+                    bubble.innerHTML = marked.parse(text);
+                } else {
+                    bubble.textContent = text;
+                }
+            }
 
             wrapper.appendChild(bubble);
             chatMessages.appendChild(wrapper);
-
             chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            return { wrapper, bubble }; // Return both so we can target the bubble directly
         }
 
-        chatForm.addEventListener('submit', function(e) {
+        // --- THE NEW TYPING EFFECT FUNCTION ---
+        function typeOutMessage(element, fullText) {
+            let i = 0;
+            let currentText = "";
+            const typingSpeed = 15; // Milliseconds per character. Lower = faster!
+
+            const interval = setInterval(() => {
+                // Add one character at a time
+                currentText += fullText.charAt(i);
+                
+                // Parse the growing text into Markdown HTML
+                element.innerHTML = marked.parse(currentText);
+                
+                // Auto-scroll down as the text grows
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                i++;
+                // Stop the timer when we run out of text
+                if (i >= fullText.length) {
+                    clearInterval(interval);
+                }
+            }, typingSpeed);
+        }
+
+        chatForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const messageText = chatInput.value.trim();
             if (!messageText) return;
+            
+            // 1. Show user message instantly
             appendMessage(messageText, 'user');
             chatInput.value = '';
 
-            setTimeout(() => {
-                const response = getBudgieResponse(messageText);
-                appendMessage(response, 'ai');
-            }, 600);
+            // 2. Show temporary "thinking..." indicator
+            const thinkingElements = appendMessage("Budgie is thinking...", 'ai');
+            thinkingElements.bubble.style.fontStyle = "italic";
+            thinkingElements.bubble.style.opacity = "0.6";
+
+            try {
+                // 3. Send message to Python
+                const response = await fetch("http://127.0.0.1:8000/api/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: messageText })
+                });
+
+                // 4. Remove the "thinking" indicator
+                thinkingElements.wrapper.remove();
+
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // 5. Create an empty bubble, then trigger the typing effect!
+                    const aiElements = appendMessage("", 'ai');
+                    typeOutMessage(aiElements.bubble, data.reply);
+                    
+                } else {
+                    appendMessage("Oops! I'm having trouble connecting to my brain right now.", 'ai');
+                }
+            } catch (error) {
+                console.error("Chat Error:", error);
+                thinkingElements.wrapper.remove();
+                appendMessage("Error: Could not reach the Python server. Make sure it's running!", 'ai');
+            }
         });
     </script>
 </body>

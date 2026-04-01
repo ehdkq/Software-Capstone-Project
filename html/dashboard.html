@@ -219,19 +219,23 @@
         // ==========================================
 
         // --- 0. Python Login Initialization ---
-        const localUser = localStorage.getItem("userEmail");
-        if (localUser) {
-            // Set the greeting name
-            const name = localUser.split('@')[0];
-            document.getElementById("dynamic-greeting").textContent = `Welcome back, ${name}!`;
-            document.getElementById("user-greeting-new").textContent = `Welcome, ${name}!`;
-            
-            // Show and populate the floating profile circle
-            const profileCircle = document.getElementById("profile-circle");
-            profileCircle.style.display = "flex";
-            document.getElementById("profile-initial").textContent = name.charAt(0).toUpperCase();
-        }
+        const isLoggedIn = localStorage.getItem("isLoggedIn");
 
+        if (isLoggedIn === "true") {
+            // The user is logged in! Set up the generic greetings.
+            document.getElementById("dynamic-greeting").textContent = "Welcome back!";
+            document.getElementById("user-greeting-new").textContent = "Welcome to Budgie!";
+            
+            // Show the floating profile circle
+            const profileCircle = document.getElementById("profile-circle");
+            if (profileCircle) {
+                profileCircle.style.display = "flex";
+                document.getElementById("profile-initial").textContent = "U"; // "U" for User
+            }
+        } else {
+            // If they are NOT logged in, kick them out to protect the page
+            window.location.replace("login.html");
+        }
         // --- 1. Balance Logic ---
         let currentBalance = 0.00; 
 
@@ -441,7 +445,7 @@
 
         // --- 6. Logout Logic ---
         function handleLogout() {
-            localStorage.removeItem("userEmail"); 
+            localStorage.removeItem("isLoggedIn"); 
             window.location.href = "login.html";
         }
         document.getElementById("logout-btn-new").addEventListener("click", handleLogout);

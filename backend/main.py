@@ -4,6 +4,11 @@ from datetime import datetime
 import bcrypt
 import uuid
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from budgie_bot import get_ai_reply
+
+class ChatRequest(BaseModel):
+    message: str
 
 app = FastAPI()
 
@@ -230,3 +235,14 @@ print(add_transaction('080691cf-dd78-428e-a4ba-98e442940d6c', d))'''
 
 #print(create_account('backendtest2@test.com', 'test1234'))
 #print(verify_login('backendtest2@test.com', 'test1234'))
+
+@app.post("/api/chat")
+def chat_with_budgie(request: ChatRequest):
+    # 1. Grab the text the user typed
+    user_text = request.message
+    
+    # 2. Send it to your budgie_bot file to get the AI's answer
+    ai_answer = get_ai_reply(user_text)
+    
+    # 3. Send the answer back to the HTML page
+    return {"reply": ai_answer}

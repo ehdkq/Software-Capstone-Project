@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/html/css/styles.css">
     <title>Settings - Budgie</title>
     <style>
         /* Specific layout for the Settings Page */
@@ -78,7 +78,7 @@
     <header class="site-header">
         <nav class="nav">
             <a class="brand" href="dashboard.html">
-                <img src="/images/Budgie (1).png" alt="Budgie Home" class="logo" height="100"></a>
+                <img src="/html/images/Budgie (1).png" alt="Budgie Home" class="logo" height="100"></a>
             <div class="nav-links">
                 <a href="dashboard.html">Dashboard</a>
                 <a href="about.html">About</a>
@@ -147,15 +147,33 @@
 
         // --- 2. SECURITY GUARD ---
         async function checkSession() {
+            // 1. Check for your Python Login bucket
+            const isLoggedIn = localStorage.getItem("isLoggedIn");
+
+            // 2. Check for your groupmate's Supabase Session
             const { data: { session } } = await mySupabase.auth.getSession();
-            if (!session) { window.location.replace("login.html"); return; }
+
+            // 3. If NEITHER exist, kick them to the login page
+            if (!session && isLoggedIn !== "true") { 
+                window.location.replace("login.html"); 
+                return; 
+            }
+
+            // 4. If they pass the check, un-hide the settings page
             document.getElementById("body-wrapper").style.display = "block";
             
-            // Populate profile fields
-            const { data: customer } = await mySupabase.from('customers').select('first_name, last_name').eq('user_id', session.user.id).single();
-            if (customer) {
-                document.getElementById('set-first-name').value = customer.first_name;
-                document.getElementById('set-last-name').value = customer.last_name;
+            // 5. Populate profile fields (Only if using Supabase)
+            // Because your Python login just saves "true", it doesn't have your name yet!
+            if (session) {
+                const { data: customer } = await mySupabase.from('customers').select('first_name, last_name').eq('user_id', session.user.id).single();
+                if (customer) {
+                    document.getElementById('set-first-name').value = customer.first_name;
+                    document.getElementById('set-last-name').value = customer.last_name;
+                }
+            } else {
+                // If logged in via Python, just clear the "Loading..." text for now
+                document.getElementById('set-first-name').placeholder = "Python User";
+                document.getElementById('set-last-name').placeholder = "Details hidden";
             }
         }
         checkSession();

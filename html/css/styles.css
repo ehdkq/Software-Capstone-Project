@@ -6,7 +6,7 @@ body {
 .site-header {
   position: sticky;
   top: 0;
-  background: #97dbff;
+  background: rgb(151, 219, 255);
   border-bottom: 1px solid #e5e5e5;
   z-index: 1000;
 }
