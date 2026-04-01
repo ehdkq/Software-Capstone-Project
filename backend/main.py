@@ -126,8 +126,10 @@ def add_transaction(email, amount, t_type, m_id, m_name, m_code, desc, recurr):
             if user.get('email') == email:
                 acc_id = user.get('account_id')
                 
+                transaction_id = str(uuid.uuid4())  # Generate ID first
+                
                 data = {
-                    'transaction_id': str(uuid.uuid4()),
+                    'transaction_id': transaction_id,
                     'account_id': acc_id,
                     'amount': amount,
                     'transaction_type': t_type,
@@ -141,13 +143,12 @@ def add_transaction(email, amount, t_type, m_id, m_name, m_code, desc, recurr):
                  
                 result = supabase.table("transactions").insert(data).execute()
                 print(f"Transaction added successfully: {result}")
-                return {"success": True}
+                return {"success": True, "transaction_id": transaction_id}  # Return the ID
         
         print(f"User not found with email: {email}")
         return {"success": False, "error": "User not found"}
         
     except Exception as e:
-        # Print the FULL error to your terminal
         print("="*50)
         print("FULL ERROR MESSAGE:")
         print(str(e))
@@ -166,6 +167,26 @@ def delete_transaction(transaction_id):
     
     except Exception as e:
         return False
+
+# Edits a transaction on the user's account
+# Pre: takes the transaction_id, amount, t_type, desc as parameters
+# Post: returns true if the transaction was added, false otherwise
+@app.post("/transactions/edit-transaction")
+def edit_transaction(transaction_id, amount, t_type, desc):
+    try:
+        data = {
+            'amount': float(amount),
+            'transaction_type': t_type,
+            'description': desc
+        }
+        
+        supabase.table("transactions").update(data).eq("transaction_id", transaction_id).execute()
+        return {"success": True}
+    
+    except Exception as e:
+        print(f"Error editing transaction: {e}")
+        return {"success": False, "error": str(e)}
+        
     
 # Updates the users password
 # Pre: takes the user email and new desired password as parameters
@@ -195,7 +216,6 @@ def update_password(email, newpass):
         return False
 
 
-#TODO: test and fix
 # Gets all transactions tied to the specified user
 # Pre: takes a user ID as a parameter
 # Post: returns a list of dictionaries - each dictionary is a transaction
@@ -290,6 +310,56 @@ def delete_goal(goal_id):
     except Exception as e:
         print(f"Error in delete_goal: {e}")
         return {"success": False, "error": str(e)}
+
+
+
+# Gets balance tied to the specified user
+# Pre: takes a user ID as a parameter
+# Post: returns a float
+@app.get("/dashboard/get-balance")
+def get_balance(user_id):
+    try:
+        print(f'Querying for user_id: {user_id}')
+        user_response = supabase.table("users").select("*").eq("user_id", user_id).execute()
+        
+        
+        if user_response.data:
+            acc_id = user_response.data[0].get('account_id')
+            goals = supabase.table("accounts").select("balance").eq('account_id', acc_id).execute()
+            return goals
+        
+        print('User not found')
+        return {"data": []}
+        
+    except Exception as e:
+        print(f'Error: {e}')
+        return False
+
+
+
+# Updates the specified user's balance
+# Pre: takes a user ID and new balance as parameters
+# Post: returns success or failure
+@app.post("/dashboard/update-balance")
+def update_balance(user_id, new_balance):
+    try:
+        user_response = supabase.table("users").select("account_id").eq("user_id", user_id).execute()
+        
+        if not user_response.data:
+            return {"success": False, "error": "User not found"}
+        
+        acc_id = user_response.data[0].get("account_id")
+
+        supabase.table("accounts").update({
+            "balance": float(new_balance)
+        }).eq("account_id", acc_id).execute()
+
+        return {"success": True}
+    
+    except Exception as e:
+        print(f"Error updating balance: {e}")
+        return {"success": False, "error": str(e)}
+
 
 '''
 def forgot_password_email(email):
