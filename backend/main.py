@@ -64,20 +64,32 @@ def create_account(email, passw):
     salt = salt_bytes.decode('utf-8')
     pw_hash = pw_hash_bytes.decode('utf-8')
     now_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+    
+    new_user_id = str(uuid.uuid4())
+    new_account_id = str(uuid.uuid4())
 
     data = {
-        'user_id': str(uuid.uuid4()), 
+        'user_id': new_user_id, 
         'email': email, 
         'password_hash': pw_hash, 
         'password_salt': salt, 
         'role': 'customer', 
         'created_at': now_timestamp, 
         'password_updated_at': now_timestamp,
-        'account_id': str(uuid.uuid4())
+        'account_id': new_account_id
         }
 
     try:
         supabase.table("users").insert(data).execute()
+        
+        # --- THE REGISTRATION FIX ---
+        # Actually create the account in the accounts table so we don't get foreign key errors later!
+        supabase.table("accounts").insert({
+            "account_id": new_account_id,
+            "account_type": "checking"
+        }).execute()
+        # -----------------------------
+        
         return True
     except Exception as e:
         print(e)
@@ -130,6 +142,17 @@ def add_transaction(email, amount, t_type, m_id, m_name, m_code, desc, recurr):
         for user in users.data:
             if user.get('email') == email:
                 acc_id = user.get('account_id')
+                user_id = user.get('user_id')
+                
+                # --- THE SAFETY NET FIX ---
+                acc_check = supabase.table("accounts").select("account_id").eq("account_id", acc_id).execute()
+                if not acc_check.data:
+                    print(f"Creating missing account row for account_id: {acc_id}")
+                    # Added user_id to satisfy database rules
+                    supabase.table("accounts").insert({"account_id": acc_id,
+                                                       "account_type": "checking"
+                                                       }).execute()
+                # --------------------------
                 
                 data = {
                     'transaction_id': str(uuid.uuid4()),
@@ -244,6 +267,15 @@ def add_goal(user_id, category, target_amount):
         
         account_id = user_response.data[0].get('account_id')
         
+        # --- THE SAFETY NET FIX ---
+        acc_check = supabase.table("accounts").select("account_id").eq("account_id", account_id).execute()
+        if not acc_check.data:
+            print(f"Creating missing account row for account_id: {account_id}")
+            # Added user_id to satisfy database rules
+            supabase.table("accounts").insert({"account_id": account_id,
+                                               "account_type": "checking"}).execute()
+        # --------------------------
+
         # Check if goal already exists for this category
         existing_goal = supabase.table("goals").select("*").eq("account_id", account_id).eq("category", category).execute()
         
