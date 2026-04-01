@@ -38,6 +38,7 @@ async function secureDashboard() {
 async function loadUserData() {
     await loadTransactions();
     await loadGoals();
+    await loadBalance();
 }
 
 secureDashboard();
@@ -165,12 +166,10 @@ goalForm.addEventListener('submit', async function(e) {
 });
 
 async function deleteGoal(id) {
-    
     const success = await deleteGoalFromBackend(id);
     
     if (success) {
-        goals = goals.filter(g => g.id !== id);
-        renderGoals();
+        await loadGoals();  // Reload from backend instead of manual filtering
     } else {
         alert('Error deleting goal from database');
     }
@@ -293,39 +292,79 @@ async function deleteTransactionFromBackend(transactionId) {
     }
 }
 
+async function updateTransactionInBackend(transactionId, desc, type, amount) {
+    try {
+        const response = await fetch(
+            `${API_BASE_URL}/transactions/edit-transaction?` +
+            `transaction_id=${transactionId}` +
+            `&amount=${amount}` +
+            `&t_type=${encodeURIComponent(type)}` +
+            `&desc=${encodeURIComponent(desc)}`,
+            { method: 'POST' }
+        );
+        
+        const data = await response.json();
+        return data.success === true;
+        
+    } catch (error) {
+        console.error('Error updating transaction:', error);
+        return false;
+    }
+}
+
 transactionForm.addEventListener('submit', async function(e) {
     e.preventDefault(); 
+
     const desc = document.getElementById('t-desc').value;
     const type = document.getElementById('t-type').value;
     const amount = parseFloat(document.getElementById('t-amount').value);
 
     if (editingTransactionId !== null) {
-        // Update existing transaction
-        const index = transactions.findIndex(t => t.id === editingTransactionId);
-        if (index !== -1) {
-            transactions[index] = { id: editingTransactionId, desc, type, amount };
+        tSubmitBtn.textContent = 'Updating...';
+        tSubmitBtn.disabled = true;
+
+        const oldTransaction = transactions.find(t => t.id === editingTransactionId);
+        const success = await updateTransactionInBackend(editingTransactionId, desc, type, amount);
+        
+        if (success) {
+            const currentBalance = await getCurrentBalance();
+
+            let newBalance = currentBalance + oldTransaction.amount - amount;
+
+            await updateBalanceInBackend(newBalance);
+            await loadBalance();
+
+            await loadTransactions();
+
+            editingTransactionId = null; 
+            tSubmitBtn.textContent = 'Add'; 
+            transactionForm.reset();
+        } else {
+            alert('Error updating transaction');
         }
-        editingTransactionId = null; 
-        tSubmitBtn.textContent = 'Add'; 
-        transactionForm.reset();
-        renderTransactions();
+
+        tSubmitBtn.disabled = false;
+
     } else {
-        // Show loading state
         tSubmitBtn.textContent = 'Adding...';
         tSubmitBtn.disabled = true;
         
-        // Add new transaction to backend
         const success = await addTransactionToBackend(desc, type, amount);
         
         if (success) {
-            // Reload transactions from backend to get the new one
+            const currentBalance = await getCurrentBalance();
+
+            let newBalance = currentBalance - amount;
+
+            await updateBalanceInBackend(newBalance);
+            await loadBalance();
+
             await loadTransactions();
             transactionForm.reset();
         } else {
-            alert('Error adding transaction to database. Check console for details.');
+            alert('Error adding transaction to database.');
         }
         
-        // Reset button state
         tSubmitBtn.textContent = 'Add';
         tSubmitBtn.disabled = false;
     }
@@ -345,17 +384,20 @@ function editTransaction(id) {
 }
 
 async function deleteTransaction(id) {
+    const transactionToDelete = transactions.find(t => t.id === id);
+
     const success = await deleteTransactionFromBackend(id);
     
     if (success) {
         transactions = transactions.filter(t => t.id !== id);
-            
-        if (editingTransactionId === id) {
-            transactionForm.reset();
-            editingTransactionId = null;
-            tSubmitBtn.textContent = 'Add';
-        }
-            
+
+        const currentBalance = await getCurrentBalance();
+
+        let newBalance = currentBalance + transactionToDelete.amount;
+
+        await updateBalanceInBackend(newBalance);
+        await loadBalance();
+
         renderTransactions();
     } else {
         alert('Error deleting transaction from database');
@@ -373,10 +415,18 @@ function renderTransactions() {
             li.innerHTML = `
                 <span><strong>${t.desc}</strong> (${t.type})</span>
                 <span>$${t.amount.toFixed(2)} 
-                    <button onclick="editTransaction(${t.id})" style="background-color: #f0ad4e; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; margin-left: 10px;">Edit</button>
-                    <button onclick="deleteTransaction('${t.id}')" class="delete-btn">X</button>
+                    <button class="edit-btn" data-id="${t.id}" style="background-color: #f0ad4e; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; margin-left: 10px;">Edit</button>
+                    <button class="delete-btn" data-id="${t.id}">X</button>
                 </span>
             `;
+            
+            // Add event listeners after creating the element
+            const editBtn = li.querySelector('.edit-btn');
+            const deleteBtn = li.querySelector('.delete-btn');
+            
+            editBtn.addEventListener('click', () => editTransaction(t.id));
+            deleteBtn.addEventListener('click', () => deleteTransaction(t.id));
+            
             transactionList.appendChild(li);
         });
     }
@@ -408,6 +458,86 @@ function updateChartData() {
     spendingChart.update();
 }
 
+// Load balance from backend
+async function loadBalance() {
+    try {
+        const response = await fetch(
+            `${API_BASE_URL}/dashboard/get-balance?user_id=${currentUserId}`
+        );
+        const data = await response.json();
+        
+        if (data && data.data && data.data.length > 0) {
+            const balance = parseFloat(data.data[0].balance || 0);
+            document.getElementById('display-balance').innerText = `$${balance.toFixed(2)}`;
+        } else {
+            document.getElementById('display-balance').innerText = '$0.00';
+        }
+    } catch (error) {
+        console.error('Error loading balance:', error);
+        document.getElementById('display-balance').innerText = '$0.00';
+    }
+}
+
+async function updateBalanceInBackend(newBalance) {
+    try {
+        const response = await fetch(
+            `${API_BASE_URL}/dashboard/update-balance?` +
+            `user_id=${currentUserId}` +
+            `&new_balance=${newBalance}`,
+            { method: 'POST' }
+        );
+
+        const data = await response.json();
+        return data.success === true;
+
+    } catch (error) {
+        console.error('Error updating balance:', error);
+        return false;
+    }
+}
+
+async function getCurrentBalance() {
+    const text = document.getElementById('display-balance').innerText;
+    return parseFloat(text.replace('$', '')) || 0;
+}
+
+function toggleBalanceEdit() {
+    const form = document.getElementById('edit-balance-form');
+    const input = document.getElementById('new-balance-input');
+    const currentText = document.getElementById('display-balance').innerText;
+
+    const currentBalance = parseFloat(currentText.replace('$', '')) || 0;
+
+    if (form.style.display === 'none' || form.style.display === '') {
+        form.style.display = 'block';
+        input.value = currentBalance;
+        input.focus();
+    } else {
+        form.style.display = 'none';
+    }
+}
+
+async function saveBalance() {
+    const input = document.getElementById('new-balance-input');
+    const newBalance = parseFloat(input.value);
+
+    if (isNaN(newBalance)) {
+        alert("Please enter a valid number");
+        return;
+    }
+
+    const success = await updateBalanceInBackend(newBalance);
+
+    if (success) {
+        await loadBalance();
+
+        // Hide form after saving
+        document.getElementById('edit-balance-form').style.display = 'none';
+    } else {
+        alert("Failed to update balance");
+    }
+}
+
 // --- 5. Mock File Upload Simulation ---
 document.getElementById('statement-upload').addEventListener('change', function(e) {
     if(e.target.files.length > 0) {
@@ -423,5 +553,4 @@ document.getElementById('statement-upload').addEventListener('change', function(
 });
 
 // Initialize UI on first load
-document.getElementById('display-balance').innerText = '$0.00';
 renderTransactions();

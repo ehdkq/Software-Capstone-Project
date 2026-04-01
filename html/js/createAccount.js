@@ -10,11 +10,15 @@ createAccountBtn.addEventListener("click", (event) => {
 
     const emailAddress = document.getElementById('email-address').value;
     const newPassword = document.getElementById('password-input').value;
+    const fName = document.getElementById('first-name').value;
+    const lName = document.getElementById('last-name').value;
     const reEnterPassword = document.getElementById('reenter-password').value;
 
     const url = new URL("http://127.0.0.1:8000/create-account"); // Likely will change this for when hosting on Netlify
     url.searchParams.append('email',emailAddress);
     url.searchParams.append('passw',newPassword);
+    url.searchParams.append('firstN',fName);
+    url.searchParams.append('lastN',lName);
 
     // Security check!
     if (newPassword !== reEnterPassword) {
@@ -38,7 +42,7 @@ createAccountBtn.addEventListener("click", (event) => {
         return response.json();
     })
     .then(data => {
-        if (data === true) {
+        if (data.success) {
             console.log("Success:", data);
             
             // delay redirect

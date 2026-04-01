@@ -56,62 +56,94 @@ def verify_login(email, passw):
 # Create's a user account
 # Pre: takes user email and password as parameters
 # Post: returns True if the account was successfully created, False otherwise
+# Create's a user account along with customer and account rows
 @app.post("/create-account")
-def create_account(email, passw):
+def create_account(email, passw, firstN, lastN):
     byte_pwd = passw.encode('utf-8')
     salt_bytes = bcrypt.gensalt()
     pw_hash_bytes = bcrypt.hashpw(byte_pwd, salt_bytes)
     salt = salt_bytes.decode('utf-8')
     pw_hash = pw_hash_bytes.decode('utf-8')
     now_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
-    
-    new_user_id = str(uuid.uuid4())
-    new_account_id = str(uuid.uuid4())
 
-    data = {
-        'user_id': new_user_id, 
-        'email': email, 
-        'password_hash': pw_hash, 
-        'password_salt': salt, 
-        'role': 'customer', 
-        'created_at': now_timestamp, 
+    user_id = str(uuid.uuid4())
+    account_id = str(uuid.uuid4())
+    customer_id = str(uuid.uuid4())
+
+    user_data = {
+        'user_id': user_id,
+        'email': email,
+        'password_hash': pw_hash,
+        'password_salt': salt,
+        'role': 'customer',
+        'created_at': now_timestamp,
         'password_updated_at': now_timestamp,
-        'account_id': new_account_id
-        }
+        'account_id': account_id
+    }
+
+    customer_data = {
+        'customer_id': customer_id,
+        'user_id': user_id,
+        'first_name': firstN,
+        'last_name': lastN,
+        'created_at': now_timestamp
+    }
+
+    account_data = {
+        'account_id': account_id,
+        'customer_id': customer_id,
+        'account_type': 'checking',
+        'balance': 0.0,
+        'created_at': now_timestamp
+    }
 
     try:
-        supabase.table("users").insert(data).execute()
-        
-        # --- THE REGISTRATION FIX ---
-        # Actually create the account in the accounts table so we don't get foreign key errors later!
-        supabase.table("accounts").insert({
-            "account_id": new_account_id,
-            "account_type": "checking"
-        }).execute()
-        # -----------------------------
-        
-        return True
+        # Insert user
+        supabase.table("users").insert(user_data).execute()
+        # Insert customer
+        supabase.table("customers").insert(customer_data).execute()
+        # Insert account
+        supabase.table("accounts").insert(account_data).execute()
+
+        return {"success": True, "user_id": user_id, "customer_id": customer_id, "account_id": account_id}
     except Exception as e:
-        print(e)
-        return False
+        print("Error creating account:", e)
+        return {"success": False, "error": str(e)}
+
 
 # Deletes the users account
 # Pre: takes an email as a parameter
-# Post: returns True if the account was deleted, false otherwise
+# Post: returns True if the account was deleted, false otherwise@app.post("/account/delete-account")
 @app.post("/account/delete-account")
 def delete_account(email):
     try:
-        users = supabase.table("users").select("*").execute()
+        users_resp = supabase.table("users").select("*").eq("email", email).execute()
+        if not users_resp.data or len(users_resp.data) == 0:
+            return {"success": False, "error": "User not found"}
 
-        for user in users.data:
-            if user.get('email') == email:
-                supabase.table("users").delete().eq("email", email).execute()
-                return True
-        
-        return False
+        user = users_resp.data[0]
+        account_id = user.get("account_id")
+        user_id = user.get("user_id")
+
+        # Delete transactions tied to the account
+        supabase.table("transactions").delete().eq("account_id", account_id).execute()
+
+        # Delete goals tied to the account
+        supabase.table("goals").delete().eq("account_id", account_id).execute()
+
+        # Delete account row
+        supabase.table("accounts").delete().eq("account_id", account_id).execute()
+
+        # Delete customer row
+        supabase.table("customers").delete().eq("user_id", user_id).execute()
+
+        # Delete user row
+        supabase.table("users").delete().eq("user_id", user_id).execute()
+
+        return {"success": True}
     except Exception as e:
-
-        return False
+        print("Error deleting account:", e)
+        return {"success": False, "error": str(e)}
 
 # Gets all transactions tied to the specified user
 # Pre: takes a user ID as a parameter
@@ -142,20 +174,11 @@ def add_transaction(email, amount, t_type, m_id, m_name, m_code, desc, recurr):
         for user in users.data:
             if user.get('email') == email:
                 acc_id = user.get('account_id')
-                user_id = user.get('user_id')
                 
-                # --- THE SAFETY NET FIX ---
-                acc_check = supabase.table("accounts").select("account_id").eq("account_id", acc_id).execute()
-                if not acc_check.data:
-                    print(f"Creating missing account row for account_id: {acc_id}")
-                    # Added user_id to satisfy database rules
-                    supabase.table("accounts").insert({"account_id": acc_id,
-                                                       "account_type": "checking"
-                                                       }).execute()
-                # --------------------------
+                transaction_id = str(uuid.uuid4())  # Generate ID first
                 
                 data = {
-                    'transaction_id': str(uuid.uuid4()),
+                    'transaction_id': transaction_id,
                     'account_id': acc_id,
                     'amount': amount,
                     'transaction_type': t_type,
@@ -169,13 +192,12 @@ def add_transaction(email, amount, t_type, m_id, m_name, m_code, desc, recurr):
                  
                 result = supabase.table("transactions").insert(data).execute()
                 print(f"Transaction added successfully: {result}")
-                return {"success": True}
+                return {"success": True, "transaction_id": transaction_id}  # Return the ID
         
         print(f"User not found with email: {email}")
         return {"success": False, "error": "User not found"}
         
     except Exception as e:
-        # Print the FULL error to your terminal
         print("="*50)
         print("FULL ERROR MESSAGE:")
         print(str(e))
@@ -194,6 +216,26 @@ def delete_transaction(transaction_id):
     
     except Exception as e:
         return False
+
+# Edits a transaction on the user's account
+# Pre: takes the transaction_id, amount, t_type, desc as parameters
+# Post: returns true if the transaction was added, false otherwise
+@app.post("/transactions/edit-transaction")
+def edit_transaction(transaction_id, amount, t_type, desc):
+    try:
+        data = {
+            'amount': float(amount),
+            'transaction_type': t_type,
+            'description': desc
+        }
+        
+        supabase.table("transactions").update(data).eq("transaction_id", transaction_id).execute()
+        return {"success": True}
+    
+    except Exception as e:
+        print(f"Error editing transaction: {e}")
+        return {"success": False, "error": str(e)}
+        
     
 # Updates the users password
 # Pre: takes the user email and new desired password as parameters
@@ -223,7 +265,6 @@ def update_password(email, newpass):
         return False
 
 
-#TODO: test and fix
 # Gets all transactions tied to the specified user
 # Pre: takes a user ID as a parameter
 # Post: returns a list of dictionaries - each dictionary is a transaction
@@ -327,6 +368,56 @@ def delete_goal(goal_id):
     except Exception as e:
         print(f"Error in delete_goal: {e}")
         return {"success": False, "error": str(e)}
+
+
+
+# Gets balance tied to the specified user
+# Pre: takes a user ID as a parameter
+# Post: returns a float
+@app.get("/dashboard/get-balance")
+def get_balance(user_id):
+    try:
+        print(f'Querying for user_id: {user_id}')
+        user_response = supabase.table("users").select("*").eq("user_id", user_id).execute()
+        
+        
+        if user_response.data:
+            acc_id = user_response.data[0].get('account_id')
+            goals = supabase.table("accounts").select("balance").eq('account_id', acc_id).execute()
+            return goals
+        
+        print('User not found')
+        return {"data": []}
+        
+    except Exception as e:
+        print(f'Error: {e}')
+        return False
+
+
+
+# Updates the specified user's balance
+# Pre: takes a user ID and new balance as parameters
+# Post: returns success or failure
+@app.post("/dashboard/update-balance")
+def update_balance(user_id, new_balance):
+    try:
+        user_response = supabase.table("users").select("account_id").eq("user_id", user_id).execute()
+        
+        if not user_response.data:
+            return {"success": False, "error": "User not found"}
+        
+        acc_id = user_response.data[0].get("account_id")
+
+        supabase.table("accounts").update({
+            "balance": float(new_balance)
+        }).eq("account_id", acc_id).execute()
+
+        return {"success": True}
+    
+    except Exception as e:
+        print(f"Error updating balance: {e}")
+        return {"success": False, "error": str(e)}
+
 
 '''
 def forgot_password_email(email):
