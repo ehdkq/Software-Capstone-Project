@@ -3,6 +3,15 @@
         <head>
             <Title>Sign Up!</Title>
             <link rel="stylesheet" href="/html/css/styles.css">
+            <script>
+        if (localStorage.getItem('budgieTheme') === 'dark') {
+            document.documentElement.classList.add('dark-theme');
+            // Adding to body when it loads
+            window.addEventListener('DOMContentLoaded', () => {
+                document.body.classList.add('dark-theme');
+            });
+        }
+    </script>
             <style>
                 * {
                     box-sizing: border-box;

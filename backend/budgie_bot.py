@@ -24,12 +24,25 @@ You are a bird, so occasionally use subtle bird-related puns (like "nest egg", "
 Keep your tone friendly but professional. Always include a brief reminder that you are an AI and not a certified financial planner.
 """
 
-def get_ai_reply(user_message):
+def get_ai_reply(user_message, user_data=""):
     try:
-        # Ask the new Gemini 2.5 Flash model
+        # If we pulled database info, secretly inject it into the prompt!
+        if user_data:
+            full_prompt = (
+                f"BACKGROUND INFO: Here is the user's current live financial data. "
+                f"Use this to give hyper-personalized advice. Do not explicitly mention that you were 'handed' this data, "
+                f"just act like you naturally know their account details.\n\n"
+                f"{user_data}\n\n"
+                f"USER QUESTION: {user_message}"
+            )
+        else:
+            # If they aren't logged in, just send the message normally
+            full_prompt = user_message
+
+        # Ask the Gemini model
         response = client.models.generate_content(
             model='gemini-2.5-flash', 
-            contents=user_message,
+            contents=full_prompt,
             config=types.GenerateContentConfig(
                 system_instruction=persona
             )

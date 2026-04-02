@@ -1,13 +1,46 @@
+/* --- THEME VARIABLES --- */
+:root {
+  --bg-color: #edf0f0;
+  --text-color: #333333;
+  --card-bg: #ffffff;
+  --border-color: #eeeeee;
+  --input-bg: #ffffff;
+  --input-border: #ccc;
+  --footer-bg: #f5f5f5;
+  --chat-msg-bg: #e9ecef;
+}
+
+body.dark-theme {
+  --bg-color: #121212;
+  --text-color: #e0e0e0;
+  --card-bg: #1e1e1e;
+  --border-color: #333333;
+  --input-bg: #2a2a2a;
+  --input-border: #444;
+  --footer-bg: #1a1a1a;
+  --chat-msg-bg: #333333;
+}
+
+/* --- BASE STYLES --- */
 body {
   margin: 0;
   font-family: system-ui, Arial, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Ensure text elements flip to white in dark mode */
+h1, h2, h3, p, label {
+  color: var(--text-color);
+  transition: color 0.3s ease;
 }
 
 .site-header {
   position: sticky;
   top: 0;
   background: rgb(151, 219, 255);
-  border-bottom: 1px solid #e5e5e5;
+  border-bottom: 1px solid var(--border-color);
   z-index: 1000;
 }
 
@@ -19,12 +52,14 @@ body {
   color: white;
   flex-wrap: nowrap;
 }
+
 .nav-links {
   margin-left: auto;
   display: flex;
   gap: 20px;
   overflow-x: auto;
 }
+
 .nav-links a {
   white-space: nowrap;
 }
@@ -40,7 +75,6 @@ body {
   height: 48px;
   width: auto;
   display: block;
-  
 }
 
 .nav a {
@@ -54,40 +88,39 @@ body {
   background: rgba(0,0,0,0.06);
 }
 
+.home-information h1 {
+  font-size: 4vw;
+  padding-top: 5px;
+  padding-bottom: 0px;
+  padding-left: 5px;
+  padding-right: 5px;
+  text-align: center;
+}
 
+.home-information h3 {
+  font-size: 1vw;
+  padding: 0vw;
+  text-align: center;
+  text-decoration: underline;
+}
 
-.home-information {
-  h1 {
-    font-size: 4vw;
-    padding-top: 5px;
-    padding-bottom: 0px;
-    padding-left: 5px;
-    padding-right: 5px;
-    text-align: center;
-  }
-  h3 {
-    font-size: 1vw;
-    padding: 0vw;
-    text-align: center;
-    text-decoration: underline;
-  }
-  .bio {
-    text-align: center;
-    padding-top: 2vw;
-  }
+.home-information .bio {
+  text-align: center;
+  padding-top: 2vw;
 }
 
 .bottom-home {
   display: flex;
   padding: 15px;
-  p {
-    padding-right: 15px;
-    
-  }
-  a {
-    padding: 10px;
-    flex-direction: row;
-  }
+}
+
+.bottom-home p {
+  padding-right: 15px;
+}
+
+.bottom-home a {
+  padding: 10px;
+  flex-direction: row;
 }
 
 .login-credentials {
@@ -95,31 +128,35 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  
-  h1 {
-    padding-top: 10px;
-    font-size: 2vw;
-    width: 100%;
-    text-align: center;
-  }
-  p {
-    text-align: center;
-    font-size: 1vw;
-  }
-  #email-login, #password-login {
-    max-width: 200px;
-    width: 30vw;
-    text-align: left;
-  }
-  .form-row input {
-    width: 10vw;
-  }
+}
+
+.login-credentials h1 {
+  padding-top: 10px;
+  font-size: 2vw;
+  width: 100%;
+  text-align: center;
+}
+
+.login-credentials p {
+  text-align: center;
+  font-size: 1vw;
+}
+
+#email-login, #password-login {
+  max-width: 200px;
+  width: 30vw;
+  text-align: left;
+}
+
+.form-row input {
+  width: 10vw;
 }
 
 .login-body {
   margin: 0;
   min-height: 100vh;
 }
+
 .login-credentials {
   margin: 0;
   min-height: 100vh;
@@ -129,16 +166,18 @@ body {
   padding: 20px;
   text-align: center;
 }
+
 .content-box {
-  
   width: 100%;
   max-width: 500px;
   padding: 30px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
   border-radius: 12px;
-  background: white;
+  background: var(--card-bg);
   box-shadow: 0 4px 12px rgba(0,0,0,.8);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
+
 .register-body {
   margin: 0;
   min-height: 100vh;
@@ -148,14 +187,14 @@ body {
   padding: 20px;
   text-align: center;
 }
+
 .footer {
- 
   bottom: 0;
   width: 100%;
   padding: 10px 20px;
-  background: #f5f5f5;
-  border-top: 1px solid #ccc;
-  
+  background: var(--footer-bg);
+  border-top: 1px solid var(--border-color);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .footer-content {
@@ -169,7 +208,6 @@ body {
 .footer-brand {
   text-decoration: none;
   color: inherit;
-
 }
 
 .footer-links {
@@ -177,6 +215,7 @@ body {
   gap: 10px;
   flex-wrap: wrap;
 }
+
 .footer-links a {
   text-decoration: none;
   color: inherit;
@@ -188,6 +227,7 @@ body {
 .footer-links a:hover {
   background: rgba(0,0,0,.6);
 }
+
 main {
   padding: 24px;
   flex: 1;
@@ -196,297 +236,300 @@ main {
 /* --- Dashboard Specific Styles --- */
 
 .dashboard-body {
-    background-color: #edf0f0; /* Matching the background from your index.html */
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
+  background-color: var(--bg-color);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 .dashboard-main-content {
-    flex: 1;
-    padding: 40px 20px;
-    max-width: 1000px;
-    margin: 0 auto;
-    width: 100%;
-    box-sizing: border-box;
+  flex: 1;
+  padding: 40px 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .dashboard-header-text {
-    margin-bottom: 30px;
+  margin-bottom: 30px;
 }
 
 .dashboard-header-text h2 {
-    margin: 0 0 5px 0;
+  margin: 0 0 5px 0;
 }
 
 /* 2x2 Grid Layout */
 .dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 24px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
 }
 
 /* The Cards */
 .dashboard-card {
-    background: white;
-    border-radius: 16px; /* Rounded edges */
-    padding: 24px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtle resting shadow */
-    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth animation setup */
-    display: flex;
-    flex-direction: column;
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Hover Effects */
 .dashboard-card:hover {
-    transform: translateY(-5px); /* Moves the card up slightly */
-    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.1), 0 4px 8px rgba(0, 0, 0, 0.05); /* Larger shadow makes it 'pop' */
+  transform: translateY(-5px);
+  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.1), 0 4px 8px rgba(0, 0, 0, 0.05);
 }
 
 .dashboard-card h3 {
-    margin-top: 0;
-    color: #333;
-    border-bottom: 2px solid #edf0f0;
-    padding-bottom: 10px;
+  margin-top: 0;
+  border-bottom: 2px solid var(--bg-color);
+  padding-bottom: 10px;
 }
 
 .card-amount {
-    font-size: 2.5rem;
-    color: #2c3e50;
-    margin: 10px 0;
+  font-size: 2.5rem;
+  color: var(--text-color);
+  margin: 10px 0;
 }
 
 .transaction-list {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
 }
 
 .transaction-list li {
-    padding: 8px 0;
-    border-bottom: 1px solid #eee;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-color);
 }
 
 /* Simple CSS Progress Bar */
 .progress-bar-bg {
-    background-color: #edf0f0;
-    border-radius: 8px;
-    height: 12px;
-    width: 100%;
-    margin-top: 10px;
-    overflow: hidden;
+  background-color: var(--bg-color);
+  border-radius: 8px;
+  height: 12px;
+  width: 100%;
+  margin-top: 10px;
+  overflow: hidden;
 }
 
 .progress-bar-fill {
-    background-color: #97dbff; /* Using your header color for consistency */
-    height: 100%;
-    border-radius: 8px;
+  background-color: #97dbff;
+  height: 100%;
+  border-radius: 8px;
 }
 
 .ai-teaser-card {
-    background: linear-gradient(135deg, #ffffff 0%, #f0f8ff 100%);
+  background: var(--card-bg); 
 }
 
 .action-btn {
-    margin-top: auto;
-    display: inline-block;
-    background-color: #97dbff;
-    color: #333;
-    text-decoration: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    text-align: center;
-    font-weight: bold;
-    transition: background-color 0.2s;
+  margin-top: auto;
+  display: inline-block;
+  background-color: #97dbff;
+  color: #333;
+  text-decoration: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: bold;
+  transition: background-color 0.2s;
+  border: none;
 }
 
 .action-btn:hover {
-    background-color: #7bc5f0;
+  background-color: #7bc5f0;
 }
 
 /* Mobile Responsiveness: Stacks into a 1-column layout on small screens */
 @media (max-width: 768px) {
-    .dashboard-grid {
-        grid-template-columns: 1fr;
-    }
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Transaction Form & List Styles */
 .transaction-form {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
-    flex-wrap: wrap;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
 }
 
 .transaction-form input, 
 .transaction-form select {
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    flex: 1;
+  padding: 8px;
+  border: 1px solid var(--input-border);
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  border-radius: 4px;
+  flex: 1;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .transaction-list li {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .delete-btn {
-    background: #ff4d4d;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 4px 8px;
-    cursor: pointer;
-    margin-left: 10px;
+  background: #ff4d4d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  margin-left: 10px;
 }
 
 .delete-btn:hover {
-    background: #cc0000;
+  background: #cc0000;
 }
 
 .upload-section {
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #eee;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--border-color);
 }
 
 /* --- Updated Card 4 Styles (Bigger Image) --- */
-
-.ai-teaser-card {
-    background: white; /* Ensure solid white background to blend the image */
-}
-
 .ai-assistant-img {
-    max-width: 100%; /* Keeps it from overflowing the card horizontally */
-    height: auto;     /* Maintains aspect ratio */
-    display: block;   /* Allows centering with margin: auto */
-    margin: 10px auto; /* Centers the image */
-
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 10px auto;
 }
 
 .chat-body {
-    background-color: #edf0f0;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
+  background-color: var(--bg-color);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 .chat-main-content {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    padding: 40px 20px;
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
 }
 
 .chat-container {
-    background: white;
-    width: 100%;
-    max-width: 800px;
-    height: 70vh;
-    border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+  background: var(--card-bg);
+  width: 100%;
+  max-width: 800px;
+  height: 70vh;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: background-color 0.3s ease;
 }
 
 .chat-header {
-    background: #97dbff;
-    padding: 15px 20px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    border-bottom: 1px solid #e5e5e5;
+  background: #97dbff;
+  padding: 15px 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .chat-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: white;
-    padding: 2px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: white;
+  padding: 2px;
 }
 
 .chat-messages {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    background-color: #fcfcfc;
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  background-color: var(--bg-color);
 }
 
 .message-wrapper {
-    display: flex;
-    width: 100%;
+  display: flex;
+  width: 100%;
 }
 
 .user-wrapper {
-    justify-content: flex-end;
+  justify-content: flex-end;
 }
 
 .ai-wrapper {
-    justify-content: flex-start;
+  justify-content: flex-start;
 }
 
 .message {
-    max-width: 70%;
-    padding: 12px 16px;
-    border-radius: 16px;
-    line-height: 1.4;
-    font-size: 0.95rem;
+  max-width: 70%;
+  padding: 12px 16px;
+  border-radius: 16px;
+  line-height: 1.4;
+  font-size: 0.95rem;
 }
 
 .ai-message {
-    background-color: #e9ecef;
-    color: #333;
-    border-bottom-left-radius: 4px;
+  background-color: var(--chat-msg-bg);
+  color: var(--text-color);
+  border-bottom-left-radius: 4px;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .user-message {
-    background-color: #007bff;
-    color: white;
-    border-bottom-right-radius: 4px;
+  background-color: #007bff;
+  color: white;
+  border-bottom-right-radius: 4px;
 }
 
 .chat-input-area {
-    display: flex;
-    padding: 15px;
-    background: white;
-    border-top: 1px solid #eee;
-    gap: 10px;
+  display: flex;
+  padding: 15px;
+  background: var(--card-bg);
+  border-top: 1px solid var(--border-color);
+  gap: 10px;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .chat-input-area input {
-    flex: 1;
-    padding: 12px;
-    border: 1px solid #ccc;
-    border-radius: 24px;
-    outline: none;
-    font-size: 1rem;
+  flex: 1;
+  padding: 12px;
+  border: 1px solid var(--input-border);
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  border-radius: 24px;
+  outline: none;
+  font-size: 1rem;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .chat-input-area input:focus {
-    border-color: #97dbff;
+  border-color: #97dbff;
 }
 
 .send-btn {
-    background-color: #97dbff;
-    color: #333;
-    border: none;
-    padding: 0 20px;
-    border-radius: 24px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.2s;
+  background-color: #97dbff;
+  color: #333;
+  border: none;
+  padding: 0 20px;
+  border-radius: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
 .send-btn:hover {
-    background-color: #7bc5f0;
+  background-color: #7bc5f0;
 }

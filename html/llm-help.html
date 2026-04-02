@@ -3,9 +3,29 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="/html/css/styles.css">
     <title>AI Help - Budgie</title>
+    <link rel="stylesheet" href="/html/css/styles.css">
+    <script>
+        if (localStorage.getItem('budgieTheme') === 'dark') {
+            document.documentElement.classList.add('dark-theme');
+            // Adding to body when it loads
+            window.addEventListener('DOMContentLoaded', () => {
+                document.body.classList.add('dark-theme');
+            });
+        }
+    </script>
     <style>
+        /* Invisible layout logic to keep the footer at the bottom */
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+        }
+        main {
+            flex: 1; 
+        }
+        /* Makes the markdown text fit perfectly in the chat bubbles */
         .message p {
             margin-top: 0;
             margin-bottom: 10px;
@@ -18,14 +38,25 @@
             margin-bottom: 10px;
             padding-left: 20px;
         }
+        /* Guest badge styling */
+        .guest-badge {
+            font-size: 0.75rem;
+            background: #ffcc00;
+            color: #333;
+            padding: 2px 6px;
+            border-radius: 8px;
+            margin-left: 8px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body class="chat-body">
-    
+
     <header class="site-header">
         <nav class="nav">
             <a class="brand" href="index.html">
-                <img src="/html/images/Budgie (1).png" alt="Commerce Bank Home" class="logo" height="100"></a>
+                <img src="/html/images/Budgie (1).png" alt="Budgie Home" class="logo" height="100">
+            </a>
             <div class="nav-links">
                 <a href="about.html">About</a>
                 <a href="open-account.html">Open an Account</a>
@@ -36,25 +67,22 @@
     </header>
 
     <main class="chat-main-content">
-        <div class="chat-container">
+        <div class="chat-container" id="chat-wrapper">
             <div class="chat-header">
-                <img src="/html/images/sleepy-budgie.png" alt="Budgie" class="chat-avatar">
+                <img src="/html/images/sleepy-budgie.png" alt="Budgie Avatar" class="chat-avatar">
                 <div>
-                    <h3 style="margin: 0; color: #333;">Budgie AI</h3>
+                    <h3 style="margin: 0; color: #333; display: flex; align-items: center;">
+                        Budgie AI <span id="status-badge"></span>
+                    </h3>
                     <p style="margin: 0; font-size: 0.8rem; color: #666;">Online</p>
                 </div>
             </div>
-
+            
             <div class="chat-messages" id="chat-messages">
-                <div class="message-wrapper ai-wrapper">
-                    <div class="message ai-message">
-                        Hello! I'm Budgie. I can help you understand your spending or give you budgeting tips. What's on your mind?
-                    </div>
                 </div>
-            </div>
 
             <form class="chat-input-area" id="chat-form">
-                <input type="text" id="chat-input" placeholder="Ask about your budget..." autocomplete="off" required>
+                <input type="text" id="chat-input" placeholder="Ask about your budget or general finance..." autocomplete="off" required>
                 <button type="submit" class="send-btn">Send</button>
             </form>
         </div>
@@ -63,7 +91,8 @@
     <footer class="footer">
         <div class="footer-content">
             <a href="index.html" class="footer-brand">
-                <img src="/html/images/sleepy-budgie.png" alt="Sleepy Budgie" class="logo" height="100"></a>
+                <img src="/html/images/sleepy-budgie.png" alt="Sleepy Budgie" class="logo" height="100">
+            </a>
             <div class="footer-links">
                 <a href="about.html">About</a>
                 <a href="features.html">Features</a>
@@ -75,12 +104,38 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
     <script>
+        // --- 1. Security & Status Check ---
+        const isLoggedIn = localStorage.getItem("isLoggedIn");
+        const currentUserId = localStorage.getItem("userId");
+        const chatMessages = document.getElementById('chat-messages');
+        const statusBadge = document.getElementById('status-badge');
+
+        // Dynamic Greeting based on whether they are logged in or a guest
+        let initialGreeting = "";
+        let finalUserId = null;
+
+        if (isLoggedIn === "true" && currentUserId) {
+            initialGreeting = "Welcome back! I've got your live account data pulled up. Do you want to review your balance, goals, or recent spending?";
+            finalUserId = currentUserId; // Send real ID
+        } else {
+            initialGreeting = "Hello! I'm Budgie. I can give you general financial advice right now! *(If you want me to crunch the numbers on your actual budget, just log in!)*";
+            statusBadge.innerHTML = '<span class="guest-badge">Guest Mode</span>';
+            finalUserId = null; // Send null so Python knows it's a guest
+        }
+
+        // Put the greeting on the screen
+        chatMessages.innerHTML = `
+            <div class="message-wrapper ai-wrapper">
+                <div class="message ai-message">${marked.parse(initialGreeting)}</div>
+            </div>
+        `;
+
+        // --- 2. Chat Logic ---
         const chatForm = document.getElementById('chat-form');
         const chatInput = document.getElementById('chat-input');
-        const chatMessages = document.getElementById('chat-messages');
 
-        // Helper function to append messages to the screen
         function appendMessage(text, sender) {
             const wrapper = document.createElement('div');
             wrapper.classList.add('message-wrapper');
@@ -90,7 +145,6 @@
             bubble.classList.add('message');
             bubble.classList.add(sender === 'user' ? 'user-message' : 'ai-message');
             
-            // If it has text right away, format it. Otherwise, leave it blank (for the typing effect).
             if (text) {
                 if (sender === 'ai') {
                     bubble.innerHTML = marked.parse(text);
@@ -103,27 +157,20 @@
             chatMessages.appendChild(wrapper);
             chatMessages.scrollTop = chatMessages.scrollHeight;
             
-            return { wrapper, bubble }; // Return both so we can target the bubble directly
+            return { wrapper, bubble }; 
         }
 
-        // --- THE NEW TYPING EFFECT FUNCTION ---
         function typeOutMessage(element, fullText) {
             let i = 0;
             let currentText = "";
-            const typingSpeed = 15; // Milliseconds per character. Lower = faster!
+            const typingSpeed = 15;
 
             const interval = setInterval(() => {
-                // Add one character at a time
                 currentText += fullText.charAt(i);
-                
-                // Parse the growing text into Markdown HTML
                 element.innerHTML = marked.parse(currentText);
-                
-                // Auto-scroll down as the text grows
                 chatMessages.scrollTop = chatMessages.scrollHeight;
                 
                 i++;
-                // Stop the timer when we run out of text
                 if (i >= fullText.length) {
                     clearInterval(interval);
                 }
@@ -136,33 +183,29 @@
             const messageText = chatInput.value.trim();
             if (!messageText) return;
             
-            // 1. Show user message instantly
             appendMessage(messageText, 'user');
             chatInput.value = '';
 
-            // 2. Show temporary "thinking..." indicator
             const thinkingElements = appendMessage("Budgie is thinking...", 'ai');
             thinkingElements.bubble.style.fontStyle = "italic";
             thinkingElements.bubble.style.opacity = "0.6";
 
             try {
-                // 3. Send message to Python
                 const response = await fetch("http://127.0.0.1:8000/api/chat", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ message: messageText })
+                    body: JSON.stringify({ 
+                        message: messageText,
+                        user_id: finalUserId // Will be the actual ID or null!
+                    })
                 });
 
-                // 4. Remove the "thinking" indicator
                 thinkingElements.wrapper.remove();
 
                 if (response.ok) {
                     const data = await response.json();
-                    
-                    // 5. Create an empty bubble, then trigger the typing effect!
                     const aiElements = appendMessage("", 'ai');
                     typeOutMessage(aiElements.bubble, data.reply);
-                    
                 } else {
                     appendMessage("Oops! I'm having trouble connecting to my brain right now.", 'ai');
                 }

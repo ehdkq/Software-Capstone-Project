@@ -12,13 +12,39 @@ let currentUserId = null;
 async function secureDashboard() {
     const isLoggedIn = localStorage.getItem("isLoggedIn");
     currentUserId = localStorage.getItem("userId");
-    console.log('id: ', currentUserId)
 
     if (isLoggedIn !== "true" || !currentUserId) {
         window.location.replace("login.html");
         return; 
     }
 
+    // Unhide the button
+    document.getElementById("profile-circle").style.display = "flex";
+
+    // --- NEW: Fetch the user's name and update the circle! ---
+    try {
+        const profileRes = await fetch(`${API_BASE_URL}/account/get-profile?user_id=${currentUserId}`);
+        const profileData = await profileRes.json();
+        
+        if (profileData.success) {
+            const fName = profileData.first_name;
+            const lName = profileData.last_name;
+            
+            // Use first name for the circle. If blank, fallback to email
+            const displayName = fName || profileData.email;
+            const firstLetter = displayName.charAt(0).toUpperCase();
+            document.getElementById("profile-initial").textContent = firstLetter;
+            
+            // Save BOTH names to localStorage for the settings page!
+            localStorage.setItem("firstName", fName);
+            localStorage.setItem("lastName", lName);
+        }
+    } catch (e) {
+        console.error("Could not load profile data", e);
+    }
+    // ---------------------------------------------------------
+    
+    document.getElementById("profile-circle").style.display = "flex";
     // Load user data from backend
     await loadUserData();
 

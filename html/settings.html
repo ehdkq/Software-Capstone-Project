@@ -4,6 +4,15 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/html/css/styles.css">
+    <script>
+        if (localStorage.getItem('budgieTheme') === 'dark') {
+            document.documentElement.classList.add('dark-theme');
+            // Adding to body when it loads
+            window.addEventListener('DOMContentLoaded', () => {
+                document.body.classList.add('dark-theme');
+            });
+        }
+    </script>
     <title>Settings - Budgie</title>
     <style>
         /* Specific layout for the Settings Page */
@@ -115,6 +124,21 @@
                 <p>Manage your account password and status.</p>
                 <hr>
                 
+                <div style="margin-top: 20px; margin-bottom: 40px;">
+                    <h3>Change Password</h3>
+                    
+                    <label>Current Password</label>
+                    <input type="password" id="old-password" placeholder="Enter current password" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px;">
+
+                    <label>New Password</label>
+                    <input type="password" id="new-password" placeholder="Enter new password" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px;">
+
+                    <label>Confirm New Password</label>
+                    <input type="password" id="confirm-password" placeholder="Confirm new password" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px;">
+
+                    <button id="update-password-btn" class="action-btn" style="margin-top: 15px;">Save New Password</button>
+                </div>
+
                 <div class="danger-zone">
                     <h3>The Danger Zone</h3>
                     <p>Once you delete your account, there is no going back. All your transactions, goals, and account balances will be permanently wiped.</p>
@@ -127,8 +151,15 @@
                 <p>Customize your Budgie experience.</p>
                 <hr>
                 <br>
-                <label>Currency Display</label>
-                <select style="width: 100%; padding: 10px; margin: 10px 0;">
+                
+                <label>App Theme</label>
+                <select id="theme-selector" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px;">
+                    <option value="light">Light Mode (Default)</option>
+                    <option value="dark">Night Owl (Dark Mode)</option>
+                </select>
+
+                <label style="margin-top: 15px; display: block;">Currency Display</label>
+                <select style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px;">
                     <option>USD ($)</option>
                     <option>EUR (€)</option>
                     <option>GBP (£)</option>
@@ -162,18 +193,36 @@
             // 4. If they pass the check, un-hide the settings page
             document.getElementById("body-wrapper").style.display = "block";
             
-            // 5. Populate profile fields (Only if using Supabase)
-            // Because your Python login just saves "true", it doesn't have your name yet!
+            // 5. Populate profile fields
             if (session) {
+                // If logged in via Supabase Auth
                 const { data: customer } = await mySupabase.from('customers').select('first_name, last_name').eq('user_id', session.user.id).single();
                 if (customer) {
                     document.getElementById('set-first-name').value = customer.first_name;
                     document.getElementById('set-last-name').value = customer.last_name;
                 }
             } else {
-                // If logged in via Python, just clear the "Loading..." text for now
-                document.getElementById('set-first-name').placeholder = "Python User";
-                document.getElementById('set-last-name').placeholder = "Details hidden";
+                // --- THE FIX: If logged in via Python, pull the names from localStorage! ---
+                const savedFirstName = localStorage.getItem("firstName");
+                const savedLastName = localStorage.getItem("lastName");
+
+                const firstNameBox = document.getElementById('set-first-name');
+                const lastNameBox = document.getElementById('set-last-name');
+
+                if (savedFirstName) {
+                    firstNameBox.placeholder = savedFirstName;
+                    // Pro-tip: Using .value actually fills the box so they can edit it!
+                    firstNameBox.value = savedFirstName; 
+                } else {
+                    firstNameBox.placeholder = "First Name";
+                }
+
+                if (savedLastName) {
+                    lastNameBox.placeholder = savedLastName;
+                    lastNameBox.value = savedLastName;
+                } else {
+                    lastNameBox.placeholder = "Last Name";
+                }
             }
         }
         checkSession();
@@ -205,6 +254,33 @@
                 window.location.href = "index.html";
             }
         };
+
+        // --- 6. THEME SWITCHER LOGIC ---
+        const themeSelector = document.getElementById('theme-selector');
+
+        // When the page loads, check if they already saved a theme preference
+        const savedTheme = localStorage.getItem('budgieTheme');
+        if (savedTheme) {
+            themeSelector.value = savedTheme;
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-theme');
+            }
+        }
+
+        // Listen for the user changing the dropdown
+        themeSelector.addEventListener('change', function(e) {
+            const chosenTheme = e.target.value;
+            
+            // Save it to memory so it remembers next time they log in
+            localStorage.setItem('budgieTheme', chosenTheme);
+            
+            // Turn dark mode on or off
+            if (chosenTheme === 'dark') {
+                document.body.classList.add('dark-theme');
+            } else {
+                document.body.classList.remove('dark-theme');
+            }
+        });
     </script>
 </body>
 </html>

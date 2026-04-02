@@ -5,10 +5,12 @@ import bcrypt
 import uuid
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from typing import Optional
 from budgie_bot import get_ai_reply
 
 class ChatRequest(BaseModel):
     message: str
+    user_id: Optional[str] = None
 
 app = FastAPI()
 
@@ -264,6 +266,25 @@ def update_password(email, newpass):
     except Exception as e:
         return False
 
+# Gets the user's profile information
+@app.get("/account/get-profile")
+def get_profile(user_id: str):
+    try:
+        user_res = supabase.table("users").select("*").eq("user_id", user_id).execute()
+        
+        if user_res.data:
+            user = user_res.data[0]
+            # Looks for a column named 'name' or 'first_name'. If it's blank, it falls back to the email.
+            user_name = user.get('name') or user.get('first_name') or ""
+            user_email = user.get('email') or ""
+            
+            return {"success": True, "name": user_name, "email": user_email}
+            
+        return {"success": False, "error": "User not found"}
+        
+    except Exception as e:
+        print(f"Error fetching profile: {e}")
+        return {"success": False, "error": str(e)}
 
 # Gets all transactions tied to the specified user
 # Pre: takes a user ID as a parameter
@@ -452,11 +473,59 @@ print(add_transaction('080691cf-dd78-428e-a4ba-98e442940d6c', d))'''
 
 @app.post("/api/chat")
 def chat_with_budgie(request: ChatRequest):
-    # 1. Grab the text the user typed
     user_text = request.message
+    user_id = request.user_id
     
-    # 2. Send it to your budgie_bot file to get the AI's answer
-    ai_answer = get_ai_reply(user_text)
+    financial_context = ""
+
+    # If the user is logged in, pull their data from Supabase!
+    if user_id:
+        try:
+            # 1. Find their account ID
+            user_res = supabase.table("users").select("account_id").eq("user_id", user_id).execute()
+            
+            if user_res.data:
+                acc_id = user_res.data[0].get("account_id")
+
+                # 2. Grab their Account info, Transactions, and Goals
+                acc_res = supabase.table("accounts").select("*").eq("account_id", acc_id).execute()
+                trans_res = supabase.table("transactions").select("*").eq("account_id", acc_id).execute()
+                goals_res = supabase.table("goals").select("*").eq("account_id", acc_id).execute()
+                
+                transactions = trans_res.data or []
+                goals = goals_res.data or []
+
+                # 3. Pull the exact balance directly from the accounts table (No math required!)
+                balance = 0
+                if acc_res.data:
+                    # ---> Change 'balance' below if your database column has a different name! <---
+                    balance = acc_res.data[0].get('balance', 0)
+
+                # 4. Build a clean text summary for the AI to read
+                financial_context += f"--- USER'S LIVE BANK DATA ---\n"
+                financial_context += f"TOTAL ACCOUNT BALANCE: ${float(balance):.2f}\n\n"
+                
+                if goals:
+                    financial_context += "USER'S BUDGET GOALS:\n"
+                    for g in goals:
+                        financial_context += f"- Goal: {g.get('category')}, Target: ${g.get('target_amount')}\n"
+                    financial_context += "\n"
+                
+                if transactions:
+                    financial_context += "RECENT TRANSACTIONS:\n"
+                    for t in transactions[-15:]:
+                        financial_context += f"- {t.get('transaction_type')}: ${t.get('amount')} at {t.get('merchant_name')}\n"
+                
+                # --- SNEAK PEEK ---
+                print("\n=== WHAT BUDGIE IS READING ===")
+                print(financial_context)
+                print("==============================\n")
+        
+        except Exception as e:
+            print(f"Failed to pull context for AI: {e}")
+            pass
+
+    # Send the user's message AND their database context to the AI
+    ai_answer = get_ai_reply(user_text, financial_context)
     
-    # 3. Send the answer back to the HTML page
     return {"reply": ai_answer}
