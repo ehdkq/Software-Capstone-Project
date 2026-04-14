@@ -4,15 +4,6 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/html/css/styles.css">
-    <script>
-        if (localStorage.getItem('budgieTheme') === 'dark') {
-            document.documentElement.classList.add('dark-theme');
-            // Adding to body when it loads
-            window.addEventListener('DOMContentLoaded', () => {
-                document.body.classList.add('dark-theme');
-            });
-        }
-    </script>
     <title>Settings - Budgie</title>
     <style>
         /* Specific layout for the Settings Page */
@@ -20,66 +11,104 @@
             display: flex;
             max-width: 1000px;
             margin: 40px auto;
-            background: white;
+            background: var(--card-bg);
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             min-height: 60vh;
+            border: 1px solid var(--border-color);
         }
 
-        /* Sidebar Styling */
         .settings-sidebar {
             width: 250px;
-            background-color: #f8f9fa;
-            border-right: 1px solid #eee;
+            background-color: var(--sidebar-bg, #f8f9fa);
+            border-right: 1px solid var(--border-color);
             padding: 20px 0;
         }
 
         .settings-nav-item {
             padding: 15px 25px;
             cursor: pointer;
-            color: #555;
+            color: var(--text-color);
             font-weight: 500;
             transition: all 0.3s;
         }
 
         .settings-nav-item:hover {
-            background-color: #eef2f3;
+            background-color: var(--bg-color);
             color: #97dbff;
         }
 
         .settings-nav-item.active {
             background-color: #97dbff;
-            color: white;
+            color: #333;
             border-left: 5px solid #333;
         }
 
-        /* Content Area Styling */
         .settings-content {
             flex: 1;
             padding: 40px;
+            background: var(--card-bg);
         }
 
-        .tab-content {
-            display: none; /* Hidden by default */
-        }
-
-        .tab-content.active {
-            display: block; /* Show active tab */
-        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
 
         .danger-zone {
             margin-top: 40px;
             padding: 20px;
             border: 2px solid #ff4c4c;
             border-radius: 8px;
-            background-color: #fff5f5;
+            background-color: rgba(255, 76, 76, 0.05);
         }
 
-        .danger-zone h3 {
-            color: #ff4c4c;
-            margin-top: 0;
+        .danger-zone h3 { color: #ff4c4c; margin-top: 0; }
+
+        /* Input Styles */
+        .settings-input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid var(--input-border);
+            border-radius: 4px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
         }
+
+        /* iOS Style Toggle Switch CSS */
+        .pref-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .pref-row h4 { margin: 0 0 5px 0; }
+        .pref-row p { margin: 0; font-size: 0.85rem; color: var(--text-muted, #888); }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--input-border, #ccc);
+            transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: "";
+            height: 18px; width: 18px;
+            left: 4px; bottom: 4px;
+            background-color: white;
+            transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #97dbff; }
+        input:checked + .slider:before { transform: translateX(24px); }
     </style>
 </head>
 <body class="dashboard-body" id="body-wrapper" style="display: none;">
@@ -99,8 +128,8 @@
     <main class="settings-container">
         <div class="settings-sidebar">
             <div class="settings-nav-item active" onclick="showTab('profile')">Profile</div>
-            <div class="settings-nav-item" onclick="showTab('security')">Account Security</div>
             <div class="settings-nav-item" onclick="showTab('preferences')">Preferences</div>
+            <div class="settings-nav-item" onclick="showTab('security')">Account Security</div>
         </div>
 
         <div class="settings-content">
@@ -108,15 +137,90 @@
             <div id="profile" class="tab-content active">
                 <h2>Profile Settings</h2>
                 <p>Manage your public display information.</p>
-                <hr>
-                <br>
+                <hr><br>
                 <label>First Name</label>
-                <input type="text" id="set-first-name" placeholder="Loading..." style="width: 100%; padding: 10px; margin: 10px 0;">
+                <input type="text" id="set-first-name" class="settings-input" placeholder="Loading...">
                 
                 <label>Last Name</label>
-                <input type="text" id="set-last-name" placeholder="Loading..." style="width: 100%; padding: 10px; margin: 10px 0;">
+                <input type="text" id="set-last-name" class="settings-input" placeholder="Loading...">
                 
                 <button class="action-btn" style="margin-top: 20px;">Update Profile</button>
+            </div>
+
+            <div id="preferences" class="tab-content">
+                <h2>Preferences</h2>
+                <p>Customize how Budgie looks, feels, and behaves.</p>
+                <hr>
+
+                <h3 style="margin-top: 25px;">App Appearance</h3>
+                <label>App Theme</label>
+                <select id="theme-selector" class="settings-input">
+                    <option value="light">Light Mode (Default)</option>
+                    <option value="dark">Night Owl (Dark Mode)</option>
+                </select>
+
+                <label>Currency Display</label>
+                <select id="currency-selector" class="settings-input">
+                    <option value="USD">USD ($)</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="GBP">GBP (£)</option>
+                </select>
+
+                <h3 style="margin-top: 35px;">Dashboard Behavior</h3>
+                <div style="display: flex; gap: 15px;">
+                    <div style="flex: 1;">
+                        <label>Default Timeframe</label>
+                        <select id="timeframe-selector" class="settings-input">
+                            <option value="month">This Month</option>
+                            <option value="week">This Week</option>
+                            <option value="all">All Time</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label>Budget Reset Day (1-31)</label>
+                        <input type="number" id="budget-reset-day" class="settings-input" min="1" max="31" placeholder="e.g. 1st">
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 35px;">Notifications & Alerts</h3>
+                
+                <div class="pref-row">
+                    <div>
+                        <h4>Weekly Summary Email</h4>
+                        <p>Get a snapshot of your spending every Sunday.</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-weekly">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="pref-row">
+                    <div>
+                        <h4>Goal Danger Alerts</h4>
+                        <p>Warn me when I hit 90% of a budget goal.</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-danger">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="pref-row">
+                    <div>
+                        <h4>Large Transaction Flag</h4>
+                        <p>Highlight any spending over $100.</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-large-tx">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <h3 style="margin-top: 35px;">Data Management</h3>
+                <p style="margin-bottom: 15px;">Download a complete history of your transactions as a CSV spreadsheet.</p>
+                <button id="export-csv-btn" class="action-btn" style="background-color: #28a745; color: white;">Download CSV Data</button>
+
             </div>
 
             <div id="security" class="tab-content">
@@ -126,15 +230,14 @@
                 
                 <div style="margin-top: 20px; margin-bottom: 40px;">
                     <h3>Change Password</h3>
-                    
                     <label>Current Password</label>
-                    <input type="password" id="old-password" placeholder="Enter current password" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px;">
+                    <input type="password" id="old-password" class="settings-input" placeholder="Enter current password">
 
                     <label>New Password</label>
-                    <input type="password" id="new-password" placeholder="Enter new password" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px;">
+                    <input type="password" id="new-password" class="settings-input" placeholder="Enter new password">
 
                     <label>Confirm New Password</label>
-                    <input type="password" id="confirm-password" placeholder="Confirm new password" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px;">
+                    <input type="password" id="confirm-password" class="settings-input" placeholder="Confirm new password">
 
                     <button id="update-password-btn" class="action-btn" style="margin-top: 15px;">Save New Password</button>
                 </div>
@@ -142,28 +245,8 @@
                 <div class="danger-zone">
                     <h3>The Danger Zone</h3>
                     <p>Once you delete your account, there is no going back. All your transactions, goals, and account balances will be permanently wiped.</p>
-                    <button id="delete-btn" class="action-btn" style="background-color: #ff4c4c;">Delete My Account Permanently</button>
+                    <button id="delete-btn" class="action-btn" style="background-color: #ff4c4c; color: white; border: none;">Delete My Account Permanently</button>
                 </div>
-            </div>
-
-            <div id="preferences" class="tab-content">
-                <h2>Preferences</h2>
-                <p>Customize your Budgie experience.</p>
-                <hr>
-                <br>
-                
-                <label>App Theme</label>
-                <select id="theme-selector" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px;">
-                    <option value="light">Light Mode (Default)</option>
-                    <option value="dark">Night Owl (Dark Mode)</option>
-                </select>
-
-                <label style="margin-top: 15px; display: block;">Currency Display</label>
-                <select style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px;">
-                    <option>USD ($)</option>
-                    <option>EUR (€)</option>
-                    <option>GBP (£)</option>
-                </select>
             </div>
 
         </div>
@@ -176,77 +259,183 @@
         const SUPABASE_KEY = "sb_publishable_4F8U5q77q5yDs2xYLVsUKA_cPuVOHCc";
         const mySupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // --- 2. SECURITY GUARD ---
+        // --- 2. SECURITY GUARD & INITIAL LOAD ---
         async function checkSession() {
-            // 1. Check for your Python Login bucket
             const isLoggedIn = localStorage.getItem("isLoggedIn");
-
-            // 2. Check for your groupmate's Supabase Session
             const { data: { session } } = await mySupabase.auth.getSession();
 
-            // 3. If NEITHER exist, kick them to the login page
             if (!session && isLoggedIn !== "true") { 
                 window.location.replace("login.html"); 
                 return; 
             }
 
-            // 4. If they pass the check, un-hide the settings page
             document.getElementById("body-wrapper").style.display = "block";
             
-            // 5. Populate profile fields
+            // Populate Names
             if (session) {
-                // If logged in via Supabase Auth
                 const { data: customer } = await mySupabase.from('customers').select('first_name, last_name').eq('user_id', session.user.id).single();
                 if (customer) {
                     document.getElementById('set-first-name').value = customer.first_name;
                     document.getElementById('set-last-name').value = customer.last_name;
                 }
             } else {
-                // --- THE FIX: If logged in via Python, pull the names from localStorage! ---
                 const savedFirstName = localStorage.getItem("firstName");
                 const savedLastName = localStorage.getItem("lastName");
-
                 const firstNameBox = document.getElementById('set-first-name');
                 const lastNameBox = document.getElementById('set-last-name');
 
-                if (savedFirstName) {
-                    firstNameBox.placeholder = savedFirstName;
-                    // Pro-tip: Using .value actually fills the box so they can edit it!
-                    firstNameBox.value = savedFirstName; 
-                } else {
-                    firstNameBox.placeholder = "First Name";
-                }
+                if (savedFirstName) { firstNameBox.value = savedFirstName; } 
+                else { firstNameBox.placeholder = "First Name"; }
 
-                if (savedLastName) {
-                    lastNameBox.placeholder = savedLastName;
-                    lastNameBox.value = savedLastName;
-                } else {
-                    lastNameBox.placeholder = "Last Name";
-                }
+                if (savedLastName) { lastNameBox.value = savedLastName; } 
+                else { lastNameBox.placeholder = "Last Name"; }
             }
+
+            // LOAD SAVED PREFERENCES
+            const loadPref = (id, key, isCheckbox = false) => {
+                const saved = localStorage.getItem(key);
+                if (saved !== null) {
+                    if (isCheckbox) document.getElementById(id).checked = (saved === 'true');
+                    else document.getElementById(id).value = saved;
+                }
+            };
+
+            loadPref('theme-selector', 'budgieTheme');
+            loadPref('currency-selector', 'prefCurrency');
+            loadPref('timeframe-selector', 'prefTimeframe');
+            loadPref('budget-reset-day', 'prefResetDay');
+            loadPref('toggle-weekly', 'prefWeeklySum', true);
+            loadPref('toggle-danger', 'prefGoalDanger', true);
+            loadPref('toggle-large-tx', 'prefLargeTx', true);
         }
         checkSession();
 
         // --- 3. TAB SWITCHING LOGIC ---
         function showTab(tabId) {
-            // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            // Deactivate all sidebar links
             document.querySelectorAll('.settings-nav-item').forEach(nav => nav.classList.remove('active'));
-            
-            // Show selected tab
             document.getElementById(tabId).classList.add('active');
-            // Highlight selected sidebar link
             event.currentTarget.classList.add('active');
         }
 
-        // --- 4. DELETE ACCOUNT LOGIC ---
+        // --- 4. SAVE PREFERENCES AUTOMATICALLY ---
+        const savePref = (id, key, isCheckbox = false) => {
+            document.getElementById(id).addEventListener('change', (e) => {
+                const val = isCheckbox ? e.target.checked : e.target.value;
+                localStorage.setItem(key, val);
+                
+                // Immediate Theme Application
+                if (key === 'budgieTheme') {
+                    if (val === 'dark') document.body.classList.add('dark-theme');
+                    else document.body.classList.remove('dark-theme');
+                }
+            });
+        };
+
+        savePref('theme-selector', 'budgieTheme');
+        savePref('currency-selector', 'prefCurrency');
+        savePref('timeframe-selector', 'prefTimeframe');
+        savePref('budget-reset-day', 'prefResetDay');
+        savePref('toggle-weekly', 'prefWeeklySum', true);
+        savePref('toggle-danger', 'prefGoalDanger', true);
+        savePref('toggle-large-tx', 'prefLargeTx', true);
+
+        // --- 5. EXPORT CSV LOGIC ---
+        document.getElementById('export-csv-btn').onclick = async function() {
+            const userId = localStorage.getItem("userId");
+            if (!userId) {
+                alert("Could not verify your account. Please log in again.");
+                return;
+            }
+
+            const originalText = this.textContent;
+            this.textContent = "Generating CSV...";
+            this.disabled = true;
+
+            try {
+                // Fetch from your Python backend
+                const response = await fetch(`http://127.0.0.1:8000/transactions/get-transactions?user_id=${userId}`);
+                const responseData = await response.json();
+                
+                // Extract the data array
+                const transactions = responseData.data || [];
+
+                if (transactions.length === 0) {
+                    alert("No transactions found to export!");
+                } else {
+                    // Build CSV String
+                    let csvContent = "data:text/csv;charset=utf-8,Date,Merchant,Category,Amount\n";
+                    
+                    transactions.forEach(t => {
+                        // Escape commas in names so it doesn't break columns
+                        const merchant = `"${t.merchant_name || t.description || 'Unknown'}"`;
+                        const type = `"${t.transaction_type || ''}"`;
+                        const amount = t.amount || 0;
+                        // Format the date nicely if possible
+                        const date = t.created_at ? t.created_at.split('T')[0] : "Unknown";
+                        
+                        csvContent += `${date},${merchant},${type},${amount}\n`;
+                    });
+
+                    // Trigger browser download
+                    const encodedUri = encodeURI(csvContent);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", encodedUri);
+                    link.setAttribute("download", "Budgie_Transactions.csv");
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            } catch (err) {
+                console.error("Export Error:", err);
+                alert("Failed to export data. Make sure your Python server is running!");
+            }
+
+            // Reset button
+            this.textContent = originalText;
+            this.disabled = false;
+        };
+
+        // --- 6. SECURITY LOGIC (PASSWORD & DELETE) ---
+        // (This incorporates the script you just added in the previous steps)
+        document.getElementById('update-password-btn').onclick = async function() {
+            const oldPass = document.getElementById('old-password').value;
+            const newPass = document.getElementById('new-password').value;
+            const confirmPass = document.getElementById('confirm-password').value;
+
+            if (!oldPass || !newPass || !confirmPass) { alert("Please fill in all password fields."); return; }
+            if (newPass !== confirmPass) { alert("Your new passwords do not match!"); return; }
+            if (!confirm("Are you sure you want to change your password?")) return;
+
+            const btn = document.getElementById('update-password-btn');
+            btn.textContent = "Updating..."; btn.disabled = true;
+
+            try {
+                const userEmail = localStorage.getItem("userEmail");
+                if (!userEmail) throw new Error("Could not find your email.");
+
+                const verifyRes = await fetch(`http://127.0.0.1:8000/login?email=${encodeURIComponent(userEmail)}&passw=${encodeURIComponent(oldPass)}`);
+                const verifyData = await verifyRes.json();
+                if (!verifyData.success) throw new Error("Incorrect current password.");
+
+                const updateRes = await fetch(`http://127.0.0.1:8000/account/update-password?email=${encodeURIComponent(userEmail)}&newpass=${encodeURIComponent(newPass)}`, { method: 'POST' });
+                const isSuccess = await updateRes.json(); 
+                
+                if (isSuccess) {
+                    alert("Success! Your password has been updated.");
+                    document.getElementById('old-password').value = "";
+                    document.getElementById('new-password').value = "";
+                    document.getElementById('confirm-password').value = "";
+                } else throw new Error("Database error updating password.");
+
+            } catch (err) { alert(err.message); }
+
+            btn.textContent = "Save New Password"; btn.disabled = false;
+        };
+
         document.getElementById('delete-btn').onclick = async function() {
-            const confirmName = confirm("Are you sure? This action is permanent.");
-            if (!confirmName) return;
-
+            if (!confirm("Are you sure? This action is permanent.")) return;
             const { error } = await mySupabase.rpc('delete_user');
-
             if (error) {
                 alert("Deletion failed: " + error.message);
             } else {
@@ -254,33 +443,6 @@
                 window.location.href = "index.html";
             }
         };
-
-        // --- 6. THEME SWITCHER LOGIC ---
-        const themeSelector = document.getElementById('theme-selector');
-
-        // When the page loads, check if they already saved a theme preference
-        const savedTheme = localStorage.getItem('budgieTheme');
-        if (savedTheme) {
-            themeSelector.value = savedTheme;
-            if (savedTheme === 'dark') {
-                document.body.classList.add('dark-theme');
-            }
-        }
-
-        // Listen for the user changing the dropdown
-        themeSelector.addEventListener('change', function(e) {
-            const chosenTheme = e.target.value;
-            
-            // Save it to memory so it remembers next time they log in
-            localStorage.setItem('budgieTheme', chosenTheme);
-            
-            // Turn dark mode on or off
-            if (chosenTheme === 'dark') {
-                document.body.classList.add('dark-theme');
-            } else {
-                document.body.classList.remove('dark-theme');
-            }
-        });
     </script>
 </body>
 </html>

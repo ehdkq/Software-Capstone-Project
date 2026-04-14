@@ -77,9 +77,18 @@
 
     <div id="existing-dashboard" style="display: none;">
         <main class="dashboard-main-content">
-            <div class="dashboard-header-text">
-                <h2 id="dynamic-greeting">Welcome back!</h2>
-                <p>Here is your financial overview.</p>
+            <div class="dashboard-header-text" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 15px;">
+                <div>
+                    <h2 id="dynamic-greeting" style="margin: 0 0 5px 0;">Welcome back!</h2>
+                    <p style="margin: 0;">Here is your financial overview.</p>
+                </div>
+                <div>
+                    <select id="dashboard-timefilter" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-color); cursor: pointer;">
+                        <option value="30">Last 30 Days</option>
+                        <option value="90">Last 90 Days</option>
+                        <option value="all" selected>All Time</option>
+                    </select>
+                </div>
             </div>
             
             <div class="dashboard-grid">
@@ -88,12 +97,13 @@
                     
                     <div style="display: flex; align-items: center; gap: 15px; margin: 10px 0;">
                         <h2 class="card-amount" id="display-balance" style="margin: 0;">$0.00</h2>
-                        <button onclick="toggleBalanceEdit()" class="action-btn" style="padding: 5px 10px; font-size: 0.8rem;">Edit</button>
+                        <button onclick="toggleAddFundsForm()" class="action-btn" style="padding: 5px 10px; font-size: 0.8rem; background-color: #28a745; color: white;">+ Add Funds</button>
                     </div>
-                    <div id="edit-balance-form" style="display: none; margin-bottom: 20px;">
+                    
+                    <div id="add-funds-form" style="display: none; margin-bottom: 20px;">
                         <div style="display: flex; gap: 10px;">
-                            <input type="number" id="new-balance-input" step="0.01" placeholder="Enter new balance" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
-                            <button onclick="saveBalance()" class="action-btn" style="padding: 5px 15px;">Save</button>
+                            <input type="number" id="quick-deposit-input" step="0.01" min="0.01" placeholder="Amount to add ($)" style="padding: 8px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color); flex: 1;">
+                            <button onclick="submitQuickDeposit()" class="action-btn" style="padding: 5px 15px; margin: 0; background-color: #28a745; color: white;">Deposit</button>
                         </div>
                     </div>
                     
@@ -149,6 +159,25 @@
                     <img src="/html/images/budgie-ai.png" alt ="Budgie AI Assistant" class="ai-assistant-img">
                     <a href="llm-help.html" class="action-btn">Chat Now</a>
                 </div>
+
+                <div class="dashboard-card" style="margin-top: 24px;">
+                <h3>Full Transaction History</h3>
+                <div style="overflow-x: auto;">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="full-history-body">
+                            <tr><td colspan="4" style="text-align: center;">Loading transactions...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
             </div>
 
             <div style="text-align: center; margin-top: 40px; margin-bottom: 20px;">

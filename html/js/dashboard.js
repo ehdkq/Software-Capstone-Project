@@ -1,14 +1,12 @@
-// ==========================================
-// API CONFIGURATION
-// ==========================================
-const API_BASE_URL = 'http://127.0.0.1:8000';
-
-// ==========================================
-// PART 1: SUPABASE AUTH & SECURITY LOGIC
-// ==========================================
-
+// --- Global Variables ---
+const API_BASE_URL = "http://127.0.0.1:8000";
 let currentUserId = null;
+let transactions = [];
+let goals = [];
+let spendingChart = null; // Holds the Chart.js instance
+let editingTransactionId = null;
 
+// --- 1. Security & Profile Initialization ---
 async function secureDashboard() {
     const isLoggedIn = localStorage.getItem("isLoggedIn");
     currentUserId = localStorage.getItem("userId");
@@ -18,10 +16,14 @@ async function secureDashboard() {
         return; 
     }
 
-    // Unhide the button
-    document.getElementById("profile-circle").style.display = "flex";
+    // Unhide the settings profile button
+    const profileCircle = document.getElementById("profile-circle");
+    if (profileCircle) profileCircle.style.display = "flex";
 
-    // --- NEW: Fetch the user's name and update the circle! ---
+    // Show the existing dashboard wrapper
+    document.getElementById("existing-dashboard").style.display = "block";
+
+    // Fetch the user's name for the profile circle and settings page!
     try {
         const profileRes = await fetch(`${API_BASE_URL}/account/get-profile?user_id=${currentUserId}`);
         const profileData = await profileRes.json();
@@ -32,551 +34,465 @@ async function secureDashboard() {
             
             // Use first name for the circle. If blank, fallback to email
             const displayName = fName || profileData.email;
-            const firstLetter = displayName.charAt(0).toUpperCase();
-            document.getElementById("profile-initial").textContent = firstLetter;
+            if (displayName) {
+                const firstLetter = displayName.charAt(0).toUpperCase();
+                const initialEl = document.getElementById("profile-initial");
+                if (initialEl) initialEl.textContent = firstLetter;
+                
+                // Update the greeting text!
+                const greetingEl = document.getElementById("dynamic-greeting");
+                if (greetingEl) greetingEl.textContent = `Welcome back, ${fName || 'User'}!`;
+            }
             
             // Save BOTH names to localStorage for the settings page!
-            localStorage.setItem("firstName", fName);
-            localStorage.setItem("lastName", lName);
+            if (fName) localStorage.setItem("firstName", fName);
+            if (lName) localStorage.setItem("lastName", lName);
         }
     } catch (e) {
         console.error("Could not load profile data", e);
     }
-    // ---------------------------------------------------------
-    
-    document.getElementById("profile-circle").style.display = "flex";
-    // Load user data from backend
+
+    // Load their data from the database
     await loadUserData();
-
-    // NOW check if we should show welcome screen (after data is loaded)
-    if (goals.length == 0 && transactions.length == 0){
-        document.getElementById("body-wrapper").style.display = "block";
-        document.getElementById("user-greeting-new").textContent = "Welcome to Budgie!";
-        document.getElementById("new-user-welcome").style.display = "block";
-    } else {
-        // Show the main dashboard if they have data
-        document.getElementById("body-wrapper").style.display = "block";
-        document.getElementById("existing-dashboard").style.display = "block";
-    }
-}
-
-// Load all user data from backend
-async function loadUserData() {
-    await loadTransactions();
     await loadGoals();
-    await loadBalance();
 }
 
-secureDashboard();
-
-document.getElementById("start-budgeting-btn").addEventListener("click", function() {
-    document.getElementById("new-user-welcome").style.display = "none";
-    document.getElementById("existing-dashboard").style.display = "block";
-});
-
-async function handleLogout() {
-    localStorage.removeItem("isLoggedIn");
-    localStorage.removeItem("userId");
-    window.location.href = "login.html";
-}
-
-document.getElementById("logout-btn-new").addEventListener("click", handleLogout);
-document.getElementById("logout-btn-existing").addEventListener("click", handleLogout);
-
-// ==========================================
-// PART 2: DASHBOARD LOGIC WITH BACKEND
-// ==========================================
-
-// --- 2. Goals Management Logic with Backend ---
-let goals = [];
-const goalForm = document.getElementById('goal-form');
-const goalsList = document.getElementById('goals-list');
-
-// Load goals from backend
-async function loadGoals() {
-    try {
-        const response = await fetch(
-            `${API_BASE_URL}/dashboard/get-goals?user_id=${currentUserId}&_=${Date.now()}`
-        );
-
-        const data = await response.json();
-        
-        goals = [];
-
-        if (data && data.data) {
-            goals = data.data.map(g => ({
-                id: g.goal_id,
-                category: g.category,
-                target: parseFloat(g.target_amount || 0)
-            }));
-        }
-
-        renderGoals();
-
-    } catch (error) {
-        console.error('Error loading goals:', error);
-    }
-}
-
-// Add or update goal in backend
-async function addGoalToBackend(category, targetAmount) {
-    try {
-        if (!currentUserId) {
-            console.error('No user ID found');
-            return false;
-        }
-        
-        console.log('Adding/updating goal:', { category, targetAmount, userId: currentUserId });
-        
-        const response = await fetch(
-            `${API_BASE_URL}/dashboard/add-goal?` +
-            `user_id=${encodeURIComponent(currentUserId)}` +
-            `&category=${encodeURIComponent(category)}` +
-            `&target_amount=${targetAmount}`,
-            { method: 'POST' }
-        );
-        
-        const data = await response.json();
-        console.log('Backend response:', data);
-        
-        return data.success === true;
-        
-    } catch (error) {
-        console.error('Error adding goal:', error);
-        return false;
-    }
-}
-
-// Delete goal from backend
-async function deleteGoalFromBackend(goalId) {
-    try {
-        const response = await fetch(
-            `${API_BASE_URL}/dashboard/delete-goal?goal_id=${goalId}`,
-            { method: 'POST' }
-        );
-        
-        const data = await response.json();
-        return data.success === true;
-        
-    } catch (error) {
-        console.error('Error deleting goal:', error);
-        return false;
-    }
-}
-
-goalForm.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const category = document.getElementById('g-category').value;
-    const target = parseFloat(document.getElementById('g-amount').value);
-
-    // Show loading state
-    const submitBtn = goalForm.querySelector('button[type="submit"]');
-    const originalBtnText = submitBtn.textContent;
-    submitBtn.textContent = 'Saving...';
-    submitBtn.disabled = true;
-
-    // Add/update goal in backend
-    const success = await addGoalToBackend(category, target);
-    
-    if (success) {
-        // Reload goals from backend to get the updated list
-        await loadGoals();
-        goalForm.reset();
-    } else {
-        alert('Error saving goal to database. Check console for details.');
-    }
-
-    // Reset button state
-    submitBtn.textContent = originalBtnText;
-    submitBtn.disabled = false;
-});
-
-async function deleteGoal(id) {
-    const success = await deleteGoalFromBackend(id);
-    
-    if (success) {
-        await loadGoals();  // Reload from backend instead of manual filtering
-    } else {
-        alert('Error deleting goal from database');
-    }
-}
-
-function renderGoals() {
-    goalsList.innerHTML = '';
-            
-    if (goals.length === 0) {
-        goalsList.innerHTML = '<p style="text-align: center; color: #888; font-style: italic; margin-top: 15px;">Let\'s make your first goal!</p>';
-        return;
-    }
-
-    let spentTotals = { 'Groceries': 0, 'Dining': 0, 'Utilities': 0, 'Entertainment': 0 };
-    transactions.forEach(t => {
-        if(spentTotals[t.type] !== undefined) {
-            spentTotals[t.type] += t.amount;
-        }
-    });
-
-    goals.forEach(g => {
-        const spent = spentTotals[g.category] || 0;
-        let percent = (spent / g.target) * 100;
-        let barColor = '#97dbff'; 
-                
-        if (percent >= 100) {
-            percent = 100; 
-            barColor = '#ff4d4d'; 
-        }
-
-        const goalDiv = document.createElement('div');
-        goalDiv.style.marginBottom = '15px';
-        goalDiv.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                <span><strong>${g.category}</strong>: $${spent.toFixed(2)} / $${g.target.toFixed(2)}</span>
-                <button onclick="deleteGoal('${g.id}')" class="delete-btn" style="padding: 2px 6px; font-size: 0.75rem;">X</button>
-            </div>
-            <div class="progress-bar-bg">
-                <div class="progress-bar-fill" style="width: ${percent}%; background-color: ${barColor};"></div>
-            </div>
-        `;
-        goalsList.appendChild(goalDiv);
-    });
-}
-
-// --- 3. Transaction Management with Backend ---
-let transactions = [];
-let editingTransactionId = null;
-const transactionForm = document.getElementById('transaction-form');
-const transactionList = document.getElementById('transaction-list');
-const tSubmitBtn = document.getElementById('t-submit-btn');
-
-// Load transactions from backend
-async function loadTransactions() {
+// --- 2. Load Core Data ---
+async function loadUserData() {
     try {
         const response = await fetch(`${API_BASE_URL}/transactions/get-transactions?user_id=${currentUserId}`);
         const data = await response.json();
         
         if (data && data.data) {
-            transactions = data.data.map(t => ({
-                id: t.transaction_id,
-                desc: t.description,
-                type: t.transaction_type,
-                amount: parseFloat(t.amount)
-            }));
-            renderTransactions();
+            transactions = data.data;
+        } else {
+            transactions = [];
         }
+        
+        // Trigger all the visual updates
+        refreshDashboardVisuals();
+
     } catch (error) {
-        console.error('Error loading transactions:', error);
+        console.error('Error fetching transactions:', error);
     }
 }
 
-// Add transaction to backend
-async function addTransactionToBackend(desc, type, amount) {
+// Master function to update everything on the screen at once
+function refreshDashboardVisuals() {
+    fetchAndDisplayBalance();
+    renderRecentTransactions();
+    renderFullHistoryTable();
+    updateChartData();
+    renderGoals();
+}
+
+// --- 3. Time Filter Logic ---
+function getFilteredTransactions() {
+    const filterDropdown = document.getElementById('dashboard-timefilter');
+    const filterValue = filterDropdown ? filterDropdown.value : 'all';
+    
+    // If they want everything, give them the whole array
+    if (filterValue === 'all') return transactions;
+
+    // Otherwise, do date math
+    const daysToLookBack = parseInt(filterValue);
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - daysToLookBack);
+
+    // Return only the transactions that happened AFTER the cutoff date
+    return transactions.filter(t => {
+        const txDate = new Date(t.created_at);
+        return txDate >= cutoffDate;
+    });
+}
+
+// Listen for the dropdown to change, and update the whole dashboard instantly!
+const timeFilterEl = document.getElementById('dashboard-timefilter');
+if (timeFilterEl) {
+    timeFilterEl.addEventListener('change', function() {
+        refreshDashboardVisuals();
+    });
+}
+
+// --- 4. Dashboard Visuals (Balance & Chart) ---
+
+
+// Fetches the exact balance from the database
+async function fetchAndDisplayBalance() {
     try {
-        const userEmail = localStorage.getItem("userEmail");
-        
-        if (!userEmail) {
-            console.error('No user email found in localStorage');
-            return false;
-        }
-        
-        console.log('Adding transaction:', { desc, type, amount, email: userEmail });
-        
-        const response = await fetch(
-            `${API_BASE_URL}/transactions/add-transaction?` +
-            `email=${encodeURIComponent(userEmail)}` +
-            `&amount=${amount}` +
-            `&t_type=${encodeURIComponent(type)}` +
-            `&m_id=${Date.now()}` +
-            `&m_name=${encodeURIComponent(desc)}` +
-            `&m_code=0000` +
-            `&desc=${encodeURIComponent(desc)}` +
-            `&recurr=false`,
-            { method: 'POST' }
-        );
-        
+        const response = await fetch(`${API_BASE_URL}/account/get-balance?user_id=${currentUserId}`);
         const data = await response.json();
-        console.log('Backend response:', data);
         
-        return data.success === true;  // Check for success property
-        
+        const balanceDisplay = document.getElementById('display-balance');
+        if (balanceDisplay && data.success) {
+            const bal = parseFloat(data.balance || 0);
+            balanceDisplay.innerText = `$${bal.toFixed(2)}`;
+            
+            // Make it red if negative, otherwise use the theme text color
+            balanceDisplay.style.color = bal < 0 ? '#ff4d4d' : 'var(--text-color)';
+        }
     } catch (error) {
-        console.error('Error adding transaction:', error);
-        return false;
+        console.error("Error fetching balance:", error);
     }
 }
 
-// Delete transaction from backend
-async function deleteTransactionFromBackend(transactionId) {
-    try {
-        const response = await fetch(
-            `${API_BASE_URL}/transactions/delete-transaction?transaction_id=${transactionId}`,
-            { method: 'POST' }
-        );
-        return await response.json();
-    } catch (error) {
-        console.error('Error deleting transaction:', error);
-        return false;
+// Opens and closes the Add Funds form
+window.toggleAddFundsForm = function() {
+    const form = document.getElementById('add-funds-form');
+    if (form.style.display === 'none' || form.style.display === '') {
+        form.style.display = 'block';
+    } else {
+        form.style.display = 'none';
     }
+};
+
+// Submits a "Quick Deposit" transaction to add money to the balance safely
+window.submitQuickDeposit = async function() {
+    const amountInput = document.getElementById('quick-deposit-input');
+    const amount = parseFloat(amountInput.value);
+    
+    if (!amount || amount <= 0) {
+        alert("Please enter a valid deposit amount.");
+        return;
+    }
+
+    try {
+        // We use your existing add-transaction endpoint so it logs the paper trail AND updates the balance!
+        const userEmail = localStorage.getItem("userEmail") || "user@example.com"; 
+        
+        // Hardcoding 'Deposit' as the type and 'Quick Deposit' as the description
+        const url = `${API_BASE_URL}/transactions/add-transaction?email=${encodeURIComponent(userEmail)}&amount=${amount}&t_type=Deposit&m_id=0&m_name=Quick Deposit&m_code=0&desc=Quick Deposit&recurr=false`;
+        
+        const response = await fetch(url, { method: 'POST' });
+        const data = await response.json();
+        
+        if (data.success) {
+            // Refresh the display, transaction lists, and hide the form!
+            await loadUserData(); 
+            toggleAddFundsForm();
+            amountInput.value = ''; 
+        } else {
+            alert("Failed to process deposit. Check your server.");
+        }
+    } catch (error) {
+        console.error("Deposit error:", error);
+    }
+};
+
+function updateChartData() {
+    const ctx = document.getElementById('spending-chart');
+    if (!ctx) return;
+
+    // Get the filtered transactions based on the dropdown
+    const activeTransactions = getFilteredTransactions();
+
+    const categoryTotals = {};
+    
+    activeTransactions.forEach(t => {
+        const type = t.type || t.transaction_type;
+        // Only graph expenses, ignore income
+        if (type !== 'Income' && type !== 'Deposit') {
+            const cat = type || 'Other';
+            if (!categoryTotals[cat]) categoryTotals[cat] = 0;
+            categoryTotals[cat] += parseFloat(t.amount);
+        }
+    });
+
+    const labels = Object.keys(categoryTotals);
+    const data = Object.values(categoryTotals);
+
+    // Destroy the old chart before drawing a new one
+    if (spendingChart) {
+        spendingChart.destroy();
+    }
+
+    spendingChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels.length > 0 ? labels : ['No Expenses'],
+            datasets: [{
+                data: data.length > 0 ? data : [1],
+                backgroundColor: data.length > 0 ? ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'] : ['#e0e0e0']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right' }
+            }
+        }
+    });
 }
 
-async function updateTransactionInBackend(transactionId, desc, type, amount) {
+// --- 5. Rendering Tables & Lists ---
+
+// Renders just the top 5 most recent items for the quick "Manage Transactions" card
+function renderRecentTransactions() {
+    const list = document.getElementById('transaction-list');
+    if (!list) return;
+    
+    list.innerHTML = '';
+    
+    // Sort newest to oldest, grab top 5
+    const recentTx = [...transactions]
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .slice(0, 5);
+
+    recentTx.forEach(t => {
+        const li = document.createElement('li');
+        const desc = t.description || t.merchant_name || 'Item';
+        const type = t.type || t.transaction_type;
+        const sign = (type === 'Income' || type === 'Deposit') ? '+' : '-';
+        
+        li.innerHTML = `
+            <span><strong>${desc}</strong> (${type}) - ${sign}$${parseFloat(t.amount).toFixed(2)}</span>
+            <div>
+                <button class="action-btn" style="padding: 4px 8px; font-size: 0.8rem; margin-right: 5px;" onclick="editTransaction('${t.transaction_id}', '${desc}', '${type}', '${t.amount}')">Edit</button>
+                <button class="delete-btn" onclick="deleteTransactionFromBackend('${t.transaction_id}')">X</button>
+            </div>
+        `;
+        list.appendChild(li);
+    });
+}
+
+// Renders the big, full-width history ledger at the bottom
+function renderFullHistoryTable() {
+    const tableBody = document.getElementById('full-history-body');
+    if (!tableBody) return;
+
+    const filteredTx = getFilteredTransactions();
+
+    if (filteredTx.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">No transactions found for this time period.</td></tr>';
+        return;
+    }
+
+    const sortedTx = [...filteredTx].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    tableBody.innerHTML = ''; 
+
+    sortedTx.forEach(t => {
+        const dateObj = new Date(t.created_at);
+        const niceDate = dateObj.toLocaleDateString();
+
+        const type = t.type || t.transaction_type;
+        const isIncome = (type === 'Income' || type === 'Deposit');
+        const amountClass = isIncome ? 'amt-income' : 'amt-expense';
+        const sign = isIncome ? '+' : '-';
+
+        const desc = t.description || t.merchant_name || 'Transaction';
+        const cat = type || 'Uncategorized';
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${niceDate}</td>
+            <td><strong>${desc}</strong></td>
+            <td>${cat}</td>
+            <td class="${amountClass}">${sign}$${parseFloat(t.amount).toFixed(2)}</td>
+        `;
+        tableBody.appendChild(row);
+    });
+}
+
+// --- 6. Transaction Form Logic (Add & Edit) ---
+const transactionForm = document.getElementById('transaction-form');
+if (transactionForm) {
+    transactionForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const desc = document.getElementById('t-desc').value;
+        const type = document.getElementById('t-type').value;
+        const amount = document.getElementById('t-amount').value;
+        const tSubmitBtn = document.getElementById('t-submit-btn');
+
+        if (editingTransactionId !== null) {
+            // --- EDIT MODE ---
+            tSubmitBtn.textContent = 'Updating...';
+            tSubmitBtn.disabled = true;
+
+            const success = await updateTransactionInBackend(editingTransactionId, desc, type, amount);
+
+            if (success) {
+                await loadUserData(); // Refresh from DB
+                editingTransactionId = null; 
+                tSubmitBtn.textContent = 'Add'; 
+                transactionForm.reset();
+            } else {
+                alert('Error updating transaction.');
+            }
+            tSubmitBtn.disabled = false;
+            
+        } else {
+            // --- ADD MODE ---
+            tSubmitBtn.textContent = 'Adding...';
+            tSubmitBtn.disabled = true;
+
+            try {
+                // Fetch to your Python backend
+                const userEmail = localStorage.getItem("userEmail") || "user@example.com"; 
+                const url = `${API_BASE_URL}/transactions/add-transaction?email=${encodeURIComponent(userEmail)}&amount=${amount}&t_type=${encodeURIComponent(type)}&m_id=0&m_name=${encodeURIComponent(desc)}&m_code=0&desc=${encodeURIComponent(desc)}&recurr=false`;
+                
+                const response = await fetch(url, { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.success) {
+                    await loadUserData(); // Refresh from DB
+                    transactionForm.reset();
+                } else {
+                    alert('Error: Could not save transaction.');
+                }
+            } catch (err) {
+                console.error("Error adding transaction:", err);
+            }
+            tSubmitBtn.textContent = 'Add';
+            tSubmitBtn.disabled = false;
+        }
+    });
+}
+
+// Pre-fill form for editing
+window.editTransaction = function(id, desc, type, amount) {
+    document.getElementById('t-desc').value = desc;
+    document.getElementById('t-type').value = type;
+    document.getElementById('t-amount').value = amount;
+    
+    editingTransactionId = id;
+    document.getElementById('t-submit-btn').textContent = 'Update';
+};
+
+// Python fetch to update transaction
+async function updateTransactionInBackend(id, desc, type, amount) {
     try {
         const response = await fetch(
-            `${API_BASE_URL}/transactions/edit-transaction?` +
-            `transaction_id=${transactionId}` +
+            `${API_BASE_URL}/transactions/update-transaction?` +
+            `transaction_id=${encodeURIComponent(id)}` +
             `&amount=${amount}` +
             `&t_type=${encodeURIComponent(type)}` +
             `&desc=${encodeURIComponent(desc)}`,
             { method: 'POST' }
         );
-        
         const data = await response.json();
         return data.success === true;
-        
     } catch (error) {
         console.error('Error updating transaction:', error);
         return false;
     }
 }
 
-transactionForm.addEventListener('submit', async function(e) {
-    e.preventDefault(); 
-
-    const desc = document.getElementById('t-desc').value;
-    const type = document.getElementById('t-type').value;
-    const amount = parseFloat(document.getElementById('t-amount').value);
-
-    if (editingTransactionId !== null) {
-        tSubmitBtn.textContent = 'Updating...';
-        tSubmitBtn.disabled = true;
-
-        const oldTransaction = transactions.find(t => t.id === editingTransactionId);
-        const success = await updateTransactionInBackend(editingTransactionId, desc, type, amount);
-        
-        if (success) {
-            const currentBalance = await getCurrentBalance();
-
-            let newBalance = currentBalance + oldTransaction.amount - amount;
-
-            await updateBalanceInBackend(newBalance);
-            await loadBalance();
-
-            await loadTransactions();
-
-            editingTransactionId = null; 
-            tSubmitBtn.textContent = 'Add'; 
-            transactionForm.reset();
-        } else {
-            alert('Error updating transaction');
-        }
-
-        tSubmitBtn.disabled = false;
-
-    } else {
-        tSubmitBtn.textContent = 'Adding...';
-        tSubmitBtn.disabled = true;
-        
-        const success = await addTransactionToBackend(desc, type, amount);
-        
-        if (success) {
-            const currentBalance = await getCurrentBalance();
-
-            let newBalance = currentBalance - amount;
-
-            await updateBalanceInBackend(newBalance);
-            await loadBalance();
-
-            await loadTransactions();
-            transactionForm.reset();
-        } else {
-            alert('Error adding transaction to database.');
-        }
-        
-        tSubmitBtn.textContent = 'Add';
-        tSubmitBtn.disabled = false;
-    }
-});
-
-function editTransaction(id) {
-    const transactionToEdit = transactions.find(t => t.id === id);
-            
-    if (transactionToEdit) {
-        document.getElementById('t-desc').value = transactionToEdit.desc;
-        document.getElementById('t-type').value = transactionToEdit.type;
-        document.getElementById('t-amount').value = transactionToEdit.amount;
-                
-        editingTransactionId = id;
-        tSubmitBtn.textContent = 'Update';
-    }
-}
-
-async function deleteTransaction(id) {
-    const transactionToDelete = transactions.find(t => t.id === id);
-
-    const success = await deleteTransactionFromBackend(id);
+// Python fetch to delete transaction
+window.deleteTransactionFromBackend = async function(id) {
+    if (!confirm("Are you sure you want to delete this transaction?")) return;
     
-    if (success) {
-        transactions = transactions.filter(t => t.id !== id);
+    try {
+        const response = await fetch(`${API_BASE_URL}/transactions/delete-transaction?transaction_id=${encodeURIComponent(id)}`, { method: 'POST' });
+        const isDeleted = await response.json();
+        if (isDeleted) {
+            await loadUserData(); // Refresh from DB
+        } else {
+            alert('Failed to delete transaction.');
+        }
+    } catch (error) {
+        console.error('Error deleting:', error);
+    }
+};
 
-        const currentBalance = await getCurrentBalance();
-
-        let newBalance = currentBalance + transactionToDelete.amount;
-
-        await updateBalanceInBackend(newBalance);
-        await loadBalance();
-
-        renderTransactions();
-    } else {
-        alert('Error deleting transaction from database');
+// --- 7. Goals Logic ---
+async function loadGoals() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/dashboard/get-goals?user_id=${currentUserId}`);
+        const data = await response.json();
+        goals = data.data || [];
+        renderGoals();
+    } catch (error) {
+        console.error('Error fetching goals:', error);
     }
 }
 
-function renderTransactions() {
-    transactionList.innerHTML = '';
-
-    if (transactions.length === 0) {
-        transactionList.innerHTML = '<p style="text-align: center; color: #888; font-style: italic; margin-top: 15px;">No transactions yet. Add your first one above!</p>';
-    } else {
+function renderGoals() {
+    const list = document.getElementById('goals-list');
+    if (!list) return;
+    
+    list.innerHTML = '';
+    
+    goals.forEach(goal => {
+        // Calculate progress based on actual transactions!
+        let currentAmount = 0;
         transactions.forEach(t => {
-            const li = document.createElement('li');
-            li.innerHTML = `
-                <span><strong>${t.desc}</strong> (${t.type})</span>
-                <span>$${t.amount.toFixed(2)} 
-                    <button class="edit-btn" data-id="${t.id}" style="background-color: #f0ad4e; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; margin-left: 10px;">Edit</button>
-                    <button class="delete-btn" data-id="${t.id}">X</button>
-                </span>
-            `;
-            
-            // Add event listeners after creating the element
-            const editBtn = li.querySelector('.edit-btn');
-            const deleteBtn = li.querySelector('.delete-btn');
-            
-            editBtn.addEventListener('click', () => editTransaction(t.id));
-            deleteBtn.addEventListener('click', () => deleteTransaction(t.id));
-            
-            transactionList.appendChild(li);
+            const type = t.type || t.transaction_type;
+            if (type === goal.category) {
+                currentAmount += parseFloat(t.amount);
+            }
+        });
+
+        const target = parseFloat(goal.target_amount);
+        let percent = (currentAmount / target) * 100;
+        if (percent > 100) percent = 100;
+
+        const goalDiv = document.createElement('div');
+        goalDiv.style.marginBottom = '15px';
+        goalDiv.innerHTML = `
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                <strong>${goal.category}</strong>
+                <span>$${currentAmount.toFixed(2)} / $${target.toFixed(2)}</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width: ${percent}%; background-color: ${percent >= 100 ? '#ff4d4d' : '#97dbff'};"></div>
+            </div>
+            <div style="text-align: right; margin-top: 5px;">
+                <button class="action-btn" style="padding: 2px 8px; font-size: 0.7rem; background-color: #ff4d4d; color: white;" onclick="deleteGoal('${goal.goal_id}')">Delete</button>
+            </div>
+        `;
+        list.appendChild(goalDiv);
+    });
+}
+
+const goalForm = document.getElementById('goal-form');
+if (goalForm) {
+    goalForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const category = document.getElementById('g-category').value;
+        const amount = document.getElementById('g-amount').value;
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/dashboard/add-goal?user_id=${currentUserId}&category=${encodeURIComponent(category)}&target_amount=${amount}`, { method: 'POST' });
+            const data = await response.json();
+            if (data.success) {
+                await loadGoals();
+                goalForm.reset();
+            } else {
+                alert('Error adding goal.');
+            }
+        } catch (err) {
+            console.error('Goal Error:', err);
+        }
+    });
+}
+
+window.deleteGoal = async function(goalId) {
+    if (!confirm("Remove this goal?")) return;
+    try {
+        const response = await fetch(`${API_BASE_URL}/dashboard/delete-goal?goal_id=${goalId}`, { method: 'POST' });
+        const data = await response.json();
+        if (data.success) {
+            await loadGoals();
+        }
+    } catch (err) {
+        console.error('Goal delete error:', err);
+    }
+};
+
+// --- 8. Global Logout Logic ---
+const logoutBtns = [document.getElementById('logout-btn-existing'), document.getElementById('logout-btn-new')];
+logoutBtns.forEach(btn => {
+    if (btn) {
+        btn.addEventListener('click', function() {
+            localStorage.removeItem("isLoggedIn");
+            localStorage.removeItem("userId");
+            localStorage.removeItem("userEmail");
+            window.location.replace("index.html");
         });
     }
-            
-    updateChartData(); 
-    renderGoals(); 
-}
-
-// --- 4. Pie Chart Logic ---
-const ctx = document.getElementById('spending-chart').getContext('2d');
-let spendingChart = new Chart(ctx, {
-    type: 'pie',
-    data: {
-        labels: ['Groceries', 'Dining', 'Utilities', 'Entertainment'],
-        datasets: [{
-            data: [0, 0, 0, 0], 
-            backgroundColor: ['#97dbff', '#ffb3ba', '#bae1ff', '#baffc9']
-        }]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
 });
 
-function updateChartData() {
-    let totals = { 'Groceries': 0, 'Dining': 0, 'Utilities': 0, 'Entertainment': 0 };
-    transactions.forEach(t => {
-        if(totals[t.type] !== undefined) totals[t.type] += t.amount;
-    });
-    spendingChart.data.datasets[0].data = Object.values(totals);
-    spendingChart.update();
-}
-
-// Load balance from backend
-async function loadBalance() {
-    try {
-        const response = await fetch(
-            `${API_BASE_URL}/dashboard/get-balance?user_id=${currentUserId}`
-        );
-        const data = await response.json();
-        
-        if (data && data.data && data.data.length > 0) {
-            const balance = parseFloat(data.data[0].balance || 0);
-            document.getElementById('display-balance').innerText = `$${balance.toFixed(2)}`;
-        } else {
-            document.getElementById('display-balance').innerText = '$0.00';
-        }
-    } catch (error) {
-        console.error('Error loading balance:', error);
-        document.getElementById('display-balance').innerText = '$0.00';
-    }
-}
-
-async function updateBalanceInBackend(newBalance) {
-    try {
-        const response = await fetch(
-            `${API_BASE_URL}/dashboard/update-balance?` +
-            `user_id=${currentUserId}` +
-            `&new_balance=${newBalance}`,
-            { method: 'POST' }
-        );
-
-        const data = await response.json();
-        return data.success === true;
-
-    } catch (error) {
-        console.error('Error updating balance:', error);
-        return false;
-    }
-}
-
-async function getCurrentBalance() {
-    const text = document.getElementById('display-balance').innerText;
-    return parseFloat(text.replace('$', '')) || 0;
-}
-
-function toggleBalanceEdit() {
-    const form = document.getElementById('edit-balance-form');
-    const input = document.getElementById('new-balance-input');
-    const currentText = document.getElementById('display-balance').innerText;
-
-    const currentBalance = parseFloat(currentText.replace('$', '')) || 0;
-
-    if (form.style.display === 'none' || form.style.display === '') {
-        form.style.display = 'block';
-        input.value = currentBalance;
-        input.focus();
-    } else {
-        form.style.display = 'none';
-    }
-}
-
-async function saveBalance() {
-    const input = document.getElementById('new-balance-input');
-    const newBalance = parseFloat(input.value);
-
-    if (isNaN(newBalance)) {
-        alert("Please enter a valid number");
-        return;
-    }
-
-    const success = await updateBalanceInBackend(newBalance);
-
-    if (success) {
-        await loadBalance();
-
-        // Hide form after saving
-        document.getElementById('edit-balance-form').style.display = 'none';
-    } else {
-        alert("Failed to update balance");
-    }
-}
-
-// --- 5. Mock File Upload Simulation ---
-document.getElementById('statement-upload').addEventListener('change', function(e) {
-    if(e.target.files.length > 0) {
-        alert("File selected! Loading mock data to demonstrate the chart and goals update.");
-        transactions = [
-            { id: 1, desc: "Schnucks", type: "Groceries", amount: 120.50 },
-            { id: 2, desc: "Evergy", type: "Utilities", amount: 85.00 },
-            { id: 3, desc: "AMC Theaters", type: "Entertainment", amount: 35.00 },
-            { id: 4, desc: "Chipotle", type: "Dining", amount: 24.50 }
-        ];
-        renderTransactions();
-    }
-});
-
-// Initialize UI on first load
-renderTransactions();
+// Run security check as soon as the file loads
+secureDashboard();

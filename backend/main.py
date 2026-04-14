@@ -164,23 +164,34 @@ def get_transactions(user_id):
 
         return False
 
-# Adds a transaction to the user's account
-# Pre: takes the user email, transaction amount, transaction type, merchant ID, merchant name, 
-#      merchant code, a description, and a recurring T/F as parameters
-# Post: returns true if the transaction was added, false otherwise
+# Adds a transaction to the user's account and updates balance
 @app.post("/transactions/add-transaction")
 def add_transaction(email, amount, t_type, m_id, m_name, m_code, desc, recurr):
-    print(f"Received add_transaction request - Email: {email}, Amount: {amount}, Type: {t_type}")
     try:
         users = supabase.table("users").select("*").execute()
         for user in users.data:
             if user.get('email') == email:
                 acc_id = user.get('account_id')
                 
-                transaction_id = str(uuid.uuid4())  # Generate ID first
+                # --- SAFETY NET ---
+                acc_check = supabase.table("accounts").select("account_id").eq("account_id", acc_id).execute()
+                if not acc_check.data:
+                    supabase.table("accounts").insert({"account_id": acc_id, "account_type": "checking"}).execute()
                 
+                # --- AUTOMATIC BALANCE UPDATE ---
+                acc_res = supabase.table("accounts").select("balance").eq("account_id", acc_id).execute()
+                if acc_res.data:
+                    current_balance = float(acc_res.data[0].get("balance") or 0)
+                    tx_amt = float(amount)
+                    if str(t_type).lower() in ['income', 'deposit']:
+                        new_balance = current_balance + tx_amt
+                    else:
+                        new_balance = current_balance - tx_amt
+                    supabase.table("accounts").update({"balance": new_balance}).eq("account_id", acc_id).execute()
+                # --------------------------------
+
                 data = {
-                    'transaction_id': transaction_id,
+                    'transaction_id': str(uuid.uuid4()),
                     'account_id': acc_id,
                     'amount': amount,
                     'transaction_type': t_type,
@@ -192,52 +203,93 @@ def add_transaction(email, amount, t_type, m_id, m_name, m_code, desc, recurr):
                     'created_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
                 }
                  
-                result = supabase.table("transactions").insert(data).execute()
-                print(f"Transaction added successfully: {result}")
-                return {"success": True, "transaction_id": transaction_id}  # Return the ID
+                supabase.table("transactions").insert(data).execute()
+                return {"success": True}
         
-        print(f"User not found with email: {email}")
         return {"success": False, "error": "User not found"}
         
     except Exception as e:
-        print("="*50)
-        print("FULL ERROR MESSAGE:")
-        print(str(e))
-        print("="*50)
+        print(f"Error adding transaction: {e}")
         return {"success": False, "error": str(e)}
 
 
-# Deletes the specified transaction
-# Pre: takes a transaction ID as a parameter
-# Post:  returns true if the transaction was deleted, false otherwise
+# Deletes the specified transaction and reverses the balance
 @app.post("/transactions/delete-transaction")
 def delete_transaction(transaction_id):
     try:
+        # 1. Find the transaction to reverse the math
+        tx_res = supabase.table("transactions").select("*").eq("transaction_id", transaction_id).execute()
+        if tx_res.data:
+            tx = tx_res.data[0]
+            acc_id = tx.get("account_id")
+            old_amt = float(tx.get("amount") or 0)
+            old_type = tx.get("transaction_type", "")
+            
+            # 2. Update the balance
+            acc_res = supabase.table("accounts").select("balance").eq("account_id", acc_id).execute()
+            if acc_res.data:
+                current_balance = float(acc_res.data[0].get("balance") or 0)
+                # If they delete an income, subtract it. If they delete an expense, add it back!
+                if str(old_type).lower() in ['income', 'deposit']:
+                    current_balance -= old_amt
+                else:
+                    current_balance += old_amt
+                supabase.table("accounts").update({"balance": current_balance}).eq("account_id", acc_id).execute()
+
+        # 3. Actually delete the transaction
         supabase.table("transactions").delete().eq("transaction_id", transaction_id).execute()
         return True
     
     except Exception as e:
+        print(f"Error deleting transaction: {e}")
         return False
 
-# Edits a transaction on the user's account
-# Pre: takes the transaction_id, amount, t_type, desc as parameters
-# Post: returns true if the transaction was added, false otherwise
-@app.post("/transactions/edit-transaction")
-def edit_transaction(transaction_id, amount, t_type, desc):
+
+# Updates an existing transaction and recalculates balance
+@app.post("/transactions/update-transaction")
+def update_transaction(transaction_id, amount, t_type, desc):
     try:
+        # 1. Get the old transaction to reverse it
+        old_tx_res = supabase.table("transactions").select("*").eq("transaction_id", transaction_id).execute()
+        if not old_tx_res.data:
+            return {"success": False, "error": "Transaction not found"}
+        
+        old_tx = old_tx_res.data[0]
+        acc_id = old_tx.get("account_id")
+        old_amt = float(old_tx.get("amount") or 0)
+        old_type = old_tx.get("transaction_type", "")
+        
+        # 2. Get current balance
+        acc_res = supabase.table("accounts").select("balance").eq("account_id", acc_id).execute()
+        current_balance = float(acc_res.data[0].get("balance") or 0) if acc_res.data else 0
+            
+        # 3. Reverse the old transaction
+        if str(old_type).lower() in ['income', 'deposit']:
+            current_balance -= old_amt
+        else:
+            current_balance += old_amt
+            
+        # 4. Apply the new transaction
+        new_amt = float(amount)
+        if str(t_type).lower() in ['income', 'deposit']:
+            current_balance += new_amt
+        else:
+            current_balance -= new_amt
+            
+        # 5. Save the new balance and updated transaction
+        supabase.table("accounts").update({"balance": current_balance}).eq("account_id", acc_id).execute()
+        
         data = {
-            'amount': float(amount),
-            'transaction_type': t_type,
-            'description': desc
+            "amount": new_amt,
+            "transaction_type": t_type,
+            "description": desc
         }
-        
         supabase.table("transactions").update(data).eq("transaction_id", transaction_id).execute()
-        return {"success": True}
-    
-    except Exception as e:
-        print(f"Error editing transaction: {e}")
-        return {"success": False, "error": str(e)}
         
+        return {"success": True}
+    except Exception as e:
+        print(f"Error updating transaction: {e}")
+        return {"success": False, "error": str(e)}
     
 # Updates the users password
 # Pre: takes the user email and new desired password as parameters
@@ -266,6 +318,43 @@ def update_password(email, newpass):
     except Exception as e:
         return False
 
+
+# Gets the user's exact balance from the accounts table
+@app.get("/account/get-balance")
+def get_balance(user_id: str):
+    try:
+        user_res = supabase.table("users").select("account_id").eq("user_id", user_id).execute()
+        if user_res.data:
+            acc_id = user_res.data[0].get("account_id")
+            
+            # Grab the balance
+            acc_res = supabase.table("accounts").select("balance").eq("account_id", acc_id).execute()
+            if acc_res.data:
+                balance = acc_res.data[0].get("balance", 0)
+                return {"success": True, "balance": balance}
+                
+        return {"success": False, "balance": 0}
+    except Exception as e:
+        print(f"Error fetching balance: {e}")
+        return {"success": False, "error": str(e)}
+
+# Updates the user's balance in the accounts table
+@app.post("/account/update-balance")
+def update_balance(user_id: str, new_balance: float):
+    try:
+        user_res = supabase.table("users").select("account_id").eq("user_id", user_id).execute()
+        if user_res.data:
+            acc_id = user_res.data[0].get("account_id")
+            
+            # Save the new balance
+            supabase.table("accounts").update({"balance": new_balance}).eq("account_id", acc_id).execute()
+            return {"success": True}
+            
+        return {"success": False}
+    except Exception as e:
+        print(f"Error updating balance: {e}")
+        return {"success": False, "error": str(e)}
+    
 # Gets the user's profile information
 @app.get("/account/get-profile")
 def get_profile(user_id: str):
