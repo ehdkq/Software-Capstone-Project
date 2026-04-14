@@ -5,6 +5,10 @@ let transactions = [];
 let goals = [];
 let spendingChart = null; // Holds the Chart.js instance
 let editingTransactionId = null;
+// --- Physics Variables ---
+let physicsEngine = null;
+let physicsRender = null;
+let currentGoalCategory = null;
 
 // --- 1. Security & Profile Initialization ---
 async function secureDashboard() {
@@ -409,41 +413,161 @@ async function loadGoals() {
 }
 
 function renderGoals() {
-    const list = document.getElementById('goals-list');
-    if (!list) return;
+    const selectBox = document.getElementById('goal-visualizer-select');
+    if (!selectBox) return;
     
-    list.innerHTML = '';
+    // 1. Populate the dropdown with the user's goals
+    // Save the current selection so it doesn't reset when we redraw
+    const currentSelection = selectBox.value; 
+    selectBox.innerHTML = '<option value="">Select a Goal to view...</option>';
     
     goals.forEach(goal => {
-        // Calculate progress based on actual transactions!
-        let currentAmount = 0;
-        transactions.forEach(t => {
-            const type = t.type || t.transaction_type;
-            if (type === goal.category) {
-                currentAmount += parseFloat(t.amount);
-            }
-        });
-
-        const target = parseFloat(goal.target_amount);
-        let percent = (currentAmount / target) * 100;
-        if (percent > 100) percent = 100;
-
-        const goalDiv = document.createElement('div');
-        goalDiv.style.marginBottom = '15px';
-        goalDiv.innerHTML = `
-            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                <strong>${goal.category}</strong>
-                <span>$${currentAmount.toFixed(2)} / $${target.toFixed(2)}</span>
-            </div>
-            <div class="progress-bar-bg">
-                <div class="progress-bar-fill" style="width: ${percent}%; background-color: ${percent >= 100 ? '#ff4d4d' : '#97dbff'};"></div>
-            </div>
-            <div style="text-align: right; margin-top: 5px;">
-                <button class="action-btn" style="padding: 2px 8px; font-size: 0.7rem; background-color: #ff4d4d; color: white;" onclick="deleteGoal('${goal.goal_id}')">Delete</button>
-            </div>
-        `;
-        list.appendChild(goalDiv);
+        const option = document.createElement('option');
+        option.value = goal.category;
+        option.textContent = `${goal.category} (Target: $${parseFloat(goal.target_amount).toFixed(2)})`;
+        selectBox.appendChild(option);
     });
+    
+    // Restore selection if it existed
+    if (currentSelection) selectBox.value = currentSelection;
+
+    // 2. Add the event listener to draw the arena when they pick a goal
+    selectBox.removeEventListener('change', drawGamificationArena); // Prevent duplicates
+    selectBox.addEventListener('change', drawGamificationArena);
+    
+    // Draw it immediately if something is already selected
+    drawGamificationArena();
+}
+// Creates the physics world inside the jar
+// Creates the physics world inside the jar
+function initPhysicsEngine() {
+    if (physicsEngine) return; 
+
+    const jarContainer = document.getElementById('the-jar');
+    const Engine = Matter.Engine,
+          Render = Matter.Render,
+          Runner = Matter.Runner,
+          Bodies = Matter.Bodies,
+          Composite = Matter.Composite;
+
+    physicsEngine = Engine.create();
+
+    // 1. Stretch the canvas to match the new 150x180 image
+    physicsRender = Render.create({
+        element: jarContainer,
+        engine: physicsEngine,
+        options: {
+            width: 150,
+            height: 180,
+            background: 'transparent',
+            wireframes: false 
+        }
+    });
+
+    // --- X-RAY VISION: TEMPORARILY RED AND VISIBLE ---
+    const wallOptions = { isStatic: true, render: { visible: false } };
+    
+    // Reminder: Bodies.rectangle( x-center, y-center, width, height )
+    const leftWall = Bodies.rectangle(37, 90, 10, 180, wallOptions); 
+    const rightWall = Bodies.rectangle(115, 90, 10, 180, wallOptions); 
+    const floor = Bodies.rectangle(80, 160, 150, 20, wallOptions); 
+
+    Composite.add(physicsEngine.world, [leftWall, rightWall, floor]);
+    Render.run(physicsRender);
+    Runner.run(Runner.create(), physicsEngine);
+}
+
+function drawGamificationArena() {
+    const selectBox = document.getElementById('goal-visualizer-select');
+    const arena = document.getElementById('gamification-arena');
+    const category = selectBox.value;
+
+    if (!category) {
+        arena.style.display = 'none';
+        return;
+    }
+
+    const activeGoal = goals.find(g => g.category === category);
+    if (!activeGoal) return;
+
+    arena.style.display = 'block';
+
+    // 1. Boot up the physics engine if it hasn't started yet
+    initPhysicsEngine();
+
+    // 2. Do the math
+    const target = parseFloat(activeGoal.target_amount);
+    const categoryTx = transactions.filter(t => (t.type || t.transaction_type) === category);
+    
+    let currentSpent = 0;
+    categoryTx.forEach(t => currentSpent += parseFloat(t.amount));
+
+    const isOverBudget = currentSpent > target;
+
+    const mascot = document.getElementById('budgie-mascot');
+    const statusText = document.getElementById('budgie-status-text');
+    const jar = document.getElementById('the-jar');
+    const readout = document.getElementById('goal-math-readout');
+
+    jar.classList.remove('over-budget-shake');
+    readout.innerHTML = `Spent: <strong style="color: ${isOverBudget ? '#ff4d4d' : 'var(--text-color)'}">$${currentSpent.toFixed(2)}</strong> / Target: $${target.toFixed(2)}`;
+
+    // 3. PHYSICS LOGIC
+    // If we swapped to a different goal in the dropdown, empty the jar completely!
+    if (currentGoalCategory !== category) {
+        Matter.World.clear(physicsEngine.world, true); // The 'true' keeps our invisible walls!
+        currentGoalCategory = category;
+    }
+
+    if (isOverBudget) {
+        mascot.src = '/html/images/sad budgie.png';
+        statusText.textContent = "Oh no! Seeds lost!";
+        statusText.style.color = '#ff4d4d';
+        
+        // Vaporize all the seeds and shake the jar
+        Matter.World.clear(physicsEngine.world, true);
+        setTimeout(() => jar.classList.add('over-budget-shake'), 10); 
+        
+    } else {
+        mascot.src = '/html/images/budgie happy.png';
+        statusText.textContent = "Looking good!";
+        statusText.style.color = '#28a745';
+        
+        const targetSeeds = categoryTx.length;
+        // Count how many dynamic objects (seeds) are currently in the physics world
+        const currentSeeds = physicsEngine.world.bodies.filter(b => !b.isStatic).length;
+
+        // If we have fewer seeds than transactions, drop the missing ones!
+        if (targetSeeds > currentSeeds) {
+            let seedsToAdd = targetSeeds - currentSeeds;
+            
+            // Drop them on a timer so they fall sequentially and collide
+            let dropInterval = setInterval(() => {
+                if (seedsToAdd <= 0) {
+                    clearInterval(dropInterval);
+                    return;
+                }
+                
+                // Drop from the top, randomize the X axis slightly so they stack organically
+                const dropX = 75 + (Math.random() * 30 - 15); 
+                
+                // Create an 8-sided polygon to simulate a rounded seed
+                const seed = Matter.Bodies.polygon(dropX, -10, 8, 7, { 
+                    restitution: 0.5, // Bounciness!
+                    friction: 0.1,
+                    render: { fillStyle: '#f5c542' }
+                });
+                
+                Matter.Composite.add(physicsEngine.world, seed);
+                seedsToAdd--;
+            }, 300); // 300ms between each drop
+            
+        } else if (targetSeeds < currentSeeds) {
+            // If they deleted a transaction, the easiest fix is to empty the jar and let the function redraw it
+             Matter.World.clear(physicsEngine.world, true);
+             setTimeout(drawGamificationArena, 50); 
+        }
+    }
 }
 
 const goalForm = document.getElementById('goal-form');

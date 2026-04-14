@@ -4,21 +4,23 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/html/css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <title>Dashboard - Budgie</title>
+    
     <script>
         if (localStorage.getItem('budgieTheme') === 'dark') {
             document.documentElement.classList.add('dark-theme');
-            // Adding to body when it loads
             window.addEventListener('DOMContentLoaded', () => {
                 document.body.classList.add('dark-theme');
             });
         }
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <title>Dashboard - Budgie</title>
+
     <style>
         /* Floating Profile Circle (Bottom Right) */
         #profile-circle {
-            display: none; /* Hidden until logged in */
+            display: none; /* Hidden until Javascript confirms login */
             position: fixed;
             bottom: 30px;
             right: 30px;
@@ -28,12 +30,12 @@
             width: 60px;
             height: 60px;
             background-color: #97dbff;
-            color: white;
+            color: #333;
             border-radius: 50%;
             text-decoration: none;
             font-weight: bold;
             font-size: 1.8rem;
-            border: 3px solid #fff;
+            border: 3px solid var(--card-bg, #fff);
             box-shadow: 0 8px 15px rgba(0,0,0,0.2);
             transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
         }
@@ -66,8 +68,8 @@
     </header>
 
     <div id="new-user-welcome" style="display: none; text-align: center; padding: 100px 20px; font-family: sans-serif; min-height: 60vh;">
-        <h1 id="user-greeting-new" style="color: #333; font-size: 2.5rem;">Welcome to Budgie!</h1>
-        <p style="margin: 20px 0; font-size: 1.2rem; color: #666;">Your dashboard is currently empty. Let's set up your first budget!</p>
+        <h1 id="user-greeting-new" style="color: var(--text-color); font-size: 2.5rem;">Welcome to Budgie!</h1>
+        <p style="margin: 20px 0; font-size: 1.2rem; color: var(--text-muted);">Your dashboard is currently empty. Let's set up your first budget!</p>
         
         <div style="display: flex; justify-content: center; gap: 15px; margin-top: 30px;">
             <button id="start-budgeting-btn" class="action-btn" style="padding: 10px 25px; font-size: 1.1rem; cursor: pointer;">Start Budgeting</button>
@@ -77,13 +79,14 @@
 
     <div id="existing-dashboard" style="display: none;">
         <main class="dashboard-main-content">
+            
             <div class="dashboard-header-text" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 15px;">
                 <div>
                     <h2 id="dynamic-greeting" style="margin: 0 0 5px 0;">Welcome back!</h2>
-                    <p style="margin: 0;">Here is your financial overview.</p>
+                    <p style="margin: 0; color: var(--text-muted);">Here is your financial overview.</p>
                 </div>
                 <div>
-                    <select id="dashboard-timefilter" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-color); cursor: pointer;">
+                    <select id="dashboard-timefilter" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-color); cursor: pointer; outline: none;">
                         <option value="30">Last 30 Days</option>
                         <option value="90">Last 90 Days</option>
                         <option value="all" selected>All Time</option>
@@ -92,6 +95,7 @@
             </div>
             
             <div class="dashboard-grid">
+                
                 <div class="dashboard-card">
                     <h3>Total Balance</h3>
                     
@@ -106,22 +110,44 @@
                             <button onclick="submitQuickDeposit()" class="action-btn" style="padding: 5px 15px; margin: 0; background-color: #28a745; color: white;">Deposit</button>
                         </div>
                     </div>
-                    
-                    <h3 style="margin-top: 15px; padding-bottom: 10px;">Budget Goals</h3>
-                    
-                    <form id="goal-form" class="transaction-form" style="margin-bottom: 15px;">
-                        <select id="g-category" required>
+                    <h3 style="margin-top: 15px; padding-bottom: 10px;">Create a Goal</h3>
+                    <form id="goal-form" class="transaction-form" style="margin-bottom: 25px; display: flex; gap: 10px;">
+                        <select id="g-category" required style="flex: 1; padding: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-color); border-radius: 4px;">
+                            <option value="" disabled selected>Category...</option>
                             <option value="Groceries">Groceries</option>
                             <option value="Dining">Dining Out</option>
                             <option value="Utilities">Utilities</option>
                             <option value="Entertainment">Entertainment</option>
                         </select>
-                        <input type="number" id="g-amount" placeholder="Target limit ($)" step="0.01" required>
-                        <button type="submit" class="action-btn" style="margin-top:0;">Add / Update</button>
+                        <input type="number" id="g-amount" placeholder="Target ($)" step="0.01" required style="width: 100px; padding: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-color); border-radius: 4px;">
+                        <button type="submit" class="action-btn" style="margin-top:0;">Save</button>
                     </form>
 
-                    <div id="goals-list">
+                    <h3 style="padding-bottom: 10px;">Goal Tracker</h3>
+                    
+                    <select id="goal-visualizer-select" style="padding: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-color); border-radius: 4px; margin-bottom: 15px; width: 100%; font-weight: bold; outline: none;">
+                        <option value="">Select a Goal...</option>
+                        </select>
+                    
+
+                    <div id="gamification-arena" style="display: none; background: var(--bg-color); border-radius: 12px; padding: 20px; border: 1px solid var(--border-color); text-align: center;">
+                        <div style="display: flex; justify-content: center; align-items: flex-end; gap: 30px; margin-bottom: 20px; height: 150px;">
+                            
+                            <div style="display: flex; flex-direction: column; align-items: center;">
+                                <img id="budgie-mascot" src="/html/images/happy-budgie.png" alt="Budgie" style="width: 80px; height: 80px; transition: all 0.3s; background: white; border-radius: 50%; padding: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                                <span id="budgie-status-text" style="margin-top: 10px; font-weight: bold; font-size: 0.9rem;">Looking good!</span>
+                            </div>
+
+                            <div style="position: relative; width: 150px; height: 180px;">
+                                <div id="the-jar" style="position: absolute; bottom: 0; width: 100%; height: 100%; background-image: url('/html/images/empty jar.png'); background-size: contain; background-repeat: no-repeat; background-position: bottom center; z-index: 1;">
+                                </div>
+                            </div>
                         </div>
+
+                        <div id="goal-math-readout" style="font-size: 1.1rem; color: var(--text-color);">
+                            Spent: <strong>$0.00</strong> / Target: $0.00
+                        </div>
+                    </div>
                 </div>
 
                 <div class="dashboard-card">
@@ -146,7 +172,7 @@
                     <h3>Spending Breakdown</h3>
                     <div class="upload-section">
                         <label for="statement-upload">Upload Bank Statement (CSV):</label>
-                        <input type="file" id="statement-upload" accept=".csv">
+                        <input type="file" id="statement-upload" accept=".csv" style="color: var(--text-color);">
                     </div>
                     <div class="chart-container" style="position: relative; height:250px; width:100%">
                         <canvas id="spending-chart"></canvas>
@@ -157,10 +183,11 @@
                     <h3>Ask Budgie AI</h3>
                     <p>Have a question about your spending? Budgie is here to help.</p>
                     <img src="/html/images/budgie-ai.png" alt ="Budgie AI Assistant" class="ai-assistant-img">
-                    <a href="llm-help.html" class="action-btn">Chat Now</a>
+                    <a href="llm-help.html" class="action-btn" style="display: block; margin-top: 15px;">Chat Now</a>
                 </div>
+            </div>
 
-                <div class="dashboard-card" style="margin-top: 24px;">
+            <div class="dashboard-card" style="margin-top: 24px;">
                 <h3>Full Transaction History</h3>
                 <div style="overflow-x: auto;">
                     <table class="history-table">
@@ -173,11 +200,10 @@
                             </tr>
                         </thead>
                         <tbody id="full-history-body">
-                            <tr><td colspan="4" style="text-align: center;">Loading transactions...</td></tr>
+                            <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Loading transactions...</td></tr>
                         </tbody>
                     </table>
                 </div>
-            </div>
             </div>
 
             <div style="text-align: center; margin-top: 40px; margin-bottom: 20px;">

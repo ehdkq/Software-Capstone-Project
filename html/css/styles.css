@@ -533,3 +533,149 @@ main {
 .send-btn:hover {
   background-color: #7bc5f0;
 }
+
+/* --- Full History Table Styles (Upgraded Layout) --- */
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  text-align: left;
+  table-layout: fixed; /* <-- This forces the browser to obey our spacing rules! */
+}
+
+/* Assign exact percentages so the columns spread out beautifully */
+.history-table th:nth-child(1) { width: 20%; } /* Date */
+.history-table th:nth-child(2) { width: 40%; } /* Description gets the most room */
+.history-table th:nth-child(3) { width: 20%; } /* Category */
+.history-table th:nth-child(4) { width: 20%; text-align: right; } /* Amount */
+
+.history-table th {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  padding: 12px 15px;
+  font-weight: bold;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.history-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-color);
+  
+  /* If a description is way too long, add '...' instead of breaking the table */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Align the money to the right so all the decimal points line up perfectly */
+.history-table td:nth-child(4) {
+  text-align: right;
+}
+
+/* Hover effect for rows */
+.history-table tr:hover td {
+  background-color: var(--bg-color);
+}
+
+/* Color coding for income vs expenses */
+.amt-income {
+  color: #28a745; 
+  font-weight: bold;
+}
+.amt-expense {
+  color: var(--text-color);
+}
+
+/* --- Gamification Animation --- */
+.seed {
+    width: 15px;
+    height: 20px;
+    background-color: #f5c542; /* Golden seed color */
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; /* Makes it shaped like a seed! */
+    box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2);
+    /* The animation drops it from 100px above, and fades it in */
+    animation: dropIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    opacity: 0; /* Hidden until animation starts */
+}
+
+@keyframes dropIn {
+    0% { transform: translateY(-100px); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+
+/* Shake animation for when they go over budget */
+@keyframes shakeJar {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-5px); }
+    100% { transform: translateX(0); }
+}
+.over-budget-shake {
+    animation: shakeJar 0.4s ease-in-out;
+    /* This creates a red warning glow around your custom image! */
+    filter: drop-shadow(0 0 15px rgba(255, 77, 77, 0.9));
+}
+
+/* --- AI Chat Image Upload Button --- */
+.upload-btn {
+    background-color: transparent;
+    color: var(--text-color);
+    border: 1px solid var(--input-border);
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+/* Hover effect for logged-in users */
+.upload-btn:hover:not(.disabled) {
+    background-color: var(--bg-color);
+    border-color: #97dbff;
+}
+
+/* The Grayed-Out State for Guests */
+.upload-btn.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background-color: var(--bg-color);
+}
+
+/* --- Members Only Popup (Toast) --- */
+.members-only-popup {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background-color: #333;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 24px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    font-size: 0.95rem;
+    font-weight: bold;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Gives it a nice bouncy pop-in */
+    z-index: 2000;
+    pointer-events: none; /* So it doesn't block clicking */
+}
+
+/* Toggled by Javascript to show the popup */
+.members-only-popup.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+/* Adjust dark theme contrast for the popup */
+body.dark-theme .members-only-popup {
+    background-color: #97dbff;
+    color: #121212;
+}
