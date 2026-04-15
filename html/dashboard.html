@@ -86,10 +86,11 @@
                     <p style="margin: 0; color: var(--text-muted);">Here is your financial overview.</p>
                 </div>
                 <div>
-                    <select id="dashboard-timefilter" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-color); cursor: pointer; outline: none;">
+                    <select id="timeframe-filter">
+                        <option value="all">All Time</option>
                         <option value="30">Last 30 Days</option>
+                        <option value="60">Last 60 Days</option>
                         <option value="90">Last 90 Days</option>
-                        <option value="all" selected>All Time</option>
                     </select>
                 </div>
             </div>
@@ -170,9 +171,19 @@
 
                 <div class="dashboard-card">
                     <h3>Spending Breakdown</h3>
-                    <div class="upload-section">
-                        <label for="statement-upload">Upload Bank Statement (CSV):</label>
-                        <input type="file" id="statement-upload" accept=".csv" style="color: var(--text-color);">
+                    <div class="upload-section" style="display: flex; flex-direction: column; gap: 10px;">
+                        <label for="statement-upload">Auto-Import Bank Statement (PDF):</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="file" id="statement-upload" accept="application/pdf" style="flex: 1; padding: 5px;">
+                            <button id="import-statement-btn" class="action-btn" style="padding: 5px 15px; margin: 0; background-color: #9966FF; color: white;">Import via AI</button>
+                        </div>
+                        
+                        <div id="import-status-area" style="display: none; margin-top: 10px;">
+                            <span id="import-status-text" style="font-size: 0.85rem; font-weight: bold; color: var(--text-color);">Analyzing document...</span>
+                            <div class="import-progress-container" style="display: block; width: 100%; height: 12px; background-color: rgba(0,0,0,0.1); border-radius: 6px; overflow: hidden; margin-top: 5px;">
+                                <div id="import-progress-bar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #97dbff, #9966FF, #97dbff); background-size: 200% 100%; border-radius: 6px; transition: width 0.4s ease-out;"></div>
+                            </div>
+                        </div>
                     </div>
                     <div class="chart-container" style="position: relative; height:250px; width:100%">
                         <canvas id="spending-chart"></canvas>

@@ -1,14 +1,20 @@
 // --- Global Variables ---
 const API_BASE_URL = "http://127.0.0.1:8000";
 let currentUserId = null;
-let transactions = [];
+
+// 1. Your two data nests!
+let allTransactions = []; // The vault containing EVERYTHING
+let activeTransactions = []; // The filtered list currently on screen
+
 let goals = [];
 let spendingChart = null; // Holds the Chart.js instance
 let editingTransactionId = null;
+
 // --- Physics Variables ---
 let physicsEngine = null;
 let physicsRender = null;
 let currentGoalCategory = null;
+
 
 // --- 1. Security & Profile Initialization ---
 async function secureDashboard() {
@@ -20,14 +26,11 @@ async function secureDashboard() {
         return; 
     }
 
-    // Unhide the settings profile button
     const profileCircle = document.getElementById("profile-circle");
     if (profileCircle) profileCircle.style.display = "flex";
 
-    // Show the existing dashboard wrapper
     document.getElementById("existing-dashboard").style.display = "block";
 
-    // Fetch the user's name for the profile circle and settings page!
     try {
         const profileRes = await fetch(`${API_BASE_URL}/account/get-profile?user_id=${currentUserId}`);
         const profileData = await profileRes.json();
@@ -36,19 +39,16 @@ async function secureDashboard() {
             const fName = profileData.first_name;
             const lName = profileData.last_name;
             
-            // Use first name for the circle. If blank, fallback to email
             const displayName = fName || profileData.email;
             if (displayName) {
                 const firstLetter = displayName.charAt(0).toUpperCase();
                 const initialEl = document.getElementById("profile-initial");
                 if (initialEl) initialEl.textContent = firstLetter;
                 
-                // Update the greeting text!
                 const greetingEl = document.getElementById("dynamic-greeting");
                 if (greetingEl) greetingEl.textContent = `Welcome back, ${fName || 'User'}!`;
             }
             
-            // Save BOTH names to localStorage for the settings page!
             if (fName) localStorage.setItem("firstName", fName);
             if (lName) localStorage.setItem("lastName", lName);
         }
@@ -56,30 +56,55 @@ async function secureDashboard() {
         console.error("Could not load profile data", e);
     }
 
-    // Load their data from the database
     await loadUserData();
     await loadGoals();
 }
 
-// --- 2. Load Core Data ---
+// --- 2. Data Loading & Filtering ---
 async function loadUserData() {
     try {
         const response = await fetch(`${API_BASE_URL}/transactions/get-transactions?user_id=${currentUserId}`);
         const data = await response.json();
         
         if (data && data.data) {
-            transactions = data.data;
+            allTransactions = data.data; 
         } else {
-            transactions = [];
+            allTransactions = [];
         }
         
-        // Trigger all the visual updates
-        refreshDashboardVisuals();
+        applyTimeFilter();
 
     } catch (error) {
         console.error('Error fetching transactions:', error);
     }
 }
+
+function applyTimeFilter() {
+    const timeframeFilter = document.getElementById('timeframe-filter');
+    const selectedDays = timeframeFilter ? timeframeFilter.value : "all";
+
+    if (selectedDays === "all") {
+        activeTransactions = [...allTransactions]; 
+    } else {
+        const daysToSubtract = parseInt(selectedDays, 10);
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - daysToSubtract);
+
+        activeTransactions = allTransactions.filter(tx => {
+            const txDate = new Date(tx.created_at);
+            return txDate >= cutoffDate;
+        });
+    }
+
+    refreshDashboardVisuals();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const dropdown = document.getElementById('timeframe-filter');
+    if (dropdown) {
+        dropdown.addEventListener('change', applyTimeFilter);
+    }
+});
 
 // Master function to update everything on the screen at once
 function refreshDashboardVisuals() {
@@ -87,41 +112,11 @@ function refreshDashboardVisuals() {
     renderRecentTransactions();
     renderFullHistoryTable();
     updateChartData();
-    renderGoals();
+    renderGoals(); // Goals and gamification update too!
 }
 
-// --- 3. Time Filter Logic ---
-function getFilteredTransactions() {
-    const filterDropdown = document.getElementById('dashboard-timefilter');
-    const filterValue = filterDropdown ? filterDropdown.value : 'all';
-    
-    // If they want everything, give them the whole array
-    if (filterValue === 'all') return transactions;
 
-    // Otherwise, do date math
-    const daysToLookBack = parseInt(filterValue);
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - daysToLookBack);
-
-    // Return only the transactions that happened AFTER the cutoff date
-    return transactions.filter(t => {
-        const txDate = new Date(t.created_at);
-        return txDate >= cutoffDate;
-    });
-}
-
-// Listen for the dropdown to change, and update the whole dashboard instantly!
-const timeFilterEl = document.getElementById('dashboard-timefilter');
-if (timeFilterEl) {
-    timeFilterEl.addEventListener('change', function() {
-        refreshDashboardVisuals();
-    });
-}
-
-// --- 4. Dashboard Visuals (Balance & Chart) ---
-
-
-// Fetches the exact balance from the database
+// --- 3. Dashboard Visuals (Balance & Chart) ---
 async function fetchAndDisplayBalance() {
     try {
         const response = await fetch(`${API_BASE_URL}/account/get-balance?user_id=${currentUserId}`);
@@ -131,8 +126,6 @@ async function fetchAndDisplayBalance() {
         if (balanceDisplay && data.success) {
             const bal = parseFloat(data.balance || 0);
             balanceDisplay.innerText = `$${bal.toFixed(2)}`;
-            
-            // Make it red if negative, otherwise use the theme text color
             balanceDisplay.style.color = bal < 0 ? '#ff4d4d' : 'var(--text-color)';
         }
     } catch (error) {
@@ -140,7 +133,6 @@ async function fetchAndDisplayBalance() {
     }
 }
 
-// Opens and closes the Add Funds form
 window.toggleAddFundsForm = function() {
     const form = document.getElementById('add-funds-form');
     if (form.style.display === 'none' || form.style.display === '') {
@@ -150,7 +142,6 @@ window.toggleAddFundsForm = function() {
     }
 };
 
-// Submits a "Quick Deposit" transaction to add money to the balance safely
 window.submitQuickDeposit = async function() {
     const amountInput = document.getElementById('quick-deposit-input');
     const amount = parseFloat(amountInput.value);
@@ -161,17 +152,13 @@ window.submitQuickDeposit = async function() {
     }
 
     try {
-        // We use your existing add-transaction endpoint so it logs the paper trail AND updates the balance!
         const userEmail = localStorage.getItem("userEmail") || "user@example.com"; 
-        
-        // Hardcoding 'Deposit' as the type and 'Quick Deposit' as the description
         const url = `${API_BASE_URL}/transactions/add-transaction?email=${encodeURIComponent(userEmail)}&amount=${amount}&t_type=Deposit&m_id=0&m_name=Quick Deposit&m_code=0&desc=Quick Deposit&recurr=false`;
         
         const response = await fetch(url, { method: 'POST' });
         const data = await response.json();
         
         if (data.success) {
-            // Refresh the display, transaction lists, and hide the form!
             await loadUserData(); 
             toggleAddFundsForm();
             amountInput.value = ''; 
@@ -187,14 +174,11 @@ function updateChartData() {
     const ctx = document.getElementById('spending-chart');
     if (!ctx) return;
 
-    // Get the filtered transactions based on the dropdown
-    const activeTransactions = getFilteredTransactions();
-
     const categoryTotals = {};
     
+    // Rely exclusively on activeTransactions
     activeTransactions.forEach(t => {
         const type = t.type || t.transaction_type;
-        // Only graph expenses, ignore income
         if (type !== 'Income' && type !== 'Deposit') {
             const cat = type || 'Other';
             if (!categoryTotals[cat]) categoryTotals[cat] = 0;
@@ -205,7 +189,6 @@ function updateChartData() {
     const labels = Object.keys(categoryTotals);
     const data = Object.values(categoryTotals);
 
-    // Destroy the old chart before drawing a new one
     if (spendingChart) {
         spendingChart.destroy();
     }
@@ -229,17 +212,14 @@ function updateChartData() {
     });
 }
 
-// --- 5. Rendering Tables & Lists ---
-
-// Renders just the top 5 most recent items for the quick "Manage Transactions" card
+// --- 4. Rendering Tables & Lists ---
 function renderRecentTransactions() {
     const list = document.getElementById('transaction-list');
     if (!list) return;
     
     list.innerHTML = '';
     
-    // Sort newest to oldest, grab top 5
-    const recentTx = [...transactions]
+    const recentTx = [...activeTransactions]
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
         .slice(0, 5);
 
@@ -260,19 +240,16 @@ function renderRecentTransactions() {
     });
 }
 
-// Renders the big, full-width history ledger at the bottom
 function renderFullHistoryTable() {
     const tableBody = document.getElementById('full-history-body');
     if (!tableBody) return;
 
-    const filteredTx = getFilteredTransactions();
-
-    if (filteredTx.length === 0) {
+    if (activeTransactions.length === 0) {
         tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">No transactions found for this time period.</td></tr>';
         return;
     }
 
-    const sortedTx = [...filteredTx].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    const sortedTx = [...activeTransactions].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     tableBody.innerHTML = ''; 
 
     sortedTx.forEach(t => {
@@ -298,7 +275,7 @@ function renderFullHistoryTable() {
     });
 }
 
-// --- 6. Transaction Form Logic (Add & Edit) ---
+// --- 5. Transaction Form Logic (Add & Edit) ---
 const transactionForm = document.getElementById('transaction-form');
 if (transactionForm) {
     transactionForm.addEventListener('submit', async function(e) {
@@ -310,14 +287,13 @@ if (transactionForm) {
         const tSubmitBtn = document.getElementById('t-submit-btn');
 
         if (editingTransactionId !== null) {
-            // --- EDIT MODE ---
             tSubmitBtn.textContent = 'Updating...';
             tSubmitBtn.disabled = true;
 
             const success = await updateTransactionInBackend(editingTransactionId, desc, type, amount);
 
             if (success) {
-                await loadUserData(); // Refresh from DB
+                await loadUserData(); 
                 editingTransactionId = null; 
                 tSubmitBtn.textContent = 'Add'; 
                 transactionForm.reset();
@@ -327,12 +303,10 @@ if (transactionForm) {
             tSubmitBtn.disabled = false;
             
         } else {
-            // --- ADD MODE ---
             tSubmitBtn.textContent = 'Adding...';
             tSubmitBtn.disabled = true;
 
             try {
-                // Fetch to your Python backend
                 const userEmail = localStorage.getItem("userEmail") || "user@example.com"; 
                 const url = `${API_BASE_URL}/transactions/add-transaction?email=${encodeURIComponent(userEmail)}&amount=${amount}&t_type=${encodeURIComponent(type)}&m_id=0&m_name=${encodeURIComponent(desc)}&m_code=0&desc=${encodeURIComponent(desc)}&recurr=false`;
                 
@@ -340,7 +314,7 @@ if (transactionForm) {
                 const data = await response.json();
                 
                 if (data.success) {
-                    await loadUserData(); // Refresh from DB
+                    await loadUserData(); 
                     transactionForm.reset();
                 } else {
                     alert('Error: Could not save transaction.');
@@ -354,7 +328,6 @@ if (transactionForm) {
     });
 }
 
-// Pre-fill form for editing
 window.editTransaction = function(id, desc, type, amount) {
     document.getElementById('t-desc').value = desc;
     document.getElementById('t-type').value = type;
@@ -364,7 +337,6 @@ window.editTransaction = function(id, desc, type, amount) {
     document.getElementById('t-submit-btn').textContent = 'Update';
 };
 
-// Python fetch to update transaction
 async function updateTransactionInBackend(id, desc, type, amount) {
     try {
         const response = await fetch(
@@ -383,7 +355,6 @@ async function updateTransactionInBackend(id, desc, type, amount) {
     }
 }
 
-// Python fetch to delete transaction
 window.deleteTransactionFromBackend = async function(id) {
     if (!confirm("Are you sure you want to delete this transaction?")) return;
     
@@ -391,7 +362,7 @@ window.deleteTransactionFromBackend = async function(id) {
         const response = await fetch(`${API_BASE_URL}/transactions/delete-transaction?transaction_id=${encodeURIComponent(id)}`, { method: 'POST' });
         const isDeleted = await response.json();
         if (isDeleted) {
-            await loadUserData(); // Refresh from DB
+            await loadUserData(); 
         } else {
             alert('Failed to delete transaction.');
         }
@@ -400,7 +371,7 @@ window.deleteTransactionFromBackend = async function(id) {
     }
 };
 
-// --- 7. Goals Logic ---
+// --- 6. Goals Logic ---
 async function loadGoals() {
     try {
         const response = await fetch(`${API_BASE_URL}/dashboard/get-goals?user_id=${currentUserId}`);
@@ -416,8 +387,6 @@ function renderGoals() {
     const selectBox = document.getElementById('goal-visualizer-select');
     if (!selectBox) return;
     
-    // 1. Populate the dropdown with the user's goals
-    // Save the current selection so it doesn't reset when we redraw
     const currentSelection = selectBox.value; 
     selectBox.innerHTML = '<option value="">Select a Goal to view...</option>';
     
@@ -428,18 +397,14 @@ function renderGoals() {
         selectBox.appendChild(option);
     });
     
-    // Restore selection if it existed
     if (currentSelection) selectBox.value = currentSelection;
 
-    // 2. Add the event listener to draw the arena when they pick a goal
-    selectBox.removeEventListener('change', drawGamificationArena); // Prevent duplicates
+    selectBox.removeEventListener('change', drawGamificationArena); 
     selectBox.addEventListener('change', drawGamificationArena);
     
-    // Draw it immediately if something is already selected
     drawGamificationArena();
 }
-// Creates the physics world inside the jar
-// Creates the physics world inside the jar
+
 function initPhysicsEngine() {
     if (physicsEngine) return; 
 
@@ -452,7 +417,6 @@ function initPhysicsEngine() {
 
     physicsEngine = Engine.create();
 
-    // 1. Stretch the canvas to match the new 150x180 image
     physicsRender = Render.create({
         element: jarContainer,
         engine: physicsEngine,
@@ -464,10 +428,8 @@ function initPhysicsEngine() {
         }
     });
 
-    // --- X-RAY VISION: TEMPORARILY RED AND VISIBLE ---
     const wallOptions = { isStatic: true, render: { visible: false } };
     
-    // Reminder: Bodies.rectangle( x-center, y-center, width, height )
     const leftWall = Bodies.rectangle(37, 90, 10, 180, wallOptions); 
     const rightWall = Bodies.rectangle(115, 90, 10, 180, wallOptions); 
     const floor = Bodies.rectangle(80, 160, 150, 20, wallOptions); 
@@ -492,12 +454,12 @@ function drawGamificationArena() {
 
     arena.style.display = 'block';
 
-    // 1. Boot up the physics engine if it hasn't started yet
     initPhysicsEngine();
 
-    // 2. Do the math
     const target = parseFloat(activeGoal.target_amount);
-    const categoryTx = transactions.filter(t => (t.type || t.transaction_type) === category);
+    
+    // Use activeTransactions here so the seeds only show for the selected date range!
+    const categoryTx = activeTransactions.filter(t => (t.type || t.transaction_type) === category);
     
     let currentSpent = 0;
     categoryTx.forEach(t => currentSpent += parseFloat(t.amount));
@@ -512,10 +474,8 @@ function drawGamificationArena() {
     jar.classList.remove('over-budget-shake');
     readout.innerHTML = `Spent: <strong style="color: ${isOverBudget ? '#ff4d4d' : 'var(--text-color)'}">$${currentSpent.toFixed(2)}</strong> / Target: $${target.toFixed(2)}`;
 
-    // 3. PHYSICS LOGIC
-    // If we swapped to a different goal in the dropdown, empty the jar completely!
     if (currentGoalCategory !== category) {
-        Matter.World.clear(physicsEngine.world, true); // The 'true' keeps our invisible walls!
+        Matter.World.clear(physicsEngine.world, true); 
         currentGoalCategory = category;
     }
 
@@ -524,7 +484,6 @@ function drawGamificationArena() {
         statusText.textContent = "Oh no! Seeds lost!";
         statusText.style.color = '#ff4d4d';
         
-        // Vaporize all the seeds and shake the jar
         Matter.World.clear(physicsEngine.world, true);
         setTimeout(() => jar.classList.add('over-budget-shake'), 10); 
         
@@ -534,36 +493,30 @@ function drawGamificationArena() {
         statusText.style.color = '#28a745';
         
         const targetSeeds = categoryTx.length;
-        // Count how many dynamic objects (seeds) are currently in the physics world
         const currentSeeds = physicsEngine.world.bodies.filter(b => !b.isStatic).length;
 
-        // If we have fewer seeds than transactions, drop the missing ones!
         if (targetSeeds > currentSeeds) {
             let seedsToAdd = targetSeeds - currentSeeds;
             
-            // Drop them on a timer so they fall sequentially and collide
             let dropInterval = setInterval(() => {
                 if (seedsToAdd <= 0) {
                     clearInterval(dropInterval);
                     return;
                 }
                 
-                // Drop from the top, randomize the X axis slightly so they stack organically
                 const dropX = 75 + (Math.random() * 30 - 15); 
                 
-                // Create an 8-sided polygon to simulate a rounded seed
                 const seed = Matter.Bodies.polygon(dropX, -10, 8, 7, { 
-                    restitution: 0.5, // Bounciness!
+                    restitution: 0.5, 
                     friction: 0.1,
                     render: { fillStyle: '#f5c542' }
                 });
                 
                 Matter.Composite.add(physicsEngine.world, seed);
                 seedsToAdd--;
-            }, 300); // 300ms between each drop
+            }, 300); 
             
         } else if (targetSeeds < currentSeeds) {
-            // If they deleted a transaction, the easiest fix is to empty the jar and let the function redraw it
              Matter.World.clear(physicsEngine.world, true);
              setTimeout(drawGamificationArena, 50); 
         }
@@ -605,7 +558,7 @@ window.deleteGoal = async function(goalId) {
     }
 };
 
-// --- 8. Global Logout Logic ---
+// --- 7. Global Logout Logic ---
 const logoutBtns = [document.getElementById('logout-btn-existing'), document.getElementById('logout-btn-new')];
 logoutBtns.forEach(btn => {
     if (btn) {
@@ -618,5 +571,71 @@ logoutBtns.forEach(btn => {
     }
 });
 
-// Run security check as soon as the file loads
+// --- 8. AI Statement Auto-Importer ---
+const importBtn = document.getElementById('import-statement-btn');
+if (importBtn) {
+    importBtn.addEventListener('click', async function() {
+        const fileInput = document.getElementById('statement-upload');
+        const statusArea = document.getElementById('import-status-area');
+        const statusText = document.getElementById('import-status-text');
+        const progressBar = document.getElementById('import-progress-bar');
+        const file = fileInput.files[0];
+
+        if (!file) {
+            alert("Please select a PDF statement first.");
+            return;
+        }
+
+        importBtn.disabled = true;
+        importBtn.textContent = "Reading...";
+        statusArea.style.display = "block";
+        statusText.style.color = "var(--text-color)";
+        statusText.textContent = "Budgie AI is extracting your transactions...";
+        progressBar.style.width = "5%"; 
+
+        let progress = 5;
+        const loadingInterval = setInterval(() => {
+            progress += (90 - progress) * 0.1; 
+            progressBar.style.width = `${progress}%`;
+        }, 300);
+
+        const formData = new FormData();
+        formData.append("user_id", currentUserId); 
+        formData.append("file", file);
+
+        try {
+            const response = await fetch(`http://127.0.0.1:8000/api/import-statement`, {
+                method: "POST",
+                body: formData
+            });
+            const data = await response.json();
+
+            clearInterval(loadingInterval);
+
+            if (data.success) {
+                progressBar.style.width = "100%";
+                statusText.style.color = "#28a745";
+                statusText.textContent = `Success! Imported ${data.count} transactions.`;
+                
+                if (typeof loadUserData === "function") await loadUserData();
+                fileInput.value = "";
+            } else {
+                progressBar.style.width = "0%";
+                statusText.style.color = "#ff4d4d";
+                statusText.textContent = data.error || "Failed to import.";
+            }
+        } catch (err) {
+            clearInterval(loadingInterval);
+            progressBar.style.width = "0%";
+            console.error("Import Error:", err);
+            statusText.style.color = "#ff4d4d";
+            statusText.textContent = "Server error. Check Python terminal!";
+        }
+
+        importBtn.disabled = false;
+        importBtn.textContent = "Import via AI";
+    });
+}
+
+// Kick off the application!
 secureDashboard();
