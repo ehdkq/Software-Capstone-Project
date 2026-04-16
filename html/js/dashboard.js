@@ -480,7 +480,7 @@ function drawGamificationArena() {
     }
 
     if (isOverBudget) {
-        mascot.src = '/html/images/sad budgie.png';
+        mascot.src = '/html/images/sad-budgie.png';
         statusText.textContent = "Oh no! Seeds lost!";
         statusText.style.color = '#ff4d4d';
         
@@ -488,7 +488,7 @@ function drawGamificationArena() {
         setTimeout(() => jar.classList.add('over-budget-shake'), 10); 
         
     } else {
-        mascot.src = '/html/images/budgie happy.png';
+        mascot.src = '/html/images/budgie-happy.png';
         statusText.textContent = "Looking good!";
         statusText.style.color = '#28a745';
         
