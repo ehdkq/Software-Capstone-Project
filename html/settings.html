@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="/html/css/styles.css">
+    <link rel="stylesheet" href="./css/styles.css">
     <title>Settings - Budgie</title>
     <style>
         /* Specific layout for the Settings Page */
@@ -113,17 +113,7 @@
 </head>
 <body class="dashboard-body" id="body-wrapper" style="display: none;">
     
-    <header class="site-header">
-        <nav class="nav">
-            <a class="brand" href="dashboard.html">
-                <img src="/html/images/Budgie (1).png" alt="Budgie Home" class="logo" height="100"></a>
-            <div class="nav-links">
-                <a href="dashboard.html">Dashboard</a>
-                <a href="about.html">About</a>
-                <a href="llm-help.html">AI Help</a>
-            </div>
-        </nav>
-    </header>
+    <div id="header-container"></div>
 
     <main class="settings-container">
         <div class="settings-sidebar">
@@ -354,7 +344,7 @@
 
             try {
                 // Fetch from your Python backend
-                const response = await fetch(`http://127.0.0.1:8000/transactions/get-transactions?user_id=${userId}`);
+                const response = await fetch(`https://software-capstone-project.onrender.com/transactions/get-transactions?user_id=${userId}`);
                 const responseData = await response.json();
                 
                 // Extract the data array
@@ -414,11 +404,11 @@
                 const userEmail = localStorage.getItem("userEmail");
                 if (!userEmail) throw new Error("Could not find your email.");
 
-                const verifyRes = await fetch(`http://127.0.0.1:8000/login?email=${encodeURIComponent(userEmail)}&passw=${encodeURIComponent(oldPass)}`);
+                const verifyRes = await fetch(`https://software-capstone-project.onrender.com/login?email=${encodeURIComponent(userEmail)}&passw=${encodeURIComponent(oldPass)}`);
                 const verifyData = await verifyRes.json();
                 if (!verifyData.success) throw new Error("Incorrect current password.");
 
-                const updateRes = await fetch(`http://127.0.0.1:8000/account/update-password?email=${encodeURIComponent(userEmail)}&newpass=${encodeURIComponent(newPass)}`, { method: 'POST' });
+                const updateRes = await fetch(`https://software-capstone-project.onrender.com/account/update-password?email=${encodeURIComponent(userEmail)}&newpass=${encodeURIComponent(newPass)}`, { method: 'POST' });
                 const isSuccess = await updateRes.json(); 
                 
                 if (isSuccess) {
@@ -434,15 +424,52 @@
         };
 
         document.getElementById('delete-btn').onclick = async function() {
-            if (!confirm("Are you sure? This action is permanent.")) return;
-            const { error } = await mySupabase.rpc('delete_user');
-            if (error) {
-                alert("Deletion failed: " + error.message);
-            } else {
-                alert("Account successfully deleted. We're sorry to see you go!");
-                window.location.href = "index.html";
+            const isConfirmed = confirm("Are you absolutely sure you want to delete your Budgie account? This cannot be undone, and all your data will take flight permanently!");
+            if (!isConfirmed) return;
+
+            const btn = document.getElementById('delete-btn');
+            btn.disabled = true;
+            btn.textContent = "Deleting...";
+
+            const userEmail = localStorage.getItem("userEmail"); 
+            
+            if (!userEmail) {
+                alert("Could not find your email. Please log out and back in.");
+                btn.disabled = false;
+                btn.textContent = "Delete My Account Permanently";
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("email", userEmail); 
+
+            try {
+                // Talk exclusively to your custom Python backend!
+                const response = await fetch(`https://software-capstone-project.onrender.com/account/delete-account`, {
+                    method: "POST",
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    alert("Your account has been completely deleted. We'll miss you!");
+                    localStorage.clear(); // This wipes your custom auth session
+                    window.location.replace("index.html");
+                } else {
+                    // If it fails, Python will tell us exactly which table caused the crash!
+                    alert("Error deleting account data: " + data.error);
+                    btn.disabled = false;
+                    btn.textContent = "Delete My Account Permanently";
+                }
+            } catch (error) {
+                console.error("Delete Account Error:", error);
+                alert("Could not connect to the server.");
+                btn.disabled = false;
+                btn.textContent = "Delete My Account Permanently";
             }
         };
+        
     </script>
+    <script src="./js/global.js"></script>
 </body>
 </html>

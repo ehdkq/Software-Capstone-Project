@@ -12,7 +12,7 @@ loginBtn.addEventListener("click", (event) => {
     loginBtn.textContent = "Logging in...";
     loginBtn.style.pointerEvents = "none";
 
-    const url = new URL('http://127.0.0.1:8000/login'); // Likely will change this for when hosting on Netlify
+    const url = new URL('https://software-capstone-project.onrender.com/login'); // Likely will change this for when hosting on Netlify
     url.searchParams.append('email', emailLogin);
     url.searchParams.append('passw', passwordLogin)
 

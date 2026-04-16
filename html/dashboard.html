@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="/html/css/styles.css">
+    <link rel="stylesheet" href="./css/styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <title>Dashboard - Budgie</title>
@@ -53,19 +53,7 @@
         <span id="profile-initial">U</span>
     </a>
 
-    <header class="site-header">
-        <nav class="nav">
-            <a class="brand" href="index.html">
-                <img src="/html/images/Budgie (1).png" alt="Budgie Home" class="logo" height="100"></a>
-            <div class="nav-links">
-                <a href="about.html">About</a>
-                <a href="open-account.html">Open an Account</a>
-                <a href="login.html">Log In</a>
-                <a href="features.html">Features</a>
-                <a href="llm-help.html">AI Help</a>
-            </div>
-        </nav>
-    </header>
+    <div id="header-container"></div>
 
     <div id="new-user-welcome" style="display: none; text-align: center; padding: 100px 20px; font-family: sans-serif; min-height: 60vh;">
         <h1 id="user-greeting-new" style="color: var(--text-color); font-size: 2.5rem;">Welcome to Budgie!</h1>
@@ -86,10 +74,11 @@
                     <p style="margin: 0; color: var(--text-muted);">Here is your financial overview.</p>
                 </div>
                 <div>
-                    <select id="dashboard-timefilter" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-color); cursor: pointer; outline: none;">
+                    <select id="timeframe-filter">
+                        <option value="all">All Time</option>
                         <option value="30">Last 30 Days</option>
+                        <option value="60">Last 60 Days</option>
                         <option value="90">Last 90 Days</option>
-                        <option value="all" selected>All Time</option>
                     </select>
                 </div>
             </div>
@@ -134,12 +123,12 @@
                         <div style="display: flex; justify-content: center; align-items: flex-end; gap: 30px; margin-bottom: 20px; height: 150px;">
                             
                             <div style="display: flex; flex-direction: column; align-items: center;">
-                                <img id="budgie-mascot" src="/html/images/happy-budgie.png" alt="Budgie" style="width: 80px; height: 80px; transition: all 0.3s; background: white; border-radius: 50%; padding: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                                <img id="budgie-mascot" src="./images/happy-budgie.png" alt="Budgie" style="width: 80px; height: 80px; transition: all 0.3s; background: white; border-radius: 50%; padding: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
                                 <span id="budgie-status-text" style="margin-top: 10px; font-weight: bold; font-size: 0.9rem;">Looking good!</span>
                             </div>
 
                             <div style="position: relative; width: 150px; height: 180px;">
-                                <div id="the-jar" style="position: absolute; bottom: 0; width: 100%; height: 100%; background-image: url('/html/images/empty jar.png'); background-size: contain; background-repeat: no-repeat; background-position: bottom center; z-index: 1;">
+                                <div id="the-jar" style="position: absolute; bottom: 0; width: 100%; height: 100%; background-image: url('./images/empty-jar.png'); background-size: contain; background-repeat: no-repeat; background-position: bottom center; z-index: 1;">
                                 </div>
                             </div>
                         </div>
@@ -170,9 +159,19 @@
 
                 <div class="dashboard-card">
                     <h3>Spending Breakdown</h3>
-                    <div class="upload-section">
-                        <label for="statement-upload">Upload Bank Statement (CSV):</label>
-                        <input type="file" id="statement-upload" accept=".csv" style="color: var(--text-color);">
+                    <div class="upload-section" style="display: flex; flex-direction: column; gap: 10px;">
+                        <label for="statement-upload">Auto-Import Bank Statement (PDF):</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="file" id="statement-upload" accept="application/pdf" style="flex: 1; padding: 5px;">
+                            <button id="import-statement-btn" class="action-btn" style="padding: 5px 15px; margin: 0; background-color: #9966FF; color: white;">Import via AI</button>
+                        </div>
+                        
+                        <div id="import-status-area" style="display: none; margin-top: 10px;">
+                            <span id="import-status-text" style="font-size: 0.85rem; font-weight: bold; color: var(--text-color);">Analyzing document...</span>
+                            <div class="import-progress-container" style="display: block; width: 100%; height: 12px; background-color: rgba(0,0,0,0.1); border-radius: 6px; overflow: hidden; margin-top: 5px;">
+                                <div id="import-progress-bar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #97dbff, #9966FF, #97dbff); background-size: 200% 100%; border-radius: 6px; transition: width 0.4s ease-out;"></div>
+                            </div>
+                        </div>
                     </div>
                     <div class="chart-container" style="position: relative; height:250px; width:100%">
                         <canvas id="spending-chart"></canvas>
@@ -182,7 +181,7 @@
                 <div class="dashboard-card ai-teaser-card">
                     <h3>Ask Budgie AI</h3>
                     <p>Have a question about your spending? Budgie is here to help.</p>
-                    <img src="/html/images/budgie-ai.png" alt ="Budgie AI Assistant" class="ai-assistant-img">
+                    <img src="./images/budgie-ai.png" alt ="Budgie AI Assistant" class="ai-assistant-img">
                     <a href="llm-help.html" class="action-btn" style="display: block; margin-top: 15px;">Chat Now</a>
                 </div>
             </div>
@@ -215,7 +214,7 @@
     <footer class="footer">
         <div class="footer-content">
             <a href="index.html" class="footer-brand">
-                <img src="/html/images/sleepy-budgie.png" alt="Sleepy Budgie" class="logo" height="100"></a>
+                <img src="./images/sleepy-budgie.png" alt="Sleepy Budgie" class="logo" height="100"></a>
             <div class="footer-links">
                 <a href="about.html">About</a>
                 <a href="features.html">Features</a>
@@ -226,7 +225,7 @@
         </div>
     </footer>
 
-    <script src="/html/js/dashboard.js"></script>
-
+    <script src="./js/dashboard.js"></script>
+    <script src="./js/global.js"></script>
 </body>
 </html>

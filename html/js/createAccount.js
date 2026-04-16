@@ -14,7 +14,7 @@ createAccountBtn.addEventListener("click", (event) => {
     const lName = document.getElementById('last-name').value;
     const reEnterPassword = document.getElementById('reenter-password').value;
 
-    const url = new URL("http://127.0.0.1:8000/create-account"); // Likely will change this for when hosting on Netlify
+    const url = new URL("https://software-capstone-project.onrender.com/create-account"); // Likely will change this for when hosting on Netlify
     url.searchParams.append('email',emailAddress);
     url.searchParams.append('passw',newPassword);
     url.searchParams.append('firstN',fName);
@@ -35,8 +35,6 @@ createAccountBtn.addEventListener("click", (event) => {
             'Accept': 'application/json'
         }
     })
-
-    // Complete Promise
     .then(response => {
         if (!response.ok) throw new Error("Server error");
         return response.json();
@@ -45,16 +43,21 @@ createAccountBtn.addEventListener("click", (event) => {
         if (data.success) {
             console.log("Success:", data);
             
+            // Show the success message from Python (so they know to check their mock email!)
+            alert(data.message || "Account created successfully!");
+            
             // delay redirect
             setTimeout(() => {
                 window.location.href = "login.html";
             }, 1000);
         } else {
-            alert("Account creation failed. The email might already be in use.");
+            // THE FIX: Stop guessing, and print the EXACT error from the Python server!
+            alert("Creation failed: " + (data.error || "Unknown error"));
+            console.error("Backend Error Details:", data.error);
         }
     })
     .catch((error) => {
         console.error('Error:', error);
-        alert('Could not connect to the server.');
+        alert('Could not connect to the server. Is Python running?');
     });
-});
+})

@@ -6,10 +6,9 @@ from dotenv import load_dotenv
 # Load the API key from your .env file
 load_dotenv()
 
-# Initialize the brand new Google GenAI Client
+# Initialize the Google GenAI Client
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-# The Personality Script
 # The Upgraded Personality Script
 persona = """
 You are Budgie, a highly knowledgeable, analytical, and supportive personal finance assistant for a web app. 
@@ -24,27 +23,37 @@ You are a bird, so occasionally use subtle bird-related puns (like "nest egg", "
 Keep your tone friendly but professional. Always include a brief reminder that you are an AI and not a certified financial planner.
 """
 
-def get_ai_reply(user_message, user_data=""):
+def get_ai_reply(user_message, user_data="", extracted_text=""):
     try:
-        # If we pulled database info, secretly inject it into the prompt!
+        full_prompt = ""
+        
+        # 1. Inject live database info if provided
         if user_data:
-            full_prompt = (
+            full_prompt += (
                 f"BACKGROUND INFO: Here is the user's current live financial data. "
                 f"Use this to give hyper-personalized advice. Do not explicitly mention that you were 'handed' this data, "
                 f"just act like you naturally know their account details.\n\n"
                 f"{user_data}\n\n"
-                f"USER QUESTION: {user_message}"
             )
-        else:
-            # If they aren't logged in, just send the message normally
-            full_prompt = user_message
+            
+        # 2. Inject PDF statement data if they uploaded a file
+        if extracted_text:
+            full_prompt += (
+                f"--- ATTACHED DOCUMENT DATA ---\n"
+                f"{extracted_text}\n"
+                f"-------------------\n\n"
+            )
+            
+        # 3. Add the actual question
+        full_prompt += f"USER QUESTION: {user_message}"
 
         # Ask the Gemini model
         response = client.models.generate_content(
             model='gemini-2.5-flash', 
             contents=full_prompt,
             config=types.GenerateContentConfig(
-                system_instruction=persona
+                system_instruction=persona,
+                temperature=0.7
             )
         )
         return response.text

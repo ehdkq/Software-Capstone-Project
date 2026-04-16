@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>About - Budgie</title>
-    <link rel="stylesheet" href="/html/css/styles.css">
+    <link rel="stylesheet" href="./css/styles.css">
     <script>
         if (localStorage.getItem('budgieTheme') === 'dark') {
             document.documentElement.classList.add('dark-theme');
@@ -77,20 +77,7 @@
 </head>
 
 <body>
-    <header class="site-header">
-        <nav class="nav">
-            <a class="brand" href="index.html">
-                <img src="/html/images/Budgie (1).png" alt="Budgie Home" class="logo" height="100">
-            </a>
-            <div class="nav-links">
-                <a href="about.html">About</a>
-                <a href="open-account.html">Open an Account</a>
-                <a href="login.html">Log In</a>
-                <a href="features.html">Features</a>
-                <a href="llm-help.html">AI Help</a>
-            </div>
-        </nav>
-    </header>
+    <div id="header-container"></div>
 
     <main>
         <div class="about-info">
@@ -101,7 +88,7 @@
                 Budgie is a smart budgeting app designed to make managing money simple, approachable, and even a little fun. Inspired by the small but clever budgie bird, the app helps users track their finances, set meaningful goals, and build healthier financial habits. Users can securely connect their bank accounts or manually enter transactions to monitor spending and stay on top of their budget.
             </p>
             
-            <img src="/html/images/smart birb.png" class="smart-birb" alt="Smart Budgie Bird">
+            <img src="./images/smart birb.png" class="smart-birb" alt="Smart Budgie Bird">
             
             <p>
                 Budgie goes beyond basic budgeting by helping users set and work toward personalized goals - whether that's paying off debt, saving for a vacation, or building an emergency fund. An integrated AI chatbot provides guidance, answers budgeting questions, and offers helpful insights to keep users on track.
@@ -116,7 +103,7 @@
     <footer class="footer">
         <div class="footer-content">
             <a href="index.html" class="footer-brand">
-                <img src="/html/images/sleepy-budgie.png" alt="Sleepy Budgie" class="logo" height="100">
+                <img src="./images/sleepy-budgie.png" alt="Sleepy Budgie" class="logo" height="100">
             </a>
             <div class="footer-links">
                 <a href="about.html">About</a>
@@ -127,5 +114,6 @@
             </div>
         </div>
     </footer>
+    <script src="./js/global.js"></script>
 </body>
 </html>

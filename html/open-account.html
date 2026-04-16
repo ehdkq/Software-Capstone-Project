@@ -2,7 +2,7 @@
     <html>
         <head>
             <Title>Sign Up!</Title>
-            <link rel="stylesheet" href="/html/css/styles.css">
+            <link rel="stylesheet" href="./css/styles.css">
             <script>
         if (localStorage.getItem('budgieTheme') === 'dark') {
             document.documentElement.classList.add('dark-theme');
@@ -19,7 +19,7 @@
                 }
                 body {
                     margin: 0;
-                    background-image: url("/html/images/Untitled design (1).png");
+                    background-image: url("./images/Untitled design (1).png");
                     background-size: cover;
                     background-position: center;
                     background-repeat: no-repeat;
@@ -29,20 +29,7 @@
                 
             </style>
         </head>
-        <header class="site-header">
-            <nav class="nav">
-                <a class="brand" href="index.html">
-                    <img src="/html/images/Budgie (1).png" alt="Commerce Bank Home" class="logo" height="100"></a>
-                <div class="nav-links">
-                    <a href="about.html">About</a>
-                    <a href="open-account.html">Open an Account</a>
-                    <a href="login.html">Log In</a>
-                    <a href="features.html">Features</a>
-                    <a href="llm-help.html">AI Help</a>
-                </div>
-                
-            </nav>
-        </header>
+        <div id="header-container"></div>
 
             <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -184,6 +171,7 @@
             </script>
         -->
         </body>
-        <script src="/html/js/createAccount.js"></script>
+        <script src="./js/createAccount.js"></script>
+        <script src="./js/global.js"></script>
         </body>
     </html>
