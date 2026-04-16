@@ -344,7 +344,7 @@
 
             try {
                 // Fetch from your Python backend
-                const response = await fetch(`http://127.0.0.1:8000/transactions/get-transactions?user_id=${userId}`);
+                const response = await fetch(`https://software-capstone-project.onrender.com/transactions/get-transactions?user_id=${userId}`);
                 const responseData = await response.json();
                 
                 // Extract the data array
@@ -404,11 +404,11 @@
                 const userEmail = localStorage.getItem("userEmail");
                 if (!userEmail) throw new Error("Could not find your email.");
 
-                const verifyRes = await fetch(`http://127.0.0.1:8000/login?email=${encodeURIComponent(userEmail)}&passw=${encodeURIComponent(oldPass)}`);
+                const verifyRes = await fetch(`https://software-capstone-project.onrender.com/login?email=${encodeURIComponent(userEmail)}&passw=${encodeURIComponent(oldPass)}`);
                 const verifyData = await verifyRes.json();
                 if (!verifyData.success) throw new Error("Incorrect current password.");
 
-                const updateRes = await fetch(`http://127.0.0.1:8000/account/update-password?email=${encodeURIComponent(userEmail)}&newpass=${encodeURIComponent(newPass)}`, { method: 'POST' });
+                const updateRes = await fetch(`https://software-capstone-project.onrender.com/account/update-password?email=${encodeURIComponent(userEmail)}&newpass=${encodeURIComponent(newPass)}`, { method: 'POST' });
                 const isSuccess = await updateRes.json(); 
                 
                 if (isSuccess) {
@@ -445,7 +445,7 @@
 
             try {
                 // Talk exclusively to your custom Python backend!
-                const response = await fetch(`http://127.0.0.1:8000/account/delete-account`, {
+                const response = await fetch(`https://software-capstone-project.onrender.com/account/delete-account`, {
                     method: "POST",
                     body: formData
                 });

@@ -37,7 +37,7 @@ app = FastAPI()
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins (use specific URLs in production)
+    allow_origins=["https://budgiebudgeting.netlify.app"],  # Allows all origins (use specific URLs in production)
     allow_credentials=True,
     allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
     allow_headers=["*"],  # Allows all headers

@@ -14,7 +14,7 @@ createAccountBtn.addEventListener("click", (event) => {
     const lName = document.getElementById('last-name').value;
     const reEnterPassword = document.getElementById('reenter-password').value;
 
-    const url = new URL("http://127.0.0.1:8000/create-account"); // Likely will change this for when hosting on Netlify
+    const url = new URL("https://software-capstone-project.onrender.com/create-account"); // Likely will change this for when hosting on Netlify
     url.searchParams.append('email',emailAddress);
     url.searchParams.append('passw',newPassword);
     url.searchParams.append('firstN',fName);

@@ -1,5 +1,5 @@
 // --- Global Variables ---
-const API_BASE_URL = "http://127.0.0.1:8000";
+const API_BASE_URL = "https://software-capstone-project.onrender.com";
 let currentUserId = null;
 
 // 1. Your two data nests!
@@ -604,7 +604,7 @@ if (importBtn) {
         formData.append("file", file);
 
         try {
-            const response = await fetch(`http://127.0.0.1:8000/api/import-statement`, {
+            const response = await fetch(`https://software-capstone-project.onrender.com/api/import-statement`, {
                 method: "POST",
                 body: formData
             });
