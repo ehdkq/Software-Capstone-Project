@@ -115,7 +115,7 @@ def create_account(email, passw, firstN, lastN):
 
 # Deletes the users account
 # Pre: takes an email as a parameter
-# Post: returns True if the account was deleted, false otherwise@app.post("/account/delete-account")
+# Post: returns True if the account was deleted, false otherwise
 @app.post("/account/delete-account")
 def delete_account(email):
     try:
@@ -296,7 +296,6 @@ def update_transaction(transaction_id, amount, t_type, desc):
 # Post: returns true if the password was updated successfully, false otherwise
 @app.post("/account/update-password")
 def update_password(email, newpass):
-
     try: 
         users = supabase.table("users").select("*").execute()
 
@@ -321,7 +320,7 @@ def update_password(email, newpass):
 
 # Gets the user's exact balance from the accounts table
 @app.get("/account/get-balance")
-def get_balance(user_id: str):
+def get_balance(user_id):
     try:
         user_res = supabase.table("users").select("account_id").eq("user_id", user_id).execute()
         if user_res.data:
@@ -340,7 +339,7 @@ def get_balance(user_id: str):
 
 # Updates the user's balance in the accounts table
 @app.post("/account/update-balance")
-def update_balance(user_id: str, new_balance: float):
+def update_balance(user_id, new_balance):
     try:
         user_res = supabase.table("users").select("account_id").eq("user_id", user_id).execute()
         if user_res.data:
@@ -357,7 +356,7 @@ def update_balance(user_id: str, new_balance: float):
     
 # Gets the user's profile information
 @app.get("/account/get-profile")
-def get_profile(user_id: str):
+def get_profile(user_id):
     try:
         user_res = supabase.table("users").select("*").eq("user_id", user_id).execute()
         
@@ -470,7 +469,6 @@ def add_goal(user_id, category, target_amount):
 # Post: returns True if goal was deleted, False otherwise
 @app.post("/dashboard/delete-goal")
 def delete_goal(goal_id):
-    print(f"Received delete_goal request - goal_id: {goal_id}")
     try:
         supabase.table("goals").delete().eq("goal_id", goal_id).execute()
         print(f"Goal deleted successfully")
@@ -478,7 +476,6 @@ def delete_goal(goal_id):
     except Exception as e:
         print(f"Error in delete_goal: {e}")
         return {"success": False, "error": str(e)}
-
 
 
 # Gets balance tied to the specified user
@@ -528,37 +525,6 @@ def update_balance(user_id, new_balance):
         print(f"Error updating balance: {e}")
         return {"success": False, "error": str(e)}
 
-
-'''
-def forgot_password_email(email):
-    #TODO'''
-
-# TEST QUERIES
-#print(verify_login('custosdfsdf@example.com', 'WyAH03DADiIJGThvBkyby2sMUMRgDd9Dg17yccD6JyE='))
-#print(create_account('test@test.com', 'test123'))
-#print(delete_account('usertest2@test.com'))
-#print(delete_account('usertest@test.com'))
-#print(delete_account('usertest3@test.com'))
-#print(forgot_password('dfd'))
-
-#print(get_transactions('080691cf-dd78-428e-a4ba-98e442940d6c'))
-'''d = {
-    'amount': 1.00,
-    'type': 'Withdrawal',
-    'merchant_id': 'Test01',
-    'merchant_name': 'Test Merchant',
-    'merchant_category_code': 5310,
-    'description': 'Test Transaction',
-    'is_recurring': False,
-}
-print(add_transaction('080691cf-dd78-428e-a4ba-98e442940d6c', d))'''
-
-#print(delete_transaction('fcd4123c-b2f5-4d38-8e66-9e3381242397'))
-
-#print(update_password('backendtest1@test.com', 'TestABCD'))
-
-#print(create_account('backendtest2@test.com', 'test1234'))
-#print(verify_login('backendtest2@test.com', 'test1234'))
 
 @app.post("/api/chat")
 def chat_with_budgie(request: ChatRequest):
