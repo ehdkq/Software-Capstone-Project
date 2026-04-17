@@ -560,7 +560,66 @@ def update_balance(user_id, new_balance):
         print(f"Error updating balance: {e}")
         return {"success": False, "error": str(e)}
 
+@app.post("/api/import-statement")
+async def import_statement(file: UploadFile = File(...), user_id: str = Form(None)):
+    try:
+        # 1. Match the user_id to an email (since add_transaction uses email)
+        user_res = supabase.table("users").select("email").eq("user_id", user_id).execute()
+        if not user_res.data:
+            return {"success": False, "error": "Could not verify user account."}
+        user_email = user_res.data[0].get("email")
 
+        # 2. Extract the raw text from the uploaded PDF
+        contents = await file.read()
+        extracted_text = ""
+        with pdfplumber.open(io.BytesIO(contents)) as pdf:
+            for page in pdf.pages:
+                extracted_text += page.extract_text(layout=True) + "\n"
+
+        # 3. Use AI to structure the messy bank statement
+        prompt = f"""
+        You are a data extraction API. Extract all bank transactions from the text below.
+        Return ONLY a raw, valid JSON array of objects. Do not use markdown blocks.
+        Each object must contain EXACTLY these keys:
+        "tx_date": (string, YYYY-MM-DD format)
+        "desc": (string, the merchant name)
+        "amount": (float, absolute value, NO dollar signs or commas)
+        "t_type": (string, categorize as: 'Groceries', 'Dining', 'Utilities', 'Entertainment', 'Income', or 'Other')
+
+        BANK STATEMENT TEXT:
+        {extracted_text}
+        """
+
+        response = gemini_client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt
+        )
+
+        # 4. Clean the AI response and parse the JSON
+        clean_json = response.text.replace("```json", "").replace("```", "").strip()
+        transactions = json.loads(clean_json)
+
+        # 5. Add every extracted transaction to Supabase using your existing function
+        imported_count = 0
+        for tx in transactions:
+            add_transaction(
+                email=user_email,
+                amount=tx["amount"],
+                t_type=tx["t_type"],
+                m_id="0",
+                m_name=tx["desc"],
+                m_code="0",
+                desc=tx["desc"],
+                recurr="false",
+                tx_date=tx.get("tx_date")
+            )
+            imported_count += 1
+
+        return {"success": True, "count": imported_count}
+
+    except Exception as e:
+        print(f"Import Error: {e}")
+        return {"success": False, "error": "Failed to parse PDF. The AI couldn't read the format."}
 @app.post("/api/chat")
 async def chat_with_budgie(message: str = Form(""), user_id: Optional[str] = Form(None), file: UploadFile = File(None)):
     try:
