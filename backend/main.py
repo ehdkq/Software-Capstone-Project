@@ -578,8 +578,15 @@ async def import_statement(file: UploadFile = File(...), user_id: str = Form(Non
 
         # 3. Use AI to structure the messy bank statement
         prompt = f"""
-        You are a data extraction API. Extract all bank transactions from the text below.
-        Return ONLY a raw, valid JSON array of objects. Do not use markdown blocks.
+        You are a strict, highly accurate data extraction API. 
+        Your ONLY job is to extract EVERY SINGLE bank transaction from the text below. 
+        
+        CRITICAL INSTRUCTIONS: 
+        - DO NOT skip, summarize, or omit any transactions. 
+        - You must process the document from the very first line to the very last line.
+        - If there are 50 transactions, you must output exactly 50 JSON objects.
+
+        Return ONLY a raw, valid JSON array of objects. Do not use markdown blocks or ```json wrappers.
         Each object must contain EXACTLY these keys:
         "tx_date": (string, YYYY-MM-DD format)
         "desc": (string, the merchant name)
@@ -590,11 +597,14 @@ async def import_statement(file: UploadFile = File(...), user_id: str = Form(Non
         {extracted_text}
         """
 
+        # 4. Call the Live Model with Strict Constraints
         response = gemini_client.models.generate_content(
             model='gemini-2.5-flash',
-            contents=prompt
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                temperature=0.1, # Turns off creativity so it acts like a strict data parser
+            )
         )
-
         # 4. Clean the AI response and parse the JSON
         clean_json = response.text.replace("```json", "").replace("```", "").strip()
         transactions = json.loads(clean_json)
