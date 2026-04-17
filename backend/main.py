@@ -574,42 +574,46 @@ async def import_statement(file: UploadFile = File(...), user_id: str = Form(Non
         extracted_text = ""
         with pdfplumber.open(io.BytesIO(contents)) as pdf:
             for page in pdf.pages:
-                extracted_text += page.extract_text(layout=True) + "\n"
+                # Removed layout=True. This stops pdfplumber from adding massive 
+                # blank spaces that confuse the AI when reading tables.
+                extracted_text += page.extract_text() + "\n"
+
+        # WIRETAP: Print the raw text to Render so we can verify the PDF reader worked
+        print("\n--- RAW PDF TEXT ---")
+        print(extracted_text)
+        print("--------------------\n")
 
         # 3. Use AI to structure the messy bank statement
         prompt = f"""
-        You are a strict, highly accurate data extraction API. 
-        Your ONLY job is to extract EVERY SINGLE bank transaction from the text below. 
+        Extract EVERY SINGLE transaction from the text below. Do not summarize or stop early.
         
-        CRITICAL INSTRUCTIONS: 
-        - DO NOT skip, summarize, or omit any transactions. 
-        - You must process the document from the very first line to the very last line.
-        - If there are 50 transactions, you must output exactly 50 JSON objects.
-
-        Return ONLY a raw, valid JSON array of objects. Do not use markdown blocks or ```json wrappers.
-        Each object must contain EXACTLY these keys:
+        Return a JSON array of objects with exactly these keys:
         "tx_date": (string, YYYY-MM-DD format)
-        "desc": (string, the merchant name)
-        "amount": (float, absolute value, NO dollar signs or commas)
-        "t_type": (string, categorize as: 'Groceries', 'Dining', 'Utilities', 'Entertainment', 'Income', or 'Other')
+        "desc": (string, merchant name)
+        "amount": (float, absolute value, no symbols)
+        "t_type": (string, 'Groceries', 'Dining', 'Utilities', 'Entertainment', 'Income', or 'Other')
 
-        BANK STATEMENT TEXT:
+        TEXT:
         {extracted_text}
         """
 
-        # 4. Call the Live Model with Strict Constraints
+        # 4. Call the Live Model with Strict JSON Mode
         response = gemini_client.models.generate_content(
             model='gemini-2.5-flash',
             contents=prompt,
             config=types.GenerateContentConfig(
-                temperature=0.1, # Turns off creativity so it acts like a strict data parser
+                temperature=0.0, # Zero creativity
+                response_mime_type="application/json", # Forces native JSON output without markdown!
             )
         )
-        # 4. Clean the AI response and parse the JSON
-        clean_json = response.text.replace("```json", "").replace("```", "").strip()
-        transactions = json.loads(clean_json)
+        
+        # WIRETAP: Print what the AI decided to output
+        print(f"AI OUTPUT: {response.text}")
 
-        # 5. Add every extracted transaction to Supabase using your existing function
+        # 5. Parse the JSON (No string cleaning needed anymore!)
+        transactions = json.loads(response.text)
+        
+        # Add every extracted transaction to Supabase using your existing function
         imported_count = 0
         for tx in transactions:
             add_transaction(
