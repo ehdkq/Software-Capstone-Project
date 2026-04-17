@@ -589,13 +589,12 @@ def update_balance(user_id, new_balance):
 @app.post("/api/chat")
 async def chat_with_budgie(
     message: str = Form(""), 
-    user_id: Optional[str] = Form(None), # Added user_id to see the account data
+    user_id: Optional[str] = Form(None), 
     file: UploadFile = File(None)
 ):
     try:
         extracted_text = ""
-
-        # 1. Handle the File Upload (Keep your existing logic)
+        # 1. Handle File Upload (Existing logic)
         if file:
             contents = await file.read()
             if file.content_type == "application/pdf":
@@ -605,52 +604,46 @@ async def chat_with_budgie(
             elif file.content_type.startswith("image/"):
                 extracted_text = f"[User attached an image file: {file.filename}]"
 
-        # 2. THE "BUDGIE" BRAIN: Fetching real user data
-        context_data = ""
-        if user_id:
-            # Fetch recent transactions
-            tx_res = supabase.table("transactions").select("*").execute()
-            # Fetch goals
-            goal_res = supabase.table("goals").select("*").execute()
-            
-            # Filter the data for this specific user (since your tables use account_id)
-            # We'll use your existing get_transactions logic to build the context string
-            user_tx = [t for t in tx_res.data if t.get('account_id')] # Simplifying for context
-            user_goals = goal_res.data
-            
-            context_data = f"\nUSER FINANCIAL DATA:\nTransactions: {user_tx[:10]}\nGoals: {user_goals}"
+        # 2. FETCH DATA: Resolve account_id to get real data
+        user_context = "The user is currently browsing as a guest."
+        if user_id and user_id != "null":
+            # Get account_id from users table
+            user_res = supabase.table("users").select("account_id").eq("user_id", user_id).execute()
+            if user_res.data:
+                acc_id = user_res.data[0].get("account_id")
+                # Get this user's specific transactions and goals
+                tx_res = supabase.table("transactions").select("*").eq("account_id", acc_id).limit(10).execute()
+                goal_res = supabase.table("goals").select("*").eq("account_id", acc_id).execute()
+                
+                user_context = f"User Financial Data:\n- Transactions: {tx_res.data}\n- Goals: {goal_res.data}"
 
-        # 3. Restore the "Budgie" Personality
+        # 3. CONSTRUCT THE PERSONALITY
         budgie_instructions = (
-            "You are Budgie, the smart, friendly mascot for the Budgie Budgeting app. "
-            "Your personality is clever, supportive, and approachable—like a wise little bird. "
-            "You have access to the user's real financial data provided below. Use it to give "
-            "specific advice. If they are a 'Guest' (no data), give general budgeting tips. "
-            "Keep answers conversational and bird-themed when appropriate!"
+            "You are Budgie, the smart, friendly, and clever bird mascot for the Budgie app. "
+            "Your personality is supportive and wise. You use the provided USER FINANCIAL DATA "
+            "to give specific, helpful advice. Always keep your tone bird-themed (use terms like 'flying', 'nest egg', or 'perch') "
+            "and keep answers conversational."
         )
 
-        # 4. Combine everything into the prompt
-        final_prompt = f"{budgie_instructions}\n\n{context_data}\n\nUser Question: {message}"
+        final_prompt = f"{user_context}\n\nUser Question: {message}"
         if extracted_text:
-            final_prompt += f"\n\n--- ATTACHED DOCUMENT ---\n{extracted_text}"
+            final_prompt += f"\n\n--- DOCUMENT CONTENT ---\n{extracted_text}"
 
-        # 5. Call Gemini
-        try:
-            response = gemini_client.models.generate_content(
-                model='gemini-2.5-flash',
-                contents=final_prompt
+        # 4. CALL GEMINI WITH SYSTEM INSTRUCTIONS
+        response = gemini_client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=final_prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=budgie_instructions,
+                temperature=0.7
             )
-            ai_response = response.text
-            
-        except Exception as api_error:
-            print(f"Gemini API Error: {api_error}")
-            ai_response = "I'm having a little trouble thinking right now! Check my API key."
+        )
 
-        return {"success": True, "reply": ai_response}
+        return {"success": True, "reply": response.text}
 
     except Exception as e:
         print(f"Chat Error: {e}")
-        return {"success": False, "reply": "Oops! I had trouble reading that. Please try again."}    
+        return {"success": False, "reply": "My bird brain is a bit scrambled right now! Try again?"}
 def send_verification_email(user_email, token):
     sender_email = os.getenv("EMAIL_USER")
     sender_password = os.getenv("EMAIL_PASS")

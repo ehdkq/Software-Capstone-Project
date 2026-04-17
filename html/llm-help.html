@@ -292,6 +292,9 @@
                 // 2. Prepare the Data
                 const formData = new FormData();
                 formData.append("message", messageText);
+                if (finalUserId) {
+                    formData.append("user_id", finalUserId);
+                }
                 if (currentAttachedFile) {
                     formData.append("file", currentAttachedFile);
                 }
