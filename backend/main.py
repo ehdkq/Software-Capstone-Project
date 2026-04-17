@@ -165,7 +165,7 @@ def verify_login(email, passw):
 
 # Deletes the users account
 # Pre: takes an email as a parameter
-# Post: returns True if the account was deleted, false otherwise@app.post("/account/delete-account")
+# Post: returns True if the account was deleted, false otherwise
 @app.post("/account/delete-account")
 def delete_account(email: str = Form(...)):
     try:
@@ -356,7 +356,6 @@ def update_transaction(transaction_id, amount, t_type, desc):
 # Post: returns true if the password was updated successfully, false otherwise
 @app.post("/account/update-password")
 def update_password(email, newpass):
-
     try: 
         users = supabase.table("users").select("*").execute()
 
@@ -381,7 +380,7 @@ def update_password(email, newpass):
 
 # Gets the user's exact balance from the accounts table
 @app.get("/account/get-balance")
-def get_balance(user_id: str):
+def get_balance(user_id):
     try:
         user_res = supabase.table("users").select("account_id").eq("user_id", user_id).execute()
         if user_res.data:
@@ -400,7 +399,7 @@ def get_balance(user_id: str):
 
 # Updates the user's balance in the accounts table
 @app.post("/account/update-balance")
-def update_balance(user_id: str, new_balance: float):
+def update_balance(user_id, new_balance):
     try:
         user_res = supabase.table("users").select("account_id").eq("user_id", user_id).execute()
         if user_res.data:
@@ -417,7 +416,7 @@ def update_balance(user_id: str, new_balance: float):
     
 # Gets the user's profile information
 @app.get("/account/get-profile")
-def get_profile(user_id: str):
+def get_profile(user_id):
     try:
         user_res = supabase.table("users").select("*").eq("user_id", user_id).execute()
         
@@ -530,7 +529,6 @@ def add_goal(user_id, category, target_amount):
 # Post: returns True if goal was deleted, False otherwise
 @app.post("/dashboard/delete-goal")
 def delete_goal(goal_id):
-    print(f"Received delete_goal request - goal_id: {goal_id}")
     try:
         supabase.table("goals").delete().eq("goal_id", goal_id).execute()
         print(f"Goal deleted successfully")
@@ -538,7 +536,6 @@ def delete_goal(goal_id):
     except Exception as e:
         print(f"Error in delete_goal: {e}")
         return {"success": False, "error": str(e)}
-
 
 
 # Gets balance tied to the specified user

@@ -12,7 +12,7 @@ Software tester: Halena
 | Complete   | Project Charter | https://docs.google.com/document/d/1SJPNfa6N23FdG4-C6IEalG4hsdl7S6yBFufbNqpSw1s/edit?usp=sharing |
 | ToDo   | Requriements | https://docs.google.com/document/d/1fvxDhibFLcr6y2TmASDzY9elIvbhPPjZ52ajqnh4Z2k/edit?usp=sharing |
 | ToDo   | Project Plan | https://docs.google.com/document/d/1ig6Y3RPHDSSmAJqFmzE5ZBkbpMc_DxYRUzKSSG0eum0/edit?usp=sharing |
-| ToDo   | System Architecture | https://docs.google.com/document/d/1v7JEmcQfmyFEMZkJkw2LvN4AwuXDIz012NhAgfvIH1k/edit?usp=sharing |
+| Complete   | System Architecture | https://docs.google.com/document/d/1v7JEmcQfmyFEMZkJkw2LvN4AwuXDIz012NhAgfvIH1k/edit?usp=sharing |
 | ToDo   | Test Plan | https://docs.google.com/document/d/1710Im0M6s44C6niH3AIJPlSXKdLDIo4VnxSrO-Eryow/edit?usp=sharing |
 | ToDo   | Test Cases | https://docs.google.com/document/d/1N_yx6cJDoOCKUyiBs_g4uJ-R935rnx2DOavkF8CalZo/edit?usp=sharing |
 | ToDo   | Test Report | https://docs.google.com/document/d/1p4da-1VYWHelOauBZsBVY32F6p6MWOlDJPUBX2pWDjc/edit?usp=sharing |
