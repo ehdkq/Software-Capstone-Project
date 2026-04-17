@@ -598,7 +598,7 @@ async def chat_with_budgie(message: str = Form(""), user_id: Optional[str] = For
 
         # 4. CALL THE LIVE MODEL
         response = gemini_client.models.generate_content(
-            model='gemini-1.5-flash', # Updated to the standard 2.0 stable version
+            model='gemini-2.5-flash', # Updated to the standard 2.0 stable version
             contents=f"{user_context}\n\nUser Question: {message}\n\n{extracted_text}",
             config=types.GenerateContentConfig(
                 system_instruction=budgie_instructions,
