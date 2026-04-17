@@ -49,31 +49,6 @@ app.add_middleware(
 # delete from db: response = supabase.table("TABLE_NAME").delete().eq("value", what value equals).execute()
 # return response
 
-# Verify's the users credentials
-# Pre: takes user email and password as parameters
-# Post: returns True if the login is valid, False otherwise
-@app.get("/login")
-def verify_login(email, passw):
-    try: 
-        users = supabase.table("users").select("*").execute()
-
-        for user in users.data:
-            e = user.get('email')
-            p = user.get('password_hash')
-            if e == email:
-                byte_pwd = passw.encode('utf-8')
-                salt_bytes = user.get('password_salt').encode('utf-8')
-                pw_hash_bytes = bcrypt.hashpw(byte_pwd, salt_bytes)
-                pw_hash = pw_hash_bytes.decode('utf-8')
-
-                if pw_hash == p:
-                    return {"success": True, "user_id": user.get('user_id')}  # Return user_id
-            
-        return {"success": False}
-    
-    except Exception as e:
-        print('error: ', e)
-        return {"success": False}
 
 # Create's a user account
 # Pre: takes user email and password as parameters
@@ -587,14 +562,10 @@ def update_balance(user_id, new_balance):
 
 
 @app.post("/api/chat")
-async def chat_with_budgie(
-    message: str = Form(""), 
-    user_id: Optional[str] = Form(None), 
-    file: UploadFile = File(None)
-):
+async def chat_with_budgie(message: str = Form(""), user_id: Optional[str] = Form(None), file: UploadFile = File(None)):
     try:
         extracted_text = ""
-        # 1. Handle File Upload (Existing logic)
+        # 1. Handle File Uploads (Existing logic)
         if file:
             contents = await file.read()
             if file.content_type == "application/pdf":
@@ -602,48 +573,44 @@ async def chat_with_budgie(
                     for page in pdf.pages:
                         extracted_text += page.extract_text(layout=True) + "\n"
             elif file.content_type.startswith("image/"):
-                extracted_text = f"[User attached an image file: {file.filename}]"
+                extracted_text = f"[User attached an image: {file.filename}]"
 
-        # 2. FETCH DATA: Resolve account_id to get real data
+        # 2. FETCH REAL DATA: No more generic answers
         user_context = "The user is currently browsing as a guest."
         if user_id and user_id != "null":
-            # Get account_id from users table
+            # Get the account_id first
             user_res = supabase.table("users").select("account_id").eq("user_id", user_id).execute()
             if user_res.data:
                 acc_id = user_res.data[0].get("account_id")
-                # Get this user's specific transactions and goals
+                # Grab the latest 10 transactions and all goals
                 tx_res = supabase.table("transactions").select("*").eq("account_id", acc_id).limit(10).execute()
                 goal_res = supabase.table("goals").select("*").eq("account_id", acc_id).execute()
                 
-                user_context = f"User Financial Data:\n- Transactions: {tx_res.data}\n- Goals: {goal_res.data}"
+                user_context = f"REAL USER DATA:\nTransactions: {tx_res.data}\nGoals: {goal_res.data}"
 
-        # 3. CONSTRUCT THE PERSONALITY
+        # 3. SET THE PERSONALITY
         budgie_instructions = (
-            "You are Budgie, the smart, friendly, and clever bird mascot for the Budgie app. "
-            "Your personality is supportive and wise. You use the provided USER FINANCIAL DATA "
-            "to give specific, helpful advice. Always keep your tone bird-themed (use terms like 'flying', 'nest egg', or 'perch') "
-            "and keep answers conversational."
+            "You are Budgie, the smart, clever, and supportive bird mascot for this app. "
+            "Use the REAL USER DATA provided to give specific advice. If they are a guest, "
+            "give general financial tips. Use bird-themed metaphors (nest egg, flying high, "
+            "perching) and keep it conversational!"
         )
 
-        final_prompt = f"{user_context}\n\nUser Question: {message}"
-        if extracted_text:
-            final_prompt += f"\n\n--- DOCUMENT CONTENT ---\n{extracted_text}"
-
-        # 4. CALL GEMINI WITH SYSTEM INSTRUCTIONS
+        # 4. CALL THE LIVE MODEL
         response = gemini_client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=final_prompt,
+            model='gemini-2.0-flash', # Updated to the standard 2.0 stable version
+            contents=f"{user_context}\n\nUser Question: {message}\n\n{extracted_text}",
             config=types.GenerateContentConfig(
                 system_instruction=budgie_instructions,
-                temperature=0.7
+                temperature=0.7,
             )
         )
-
+        
         return {"success": True, "reply": response.text}
 
     except Exception as e:
-        print(f"Chat Error: {e}")
-        return {"success": False, "reply": "My bird brain is a bit scrambled right now! Try again?"}
+        print(f"Detailed API Error: {e}") # This will show in your Render logs!
+        return {"success": False, "reply": "My bird brain is having a connection hiccup! Double-check the Render Environment Variables."}
 def send_verification_email(user_email, token):
     sender_email = os.getenv("EMAIL_USER")
     sender_password = os.getenv("EMAIL_PASS")
