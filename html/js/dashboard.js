@@ -147,7 +147,7 @@ window.submitQuickDeposit = async function() {
     const amount = parseFloat(amountInput.value);
     
     if (!amount || amount <= 0) {
-        alert("Please enter a valid deposit amount.");
+        showToast("Please enter a valid deposit amount.", "error");
         return;
     }
 
@@ -163,7 +163,7 @@ window.submitQuickDeposit = async function() {
             toggleAddFundsForm();
             amountInput.value = ''; 
         } else {
-            alert("Failed to process deposit. Check your server.");
+            showToast("Failed to process deposit. Check your server.", "error");
         }
     } catch (error) {
         console.error("Deposit error:", error);
@@ -297,8 +297,9 @@ if (transactionForm) {
                 editingTransactionId = null; 
                 tSubmitBtn.textContent = 'Add'; 
                 transactionForm.reset();
+                showToast("Transaction updated!", "success");
             } else {
-                alert('Error updating transaction.');
+                showToast("Error updating transaction.", "error");
             }
             tSubmitBtn.disabled = false;
             
@@ -316,8 +317,9 @@ if (transactionForm) {
                 if (data.success) {
                     await loadUserData(); 
                     transactionForm.reset();
+                    showToast("Transaction added!", "success");
                 } else {
-                    alert('Error: Could not save transaction.');
+                    showToast("Error: Could not save transaction.", "error");
                 }
             } catch (err) {
                 console.error("Error adding transaction:", err);
@@ -363,8 +365,9 @@ window.deleteTransactionFromBackend = async function(id) {
         const isDeleted = await response.json();
         if (isDeleted) {
             await loadUserData(); 
+            showToast("Transaction deleted.", "success");
         } else {
-            alert('Failed to delete transaction.');
+            showToast("Failed to delete transaction.", "error");
         }
     } catch (error) {
         console.error('Error deleting:', error);
@@ -536,8 +539,9 @@ if (goalForm) {
             if (data.success) {
                 await loadGoals();
                 goalForm.reset();
+                showToast("Goal saved successfully!", "success");
             } else {
-                alert('Error adding goal.');
+                showToast("Error adding goal.", "error");
             }
         } catch (err) {
             console.error('Goal Error:', err);
@@ -582,7 +586,7 @@ if (importBtn) {
         const file = fileInput.files[0];
 
         if (!file) {
-            alert("Please select a PDF statement first.");
+            showToast("Please select a PDF statement first.", "error");
             return;
         }
 

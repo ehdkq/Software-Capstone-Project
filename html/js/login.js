@@ -46,7 +46,7 @@ loginBtn.addEventListener("click", (event) => {
             }, 1000);
         } else {
             // reset button if login fails 
-            alert("Unsuccessful Login");
+            showToast("Unsuccessful Login. Please check your credentials.", "error");
             loginBtn.textContent = "Log In";
             loginBtn.style.pointerEvents = "auto";
         }

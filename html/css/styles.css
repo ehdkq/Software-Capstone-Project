@@ -720,3 +720,46 @@ body.dark-theme .members-only-popup {
 .remove-file-btn:hover {
     background: rgba(0,0,0,0.1);
 }
+
+/* The container that holds the toasts in the corner */
+.toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 9999; /* Ensures it pops up over absolutely everything */
+}
+
+/* The actual toast message box */
+.budgie-toast {
+    min-width: 250px;
+    background-color: #333; /* Dark gray default */
+    color: white;
+    padding: 16px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    font-family: sans-serif;
+    font-size: 14px;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* When the toast slides in */
+.budgie-toast.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Colors for different types of messages */
+.toast-error {
+    background-color: #ef4444; /* Red for errors */
+    border-left: 6px solid #b91c1c;
+}
+
+.toast-success {
+    background-color: #10b981; /* Green for success */
+    border-left: 6px solid #047857;
+}

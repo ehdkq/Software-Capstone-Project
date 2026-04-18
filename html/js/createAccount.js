@@ -22,7 +22,7 @@ createAccountBtn.addEventListener("click", (event) => {
 
     // Security check!
     if (newPassword !== reEnterPassword) {
-        alert("Whoops, passwords don't match. Please try again");
+        showToast("Whoops, passwords don't match. Please try again", "error");
         return // Stop the entire function
     }
 
@@ -43,21 +43,20 @@ createAccountBtn.addEventListener("click", (event) => {
         if (data.success) {
             console.log("Success:", data);
             
-            // Show the success message from Python (so they know to check their mock email!)
-            alert(data.message || "Account created successfully!");
+            // Show the success message
+            showToast(data.message || "Account created successfully!", "success");
             
             // delay redirect
             setTimeout(() => {
                 window.location.href = "login.html";
-            }, 1000);
+            }, 2000); // Bumped to 2 seconds so they have time to read the toast!
         } else {
-            // THE FIX: Stop guessing, and print the EXACT error from the Python server!
-            alert("Creation failed: " + (data.error || "Unknown error"));
+            showToast("Creation failed: " + (data.error || "Unknown error"), "error");
             console.error("Backend Error Details:", data.error);
         }
     })
     .catch((error) => {
         console.error('Error:', error);
-        alert('Could not connect to the server. Is Python running?');
+        showToast('Could not connect to the server. Is Python running?', "error");
     });
 })
