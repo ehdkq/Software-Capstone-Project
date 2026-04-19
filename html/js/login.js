@@ -45,14 +45,14 @@ loginBtn.addEventListener("click", (event) => {
                 window.location.href = "dashboard.html";
             }, 1000);
         } else {
-            // reset button if login fails 
-            showToast("Unsuccessful Login. Please check your credentials.", "error");
+            // THE FIX: Show the EXACT error message from the Python backend
+            showToast(data.error || "Unsuccessful Login.", "error");
             loginBtn.textContent = "Log In";
             loginBtn.style.pointerEvents = "auto";
         }
     })
     .catch((error) => {
-        //console.error('Error in login:', error);
+        showToast("Cannot connect to server. Is Render awake?", "error");
         loginBtn.textContent = "Log In";
         loginBtn.style.pointerEvents = "auto";
     });
