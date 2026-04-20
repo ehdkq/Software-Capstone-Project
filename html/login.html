@@ -48,7 +48,20 @@
                         <br><br>
                         </div>
                         <button type="submit" id="login-button" class="action-btn" style="padding: 10px 20px; cursor: pointer;">Log In</button>
+                        
                     </form>
+                    <p style="margin-top: 15px;">
+                        <a href="#" id="show-forgot-password" style="color: #9966FF; text-decoration: none; font-size: 0.9rem;">Forgot Password?</a>
+                    </p>
+
+                    <div id="forgot-password-section" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid #ccc;">
+                        <h3>Reset Password</h3>
+                        <p style="font-size: 0.9rem;">Enter your email and we'll send you a reset link.</p>
+                        <form id="forgot-password-form">
+                            <input type="email" id="reset-email" placeholder="Your account email" required style="padding: 8px; width: 100%; margin-bottom: 10px;">
+                            <button type="submit" id="reset-submit-btn" class="action-btn" style="padding: 8px 15px; width: 100%;">Send Reset Link</button>
+                        </form>
+                    </div>
                     
                     <p id="error-message" style="color: red; margin-top: 15px;"></p>
                 </div>
