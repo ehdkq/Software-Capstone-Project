@@ -138,6 +138,76 @@ def verify_login(email, passw):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
+
+def send_reset_email(user_email, token):
+    sender_email = os.getenv("EMAIL_USER")
+    sender_password = os.getenv("EMAIL_PASS")
+
+    msg = EmailMessage()
+    msg['Subject'] = 'Budgie Password Reset'
+    msg['From'] = sender_email
+    msg['To'] = user_email
+    
+    # We will create this page in Step 3!
+    reset_link = f"https://budgiebudgeting.netlify.app/reset-password.html?token={token}"
+    msg.set_content(f"We received a request to reset your Budgie password.\n\nClick the link below to set a new password:\n{reset_link}\n\nIf you did not request this, you can safely ignore this email.")
+
+    try:
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+            smtp.login(sender_email, sender_password)
+            smtp.send_message(msg)
+    except Exception as e:
+        print(f"Failed to send reset email: {e}")
+
+@app.post("/api/request-reset")
+def request_password_reset(email: str = Form(...)):
+    try:
+        # 1. Verify the email exists in the database
+        res = supabase.table("users").select("user_id").eq("email", email).execute()
+        
+        if res.data:
+            user_id = res.data[0].get("user_id")
+            # 2. Generate a secure token
+            reset_token = secrets.token_urlsafe(32)
+            
+            # 3. Save the token to the database (reusing the verification_token column)
+            supabase.table("users").update({"verification_token": reset_token}).eq("user_id", user_id).execute()
+            
+            # 4. Send the email
+            send_reset_email(email, reset_token)
+            
+        # We always return success even if the email isn't found to prevent "Email Enumeration" hacker attacks
+        return {"success": True}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@app.post("/api/execute-reset")
+def execute_password_reset(token: str = Form(...), new_password: str = Form(...)):
+    try:
+        # 1. Find the user with this token
+        res = supabase.table("users").select("user_id").eq("verification_token", token).execute()
+        
+        if not res.data:
+            return {"success": False, "error": "Invalid or expired reset link."}
+            
+        user_id = res.data[0].get("user_id")
+        
+        # 2. Hash the new password using your existing bcrypt logic
+        byte_pwd = new_password.encode('utf-8')
+        salt_bytes = bcrypt.gensalt()
+        pw_hash_bytes = bcrypt.hashpw(byte_pwd, salt_bytes)
+        
+        # 3. Update the database and wipe the token so it can't be reused
+        supabase.table("users").update({
+            "password_hash": pw_hash_bytes.decode('utf-8'),
+            "password_salt": salt_bytes.decode('utf-8'),
+            "verification_token": None,
+            "password_updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+        }).eq("user_id", user_id).execute()
+        
+        return {"success": True}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 # Deletes the users account
 # Pre: takes an email as a parameter
 # Post: returns True if the account was deleted, false otherwise
