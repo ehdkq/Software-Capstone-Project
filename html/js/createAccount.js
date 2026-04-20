@@ -20,14 +20,22 @@ createAccountBtn.addEventListener("click", (event) => {
     url.searchParams.append('firstN',fName);
     url.searchParams.append('lastN',lName);
 
-    // Security check!
+    // Security check 1: Do the passwords match?
     if (newPassword !== reEnterPassword) {
-        alert("Whoops, passwords don't match. Please try again");
-        return // Stop the entire function
+        showToast("Whoops, passwords don't match. Please try again", "error");
+        return; // Stop the entire function
     }
 
-    console.log("Passwords match! Proceeding with account creation...");
+    // Security check 2: Is the password strong enough?
+    // This Regex requires: 1 Uppercase, 1 Number, 1 Special Char, and at least 8 characters long
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+={}\[\]|\\:;"'<>,.?/-]).{8,}$/;
+    
+    if (!passwordRegex.test(newPassword)) {
+        showToast("Password must be at least 8 characters and include an uppercase letter, a number, and a special symbol.", "error");
+        return; // Stop the entire function
+    }
 
+    console.log("Passwords match and are secure! Proceeding with account creation...");
     // send data to FastApi endpoint 
     fetch(url , {
         method: 'POST',
@@ -43,21 +51,20 @@ createAccountBtn.addEventListener("click", (event) => {
         if (data.success) {
             console.log("Success:", data);
             
-            // Show the success message from Python (so they know to check their mock email!)
-            alert(data.message || "Account created successfully!");
+            // Show the success message
+            showToast(data.message || "Account created successfully!", "success");
             
             // delay redirect
             setTimeout(() => {
                 window.location.href = "login.html";
-            }, 1000);
+            }, 2000); // Bumped to 2 seconds so they have time to read the toast!
         } else {
-            // THE FIX: Stop guessing, and print the EXACT error from the Python server!
-            alert("Creation failed: " + (data.error || "Unknown error"));
+            showToast("Creation failed: " + (data.error || "Unknown error"), "error");
             console.error("Backend Error Details:", data.error);
         }
     })
     .catch((error) => {
         console.error('Error:', error);
-        alert('Could not connect to the server. Is Python running?');
+        showToast('Could not connect to the server. Is Python running?', "error");
     });
 })

@@ -45,15 +45,58 @@ loginBtn.addEventListener("click", (event) => {
                 window.location.href = "dashboard.html";
             }, 1000);
         } else {
-            // reset button if login fails 
-            alert("Unsuccessful Login");
+            // THE FIX: Show the EXACT error message from the Python backend
+            showToast(data.error || "Unsuccessful Login.", "error");
             loginBtn.textContent = "Log In";
             loginBtn.style.pointerEvents = "auto";
         }
     })
     .catch((error) => {
-        //console.error('Error in login:', error);
+        showToast("Cannot connect to server. Is Render awake?", "error");
         loginBtn.textContent = "Log In";
         loginBtn.style.pointerEvents = "auto";
     });
+});
+
+// --- FORGOT PASSWORD LOGIC ---
+const showForgotLink = document.getElementById('show-forgot-password');
+const forgotSection = document.getElementById('forgot-password-section');
+const forgotForm = document.getElementById('forgot-password-form');
+const resetSubmitBtn = document.getElementById('reset-submit-btn');
+
+showForgotLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    forgotSection.style.display = forgotSection.style.display === 'none' ? 'block' : 'none';
+});
+
+forgotForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('reset-email').value;
+    
+    resetSubmitBtn.textContent = "Sending...";
+    resetSubmitBtn.disabled = true;
+
+    try {
+        const formData = new FormData();
+        formData.append("email", email);
+
+        const response = await fetch('https://software-capstone-project.onrender.com/api/request-reset', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast("Reset link sent! Check your email.", "success");
+            forgotSection.style.display = 'none';
+        } else {
+            showToast(data.error || "Failed to send reset link.", "error");
+        }
+    } catch (error) {
+        showToast("Server error. Please try again later.", "error");
+    }
+    
+    resetSubmitBtn.textContent = "Send Reset Link";
+    resetSubmitBtn.disabled = false;
 });

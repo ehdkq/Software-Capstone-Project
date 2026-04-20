@@ -49,31 +49,6 @@ app.add_middleware(
 # delete from db: response = supabase.table("TABLE_NAME").delete().eq("value", what value equals).execute()
 # return response
 
-# Verify's the users credentials
-# Pre: takes user email and password as parameters
-# Post: returns True if the login is valid, False otherwise
-@app.get("/login")
-def verify_login(email, passw):
-    try: 
-        users = supabase.table("users").select("*").execute()
-
-        for user in users.data:
-            e = user.get('email')
-            p = user.get('password_hash')
-            if e == email:
-                byte_pwd = passw.encode('utf-8')
-                salt_bytes = user.get('password_salt').encode('utf-8')
-                pw_hash_bytes = bcrypt.hashpw(byte_pwd, salt_bytes)
-                pw_hash = pw_hash_bytes.decode('utf-8')
-
-                if pw_hash == p:
-                    return {"success": True, "user_id": user.get('user_id')}  # Return user_id
-            
-        return {"success": False}
-    
-    except Exception as e:
-        print('error: ', e)
-        return {"success": False}
 
 # Create's a user account
 # Pre: takes user email and password as parameters
@@ -183,6 +158,76 @@ def verify_login(email, passw):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
+
+def send_reset_email(user_email, token):
+    sender_email = os.getenv("EMAIL_USER")
+    sender_password = os.getenv("EMAIL_PASS")
+
+    msg = EmailMessage()
+    msg['Subject'] = 'Budgie Password Reset'
+    msg['From'] = sender_email
+    msg['To'] = user_email
+    
+    # We will create this page in Step 3!
+    reset_link = f"https://budgiebudgeting.netlify.app/reset-password.html?token={token}"
+    msg.set_content(f"We received a request to reset your Budgie password.\n\nClick the link below to set a new password:\n{reset_link}\n\nIf you did not request this, you can safely ignore this email.")
+
+    try:
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+            smtp.login(sender_email, sender_password)
+            smtp.send_message(msg)
+    except Exception as e:
+        print(f"Failed to send reset email: {e}")
+
+@app.post("/api/request-reset")
+def request_password_reset(email: str = Form(...)):
+    try:
+        # 1. Verify the email exists in the database
+        res = supabase.table("users").select("user_id").eq("email", email).execute()
+        
+        if res.data:
+            user_id = res.data[0].get("user_id")
+            # 2. Generate a secure token
+            reset_token = secrets.token_urlsafe(32)
+            
+            # 3. Save the token to the database (reusing the verification_token column)
+            supabase.table("users").update({"verification_token": reset_token}).eq("user_id", user_id).execute()
+            
+            # 4. Send the email
+            send_reset_email(email, reset_token)
+            
+        # We always return success even if the email isn't found to prevent "Email Enumeration" hacker attacks
+        return {"success": True}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@app.post("/api/execute-reset")
+def execute_password_reset(token: str = Form(...), new_password: str = Form(...)):
+    try:
+        # 1. Find the user with this token
+        res = supabase.table("users").select("user_id").eq("verification_token", token).execute()
+        
+        if not res.data:
+            return {"success": False, "error": "Invalid or expired reset link."}
+            
+        user_id = res.data[0].get("user_id")
+        
+        # 2. Hash the new password using your existing bcrypt logic
+        byte_pwd = new_password.encode('utf-8')
+        salt_bytes = bcrypt.gensalt()
+        pw_hash_bytes = bcrypt.hashpw(byte_pwd, salt_bytes)
+        
+        # 3. Update the database and wipe the token so it can't be reused
+        supabase.table("users").update({
+            "password_hash": pw_hash_bytes.decode('utf-8'),
+            "password_salt": salt_bytes.decode('utf-8'),
+            "verification_token": None,
+            "password_updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+        }).eq("user_id", user_id).execute()
+        
+        return {"success": True}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 # Deletes the users account
 # Pre: takes an email as a parameter
 # Post: returns True if the account was deleted, false otherwise
@@ -217,6 +262,30 @@ def delete_account(email: str = Form(...)):
         print("Error deleting account:", e)
         return {"success": False, "error": str(e)}
 
+
+@app.post("/account/wipe-data")
+def wipe_account_data(user_id: str = Form(...)):
+    try:
+        # 1. Find the user's account_id
+        user_res = supabase.table("users").select("account_id").eq("user_id", user_id).execute()
+        if not user_res.data:
+            return {"success": False, "error": "User not found"}
+
+        acc_id = user_res.data[0].get("account_id")
+
+        # 2. Delete all transactions tied to this account
+        supabase.table("transactions").delete().eq("account_id", acc_id).execute()
+
+        # 3. Delete all goals tied to this account
+        supabase.table("goals").delete().eq("account_id", acc_id).execute()
+
+        # 4. Reset the account balance to exactly $0.00
+        supabase.table("accounts").update({"balance": 0.0}).eq("account_id", acc_id).execute()
+
+        return {"success": True}
+    except Exception as e:
+        print("Error wiping account data:", e)
+        return {"success": False, "error": str(e)}
 # Gets all transactions tied to the specified user
 # Pre: takes a user ID as a parameter
 # Post: returns a list of dictionaries - each dictionary is a transaction
@@ -605,120 +674,72 @@ def update_balance(user_id, new_balance):
         print(f"Error updating balance: {e}")
         return {"success": False, "error": str(e)}
 
-
-@app.post("/api/chat")
-async def chat_with_budgie(message: str = Form(""), file: UploadFile = File(None)):
-    try:
-        extracted_text = ""
-
-        # 1. Handle the File Upload
-        if file:
-            contents = await file.read()
-            
-            if file.content_type == "application/pdf":
-                # Extract text from the PDF
-                with pdfplumber.open(io.BytesIO(contents)) as pdf:
-                    for page in pdf.pages:
-                        extracted_text += page.extract_text(layout=True) + "\n"
-                        
-            elif file.content_type.startswith("image/"):
-                extracted_text = f"[User attached an image file: {file.filename}]"
-
-        # 2. Build the final prompt for Gemini
-        prompt = message
-        if extracted_text:
-            prompt += f"\n\n--- ATTACHED DOCUMENT DATA ---\n{extracted_text}\n-------------------"
-
-        # 3. ---> CALL GEMINI HERE <---
-        try:
-            response = gemini_client.models.generate_content(
-                model='gemini-2.5-flash',
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    system_instruction="You are Budgie, a helpful, friendly, and concise financial AI assistant. You help users analyze their spending, read bank statements, and hit their budget goals. Keep your answers brief and conversational.",
-                    temperature=0.7,
-                )
-            )
-            ai_response = response.text
-            
-        except Exception as api_error:
-            print(f"Gemini API Error: {api_error}")
-            ai_response = "My brain is having a little trouble connecting right now! Please make sure the Gemini API key is set up correctly in the .env file."
-
-        return {"success": True, "reply": ai_response}
-
-    except Exception as e:
-        print(f"Chat Error: {e}")
-        return {"success": False, "reply": "Oops! I had trouble reading that. Please try again."}
-    
 @app.post("/api/import-statement")
-async def import_statement(user_id: str = Form(...), file: UploadFile = File(...)):
+async def import_statement(file: UploadFile = File(...), user_id: str = Form(None)):
     try:
-        contents = await file.read()
-        
-        if file.content_type != "application/pdf":
-            return {"success": False, "error": "Please upload a PDF statement."}
-
-        # 1. THE BULLETPROOF PROMPT
-        prompt = """
-        You are an elite financial data extraction tool. Read the attached bank statement PDF and extract EVERY SINGLE transaction. 
-        Return a valid JSON array of objects.
-        
-        CRITICAL RULES:
-        1. You MUST extract every single transaction. Do not stop early. Do not skip any rows.
-        2. Output amounts as pure positive numbers. Strip out commas, dollar signs, and minus signs (e.g., "$1,842.65" or "-1,842.65" must become exactly 1842.65).
-        
-        Each object must have exactly these keys:
-        - "date": The date the transaction occurred. Format strictly as "YYYY-MM-DD" (e.g., "04/14/2026" becomes "2026-04-14"). If a date has a typo like "010201202", infer the real date or default to the current year/month.
-        - "amount": a positive float representing the transaction value.
-        - "t_type": If money came IN (deposits, credits, Payroll), this must be exactly "Income". If money went OUT, assign a category like "Groceries", "Dining", "Utilities", "Entertainment", or "Other".
-        - "desc": a clean, short name of the merchant.
-        """
-
-        # 2. FEED THE RAW PDF DIRECTLY TO GEMINI'S VISION MODEL!
-        response = gemini_client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=[
-                prompt,
-                types.Part.from_bytes(data=contents, mime_type='application/pdf')
-            ],
-            config=types.GenerateContentConfig(
-                temperature=0.1,
-                response_mime_type="application/json" # This forces the AI to output flawless JSON!
-            ) 
-        )
-        
-        # Because we forced JSON output, we don't need regex scrubbing anymore!
-        transactions = json.loads(response.text)
-
+        # 1. Match the user_id to an email (since add_transaction uses email)
         user_res = supabase.table("users").select("email").eq("user_id", user_id).execute()
         if not user_res.data:
-            return {"success": False, "error": "User not found."}
-        email = user_res.data[0].get("email")
+            return {"success": False, "error": "Could not verify user account."}
+        user_email = user_res.data[0].get("email")
 
+        # 2. Extract the raw text from the uploaded PDF
+        contents = await file.read()
+        extracted_text = ""
+        with pdfplumber.open(io.BytesIO(contents)) as pdf:
+            for page in pdf.pages:
+                # Removed layout=True. This stops pdfplumber from adding massive 
+                # blank spaces that confuse the AI when reading tables.
+                extracted_text += page.extract_text() + "\n"
+
+        # WIRETAP: Print the raw text to Render so we can verify the PDF reader worked
+        print("\n--- RAW PDF TEXT ---")
+        print(extracted_text)
+        print("--------------------\n")
+
+        # 3. Use AI to structure the messy bank statement
+        prompt = f"""
+        Extract EVERY SINGLE transaction from the text below. Do not summarize or stop early.
+        
+        Return a JSON array of objects with exactly these keys:
+        "tx_date": (string, YYYY-MM-DD format)
+        "desc": (string, merchant name)
+        "amount": (float, absolute value, no symbols)
+        "t_type": (string, 'Groceries', 'Dining', 'Utilities', 'Entertainment', 'Income', or 'Other')
+
+        TEXT:
+        {extracted_text}
+        """
+
+        # 4. Call the Live Model with Strict JSON Mode
+        response = gemini_client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                temperature=0.0, # Zero creativity
+                response_mime_type="application/json", # Forces native JSON output without markdown!
+            )
+        )
+        
+        # WIRETAP: Print what the AI decided to output
+        print(f"AI OUTPUT: {response.text}")
+
+        # 5. Parse the JSON (No string cleaning needed anymore!)
+        transactions = json.loads(response.text)
+        
+        # Add every extracted transaction to Supabase using your existing function
         imported_count = 0
         for tx in transactions:
-            extracted_date = tx.get("date") or tx.get("Date")
-            
-            # The Python comma scrubber as a final safety net
-            raw_amount_str = str(tx.get("amount", "0"))
-            clean_amount_str = raw_amount_str.replace(",", "").replace("$", "").replace("-", "").strip()
-            
-            try:
-                final_amount = float(clean_amount_str)
-            except ValueError:
-                final_amount = 0.0 
-
             add_transaction(
-                email=email,
-                amount=final_amount,
-                t_type=tx.get("t_type", "Other"),
+                email=user_email,
+                amount=tx["amount"],
+                t_type=tx["t_type"],
                 m_id="0",
-                m_name=tx.get("desc", "Unknown"),
+                m_name=tx["desc"],
                 m_code="0",
-                desc=tx.get("desc", "Unknown"),
+                desc=tx["desc"],
                 recurr="false",
-                tx_date=extracted_date
+                tx_date=tx.get("tx_date")
             )
             imported_count += 1
 
@@ -726,8 +747,57 @@ async def import_statement(user_id: str = Form(...), file: UploadFile = File(...
 
     except Exception as e:
         print(f"Import Error: {e}")
-        return {"success": False, "error": str(e)}
-    
+        return {"success": False, "error": "Failed to parse PDF. The AI couldn't read the format."}
+@app.post("/api/chat")
+async def chat_with_budgie(message: str = Form(""), user_id: Optional[str] = Form(None), file: UploadFile = File(None)):
+    try:
+        extracted_text = ""
+        # 1. Handle File Uploads (Existing logic)
+        if file:
+            contents = await file.read()
+            if file.content_type == "application/pdf":
+                with pdfplumber.open(io.BytesIO(contents)) as pdf:
+                    for page in pdf.pages:
+                        extracted_text += page.extract_text(layout=True) + "\n"
+            elif file.content_type.startswith("image/"):
+                extracted_text = f"[User attached an image: {file.filename}]"
+
+        # 2. FETCH REAL DATA: No more generic answers
+        user_context = "The user is currently browsing as a guest."
+        if user_id and user_id != "null":
+            # Get the account_id first
+            user_res = supabase.table("users").select("account_id").eq("user_id", user_id).execute()
+            if user_res.data:
+                acc_id = user_res.data[0].get("account_id")
+                # Grab the latest 10 transactions and all goals
+                tx_res = supabase.table("transactions").select("*").eq("account_id", acc_id).limit(10).execute()
+                goal_res = supabase.table("goals").select("*").eq("account_id", acc_id).execute()
+                
+                user_context = f"REAL USER DATA:\nTransactions: {tx_res.data}\nGoals: {goal_res.data}"
+
+        # 3. SET THE PERSONALITY
+        budgie_instructions = (
+            "You are Budgie, the smart, clever, and supportive bird mascot for this app. "
+            "Use the REAL USER DATA provided to give specific advice. If they are a guest, "
+            "give general financial tips. Use bird-themed metaphors (nest egg, flying high, "
+            "perching) and keep it conversational!"
+        )
+
+        # 4. CALL THE LIVE MODEL
+        response = gemini_client.models.generate_content(
+            model='gemini-2.5-flash', # Updated to the standard 2.0 stable version
+            contents=f"{user_context}\n\nUser Question: {message}\n\n{extracted_text}",
+            config=types.GenerateContentConfig(
+                system_instruction=budgie_instructions,
+                temperature=0.7,
+            )
+        )
+        
+        return {"success": True, "reply": response.text}
+
+    except Exception as e:
+        print(f"Detailed API Error: {e}") # This will show in your Render logs!
+        return {"success": False, "reply": "My bird brain is having a connection hiccup! Double-check the Render Environment Variables."}
 def send_verification_email(user_email, token):
     sender_email = os.getenv("EMAIL_USER")
     sender_password = os.getenv("EMAIL_PASS")

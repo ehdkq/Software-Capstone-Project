@@ -112,7 +112,7 @@
             </div>
         </div>
     </footer>
-
+    
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     
     <script>
@@ -292,6 +292,9 @@
                 // 2. Prepare the Data
                 const formData = new FormData();
                 formData.append("message", messageText);
+                if (finalUserId) {
+                    formData.append("user_id", finalUserId);
+                }
                 if (currentAttachedFile) {
                     formData.append("file", currentAttachedFile);
                 }
@@ -369,6 +372,8 @@
                 return msgId;
             }
         });
+
+        
     </script>
     <script src="./js/global.js"></script>
 </body>
