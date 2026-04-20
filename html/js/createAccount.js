@@ -20,14 +20,22 @@ createAccountBtn.addEventListener("click", (event) => {
     url.searchParams.append('firstN',fName);
     url.searchParams.append('lastN',lName);
 
-    // Security check!
+    // Security check 1: Do the passwords match?
     if (newPassword !== reEnterPassword) {
         showToast("Whoops, passwords don't match. Please try again", "error");
-        return // Stop the entire function
+        return; // Stop the entire function
     }
 
-    console.log("Passwords match! Proceeding with account creation...");
+    // Security check 2: Is the password strong enough?
+    // This Regex requires: 1 Uppercase, 1 Number, 1 Special Char, and at least 8 characters long
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+={}\[\]|\\:;"'<>,.?/-]).{8,}$/;
+    
+    if (!passwordRegex.test(newPassword)) {
+        showToast("Password must be at least 8 characters and include an uppercase letter, a number, and a special symbol.", "error");
+        return; // Stop the entire function
+    }
 
+    console.log("Passwords match and are secure! Proceeding with account creation...");
     // send data to FastApi endpoint 
     fetch(url , {
         method: 'POST',

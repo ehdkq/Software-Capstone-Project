@@ -242,6 +242,30 @@ def delete_account(email: str = Form(...)):
         print("Error deleting account:", e)
         return {"success": False, "error": str(e)}
 
+
+@app.post("/account/wipe-data")
+def wipe_account_data(user_id: str = Form(...)):
+    try:
+        # 1. Find the user's account_id
+        user_res = supabase.table("users").select("account_id").eq("user_id", user_id).execute()
+        if not user_res.data:
+            return {"success": False, "error": "User not found"}
+
+        acc_id = user_res.data[0].get("account_id")
+
+        # 2. Delete all transactions tied to this account
+        supabase.table("transactions").delete().eq("account_id", acc_id).execute()
+
+        # 3. Delete all goals tied to this account
+        supabase.table("goals").delete().eq("account_id", acc_id).execute()
+
+        # 4. Reset the account balance to exactly $0.00
+        supabase.table("accounts").update({"balance": 0.0}).eq("account_id", acc_id).execute()
+
+        return {"success": True}
+    except Exception as e:
+        print("Error wiping account data:", e)
+        return {"success": False, "error": str(e)}
 # Gets all transactions tied to the specified user
 # Pre: takes a user ID as a parameter
 # Post: returns a list of dictionaries - each dictionary is a transaction
