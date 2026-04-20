@@ -45,8 +45,20 @@ async function secureDashboard() {
                 const initialEl = document.getElementById("profile-initial");
                 if (initialEl) initialEl.textContent = firstLetter;
                 
-                const greetingEl = document.getElementById("dynamic-greeting");
-                if (greetingEl) greetingEl.textContent = `Welcome back, ${fName || 'User'}!`;
+                // New Time-Aware code:
+const greetingEl = document.getElementById("dynamic-greeting");
+if (greetingEl) {
+    const hour = new Date().getHours();
+    let timeGreeting = "Good evening"; // Default for night time (after 6 PM)
+    
+    if (hour < 12) {
+        timeGreeting = "Good morning"; // Before noon
+    } else if (hour < 18) {
+        timeGreeting = "Good afternoon"; // Between noon and 6 PM
+    }
+    
+    greetingEl.textContent = `${timeGreeting}, ${fName || 'User'}!`;
+}
             }
             
             if (fName) localStorage.setItem("firstName", fName);

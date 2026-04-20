@@ -44,7 +44,10 @@
                             <input type="email" id="email-login" required>
                             <br><br>
                             <label for="password-login">Password:</label>
-                            <input type="password" id="password-login" required>
+                            <div style="position: relative; display: flex; align-items: center;">
+                                <input type="password" id="password-login" required style="width: 100%; padding-right: 40px;">
+                                <span id="toggle-password" style="position: absolute; right: 10px; cursor: pointer; font-size: 1.2rem;" title="Show Password">👁️</span>
+                            </div>
                         <br><br>
                         </div>
                         <button type="submit" id="login-button" class="action-btn" style="padding: 10px 20px; cursor: pointer;">Log In</button>
@@ -66,53 +69,6 @@
                     <p id="error-message" style="color: red; margin-top: 15px;"></p>
                 </div>
             </div>
-
-            <!--
-            <script>
-                // 🛑 PASTE YOUR SUPABASE URL AND KEY HERE 🛑
-                const SUPABASE_URL = "https://izexxryxkqcgezdfjqlg.supabase.co";
-                const SUPABASE_KEY = "sb_publishable_4F8U5q77q5yDs2xYLVsUKA_cPuVOHCc";
-                
-                // CHANGED: We are calling it mySupabase so the browser doesn't crash!
-                const mySupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-                document.getElementById("login-form").addEventListener("submit", async function(event) {
-                    event.preventDefault(); 
-
-                    const email = document.getElementById("email-login").value;
-                    const password = document.getElementById("password-login").value;
-                    const errorMessage = document.getElementById("error-message");
-                    const loginBtn = document.getElementById("login-button");
-
-                    // Set loading state and clear old errors
-                    loginBtn.textContent = "Logging in...";
-                    loginBtn.style.pointerEvents = "none";
-                    errorMessage.textContent = "";
-
-                    // Talk to Supabase to log the user in (using mySupabase)
-                    const { data, error } = await mySupabase.auth.signInWithPassword({
-                        email: email,
-                        password: password,
-                    });
-
-                    if (error) {
-                        // If wrong password or not verified yet
-                        errorMessage.textContent = error.message;
-                        loginBtn.textContent = "Log In";
-                        loginBtn.style.pointerEvents = "auto";
-                    } else {
-                        // Success!
-                        loginBtn.style.backgroundColor = "#4CAF50";
-                        loginBtn.style.color = "white";
-                        loginBtn.textContent = "✔ Success!";
-                        
-                        setTimeout(() => {
-                            window.location.href = "dashboard.html";
-                        }, 1000);
-                    }
-                });
-            </script>
-            -->
         <script src="./js/login.js"></script>
         <script src="./js/global.js"></script>
         </body>

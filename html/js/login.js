@@ -1,5 +1,20 @@
 const loginBtn = document.getElementById('login-button');
+// --- PASSWORD TOGGLE LOGIC ---
+const togglePassword = document.getElementById('toggle-password');
+const passwordInput = document.getElementById('password-login');
 
+if (togglePassword && passwordInput) {
+    togglePassword.addEventListener('click', function () {
+        // Check if it is currently hidden
+        const isPassword = passwordInput.getAttribute('type') === 'password';
+        
+        // Swap the type
+        passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+        
+        // Swap the icon so they know it changed
+        this.textContent = isPassword ? '🙈' : '👁️'; 
+    });
+}
 // Event listener for when user enters email and password then clicks on submit button
 loginBtn.addEventListener("click", (event) => {
     event.preventDefault();

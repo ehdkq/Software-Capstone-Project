@@ -236,6 +236,15 @@
             const popup = document.getElementById('members-popup');
             const chatInput = document.getElementById('chat-input');
             const sendBtn = document.getElementById('chat-send-btn');
+
+            // --- ENTER TO SEND LOGIC ---
+            chatInput.addEventListener('keypress', function (e) {
+                // If the user presses the 'Enter' key
+                if (e.key === 'Enter') {
+                    e.preventDefault(); // Stop it from making a weird new line
+                    sendBtn.click();    // Trick the browser into thinking they clicked the button!
+                }
+            });
             const chatMessages = document.querySelector('.chat-messages');
             
             // New File Preview Elements
