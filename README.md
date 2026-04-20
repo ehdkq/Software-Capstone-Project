@@ -14,7 +14,7 @@ Software tester: Halena
 | ToDo   | Project Plan | https://docs.google.com/document/d/1ig6Y3RPHDSSmAJqFmzE5ZBkbpMc_DxYRUzKSSG0eum0/edit?usp=sharing |
 | Complete   | System Architecture | https://docs.google.com/document/d/1v7JEmcQfmyFEMZkJkw2LvN4AwuXDIz012NhAgfvIH1k/edit?usp=sharing |
 | ToDo   | Test Plan | https://docs.google.com/document/d/1710Im0M6s44C6niH3AIJPlSXKdLDIo4VnxSrO-Eryow/edit?usp=sharing |
-| ToDo   | Test Cases | https://docs.google.com/document/d/1N_yx6cJDoOCKUyiBs_g4uJ-R935rnx2DOavkF8CalZo/edit?usp=sharing |
+| Complete   | Test Cases | https://docs.google.com/document/d/1N_yx6cJDoOCKUyiBs_g4uJ-R935rnx2DOavkF8CalZo/edit?usp=sharing |
 | ToDo   | Test Report | https://docs.google.com/document/d/1p4da-1VYWHelOauBZsBVY32F6p6MWOlDJPUBX2pWDjc/edit?usp=sharing |
 | ToDo   | Team Effort Estimation | https://docs.google.com/spreadsheets/d/1MiQinaodJCTwhgcauvE2SLWGV_9SV3TRY3I2goL2Lxg/edit?usp=sharing  |
 | ToDo   | User Guide | https://docs.google.com/document/d/15dstwvy_yRoUQmSeIcXytoss3lE0hOFkAMlbyMnMrxo/edit?usp=sharing |
