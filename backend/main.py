@@ -37,7 +37,7 @@ app = FastAPI()
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://budgiebudgeting.netlify.app"],  # Allows all origins (use specific URLs in production)
+    allow_origins=["http://127.0.0.1:5500/"],  # Allows all origins (use specific URLs in production)
     allow_credentials=True,
     allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
     allow_headers=["*"],  # Allows all headers
@@ -84,6 +84,7 @@ def create_account(email, passw, firstN, lastN):
     byte_pwd = passw.encode('utf-8')
     salt_bytes = bcrypt.gensalt()
     pw_hash_bytes = bcrypt.hashpw(byte_pwd, salt_bytes)
+    now_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
     
     # Generate a random 32-character token
     verification_token = secrets.token_urlsafe(32)
@@ -103,12 +104,31 @@ def create_account(email, passw, firstN, lastN):
         'is_verified': False, # New users start unverified
         'verification_token': verification_token # Save the token
     }
+
+    customer_data = {
+        'customer_id': customer_id,
+        'user_id': user_id,
+        'first_name': firstN,
+        'last_name': lastN,
+        'created_at': now_timestamp
+    }
+
+    account_data = {
+        'account_id': account_id,
+        'customer_id': customer_id,
+        'account_type': 'checking',
+        'balance': 0.0,
+        'created_at': now_timestamp
+    }
     
-    # ... (Keep your existing customer_data and account_data dictionaries here) ...
 
     try:
+        # Insert user
         supabase.table("users").insert(user_data).execute()
-        # ... (Keep your existing customer/account inserts here) ...
+        # Insert customer
+        supabase.table("customers").insert(customer_data).execute()
+        # Insert account
+        supabase.table("accounts").insert(account_data).execute()
         
         # Send the email!
         send_verification_email(email, verification_token)

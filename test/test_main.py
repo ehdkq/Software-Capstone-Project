@@ -9,21 +9,24 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 from backend import main as m
 
-
+# Test case 1.1
 def test_valid_login():
     response = m.verify_login('backendtest2@test.com', 'test1234')
     assert response != {"success": False}
 
+# Test case 1.2
 def test_invalid_login():
     response = m.verify_login('backendtest2@test.com', 'incorrectpassword')
     assert response == {"success": False}
 
+# Test case 2.1
 def test_create_account():
     test_email = (''.join(random.choices(string.ascii_letters + string.digits, k=8))) + '@test.com'
     response = m.create_account(test_email, 'testpassword', 'Test', 'User')
     m.delete_account(test_email)  # Clean up after test
     assert response["success"] == True
 
+# Test case 3.1
 def test_delete_existing_account():
     m.create_account('tobedeleted@test.com', 'deleteme', 'Temp', 'User')
     response = m.delete_account('tobedeleted@test.com')
@@ -33,6 +36,7 @@ def test_delete_nonexistent_account():
     response = m.delete_account('unknownemail@test.com')
     assert response["success"] == False
 
+# Test case 4.1
 def test_add_transaction():
     test_email = (''.join(random.choices(string.ascii_letters + string.digits, k=8))) + '@test.com'
     m.create_account(test_email, 'testpassword', 'Test', 'User')
@@ -49,6 +53,7 @@ def test_get_transactions():
     m.delete_account(test_email)  # Clean up after test
     assert response != False
 
+# Test case 4.2
 def test_delete_existing_transaction():
     test_email = (''.join(random.choices(string.ascii_letters + string.digits, k=8))) + '@test.com'
     user_info = m.create_account(test_email, 'testpassword', 'Test', 'User')
@@ -66,6 +71,7 @@ def test_delete_nonexistent_transaction():
     m.delete_account(test_email)  # Clean up after test
     assert response == False
 
+# Test case 4.3
 def test_update_transaction():
     test_email = (''.join(random.choices(string.ascii_letters + string.digits, k=8))) + '@test.com'
     user_info = m.create_account(test_email, 'testpassword', 'Test', 'User')
@@ -84,6 +90,7 @@ def test_update_nonexistent_transaction():
     m.delete_account(test_email)  # Clean up after test
     assert response['success'] == False
 
+
 def test_update_password():
     test_email = (''.join(random.choices(string.ascii_letters + string.digits, k=8))) + '@test.com'
     m.create_account(test_email, 'testpassword', 'Test', 'User')
@@ -99,6 +106,7 @@ def test_get_balance():
     m.delete_account(test_email)  # Clean up after test
     assert response[0] == {'balance': 0.0}
     
+# Test case 5.1
 def test_update_balance():
     test_email = (''.join(random.choices(string.ascii_letters + string.digits, k=8))) + '@test.com'
     user_info = m.create_account(test_email, 'testpassword', 'Test', 'User')
@@ -115,8 +123,6 @@ def test_get_profile():
     m.delete_account(test_email)  # Clean up after test
     assert response['success'] == True
 
-
-
 def test_get_goals():
     test_email = (''.join(random.choices(string.ascii_letters + string.digits, k=8))) + '@test.com'
     user_info = m.create_account(test_email, 'testpassword', 'Test', 'User')
@@ -126,7 +132,7 @@ def test_get_goals():
     assert response == []
 
 
-
+# Test case 6.1
 def test_add_goal():
     test_email = (''.join(random.choices(string.ascii_letters + string.digits, k=8))) + '@test.com'
     user_info = m.create_account(test_email, 'testpassword', 'Test', 'User')
@@ -135,9 +141,7 @@ def test_add_goal():
     m.delete_account(test_email)  # Clean up after test
     assert response['success'] == True
 
-
-
-
+# Test case 6.2
 def test_delete_goal():
     test_email = (''.join(random.choices(string.ascii_letters + string.digits, k=8))) + '@test.com'
     user_info = m.create_account(test_email, 'testpassword', 'Test', 'User')
@@ -149,10 +153,8 @@ def test_delete_goal():
     m.delete_account(test_email)  # Clean up after test
     assert response['success'] == True
 
-
+# Test case 6.3
 def test_chat_with_budgie():
     req = m.ChatRequest(message="Test")
     response = m.chat_with_budgie(req)
     assert response["reply"] != ""
-
-
