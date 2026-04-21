@@ -23,6 +23,21 @@ from email.message import EmailMessage
 # --- SETUP & AI INIT ---
 load_dotenv() # Loads the hidden keys from your .env file
 
+app = FastAPI()
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    # Replace the "*" with your actual Netlify URL and local testing URLs
+    allow_origins=[
+        "https://budgiebudgeting.netlify.app",
+        "http://localhost:5500",
+        "http://127.0.0.1:5500"
+    ], 
+    allow_credentials=True,
+    allow_methods=["*"], 
+    allow_headers=["*"],
+)
 # Initialize Gemini Client
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 gemini_client = genai.Client(api_key=GEMINI_API_KEY)
@@ -32,16 +47,7 @@ class ChatRequest(BaseModel):
     message: str
     user_id: Optional[str] = None
 
-app = FastAPI()
 
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://127.0.0.1:5500/"],  # Allows all origins (use specific URLs in production)
-    allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
-    allow_headers=["*"],  # Allows all headers
-)
 
 # pull from db: response = supabase.table("TABLE_NAME").select("* (ALL)").execute()
 # write to db: response = supabase.table("TABLE_NAME").insert(data - typically a dict).execute()
