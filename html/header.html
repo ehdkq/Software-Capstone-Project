@@ -1,34 +1,37 @@
 <!DOCTYPE html>
-    <html>
-        <head>
-            <link rel="stylesheet" href="./css/styles.css">
-            <script>
-        if (localStorage.getItem('budgieTheme') === 'dark') {
-            document.documentElement.classList.add('dark-theme');
-            // Adding to body when it loads
-            window.addEventListener('DOMContentLoaded', () => {
-                document.body.classList.add('dark-theme');
-            });
-        }
-    </script>
-    
-        </head>
-        <header class="site-header">
-            <nav class="nav">
-                <a class="brand" href="index.html">
-                    <img src="./images/Budgie (1).png" alt="Commerce Bank Home" class="logo" height="100"></a>
-                <div class="nav-links">
-                    <a href="about.html">About</a>
-                    <a href="open-account.html">Open an Account</a>
-                    
-                    <a href="login.html" id="nav-login-btn">Log In</a>
-                    
-                    <a href="dashboard.html" id="nav-dashboard-btn" style="display: none;">Dashboard</a>
-                    
-                    <a href="features.html">Features</a>
-                    <a href="llm-help.html">AI Help</a>
-                </div>
+<html>
+    <head>
+        <link rel="stylesheet" href="./css/styles.css">
+        <script>
+            if (localStorage.getItem('budgieTheme') === 'dark') {
+                document.documentElement.classList.add('dark-theme');
+                // Adding to body when it loads
+                window.addEventListener('DOMContentLoaded', () => {
+                    document.body.classList.add('dark-theme');
+                });
+            }
+        </script>
+    </head>
+    <header class="site-header">
+        <nav class="nav">
+            <a class="brand" href="index.html">
+                <img src="./images/Budgie (1).png" alt="Commerce Bank Home" class="logo" height="100">
+            </a>
+            
+            <button class="hamburger-btn" id="mobile-menu-btn">☰</button>
+            
+            <div class="nav-links" id="nav-links-container">
+                <a href="about.html">About</a>
+                <a href="open-account.html">Open an Account</a>
                 
-            </nav>
-        </header>
-    </html>
+                <a href="login.html" id="nav-login-btn">Log In</a>
+                
+                <a href="dashboard.html" id="nav-dashboard-btn" style="display: none;">Dashboard</a>
+                
+                <a href="features.html">Features</a>
+                <a href="llm-help.html">AI Help</a>
+            </div>
+            
+        </nav>
+    </header>
+</html>

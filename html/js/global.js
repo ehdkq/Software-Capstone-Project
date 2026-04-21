@@ -40,6 +40,19 @@ document.addEventListener("DOMContentLoaded", async () => {
             const response = await fetch("header.html");
             const headerHtml = await response.text();
             headerContainer.innerHTML = headerHtml;
+            
+            // 👇 NEW MOBILE MENU LOGIC GOES HERE 👇
+            // (It must be inside this block so it runs AFTER the header is loaded!)
+            const mobileBtn = document.getElementById('mobile-menu-btn');
+            const navLinks = document.getElementById('nav-links-container');
+
+            if (mobileBtn && navLinks) {
+                mobileBtn.addEventListener('click', () => {
+                    navLinks.classList.toggle('show');
+                });
+            }
+            // 👆 END OF MOBILE MENU LOGIC 👆
+
         } catch (error) {
             console.error("Failed to load header:", error);
         }

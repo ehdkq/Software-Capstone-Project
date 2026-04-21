@@ -75,6 +75,14 @@ if (greetingEl) {
 // --- 2. Data Loading & Filtering ---
 async function loadUserData() {
     try {
+        // 1. Show the skeletons before we fetch from Render
+        const skeletons = document.getElementById('loading-skeletons');
+        const transactionList = document.getElementById('transaction-list');
+        if (skeletons && transactionList) {
+            skeletons.style.display = 'block';
+            transactionList.style.display = 'none';
+        }
+
         const response = await fetch(`${API_BASE_URL}/transactions/get-transactions?user_id=${currentUserId}`);
         const data = await response.json();
         
@@ -86,8 +94,18 @@ async function loadUserData() {
         
         applyTimeFilter();
 
+        // 2. Hide the skeletons and show the real data now that it's loaded!
+        if (skeletons && transactionList) {
+            skeletons.style.display = 'none';
+            transactionList.style.display = 'block'; // Or 'ul' depending on your CSS, but block usually works best!
+        }
+
     } catch (error) {
         console.error('Error fetching transactions:', error);
+        
+        // If the server crashes, hide the skeletons so it doesn't spin forever
+        const skeletons = document.getElementById('loading-skeletons');
+        if (skeletons) skeletons.style.display = 'none';
     }
 }
 

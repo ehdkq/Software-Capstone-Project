@@ -763,3 +763,61 @@ body.dark-theme .members-only-popup {
     background-color: #10b981; /* Green for success */
     border-left: 6px solid #047857;
 }
+
+/* --- LOADING SKELETONS --- */
+@keyframes shimmer {
+    0% { background-position: -468px 0; }
+    100% { background-position: 468px 0; }
+}
+
+.skeleton {
+    background: #f6f7f8;
+    background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+    background-repeat: no-repeat;
+    background-size: 800px 100%; 
+    animation-duration: 1.5s;
+    animation-fill-mode: forwards; 
+    animation-iteration-count: infinite;
+    animation-name: shimmer;
+    animation-timing-function: linear;
+    border-radius: 4px;
+}
+
+.skeleton-row {
+    height: 40px;
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+/* --- MOBILE HEADER RESPONSIVENESS --- */
+.hamburger-btn {
+    display: none; /* Hidden on desktop */
+    font-size: 1.8rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-color);
+}
+
+@media (max-width: 768px) {
+    .hamburger-btn {
+        display: block; /* Show icon on phones */
+    }
+    
+    .nav-links {
+        display: none; /* Hide standard links */
+        flex-direction: column;
+        position: absolute;
+        top: 70px; /* Adjust based on your header height */
+        right: 0;
+        background: var(--card-bg);
+        width: 100%;
+        text-align: center;
+        padding: 20px 0;
+        box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .nav-links.show {
+        display: flex; /* Class added by JS to drop the menu down */
+    }
+}

@@ -95,7 +95,7 @@
                     
                     <div id="add-funds-form" style="display: none; margin-bottom: 20px;">
                         <div style="display: flex; gap: 10px;">
-                            <input type="number" id="quick-deposit-input" step="0.01" min="0.01" placeholder="Amount to add ($)" style="padding: 8px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color); flex: 1;">
+                            <input type="text" inputmode="decimal" id="quick-deposit-input" class="currency-input" placeholder="Amount to add ($)" style="padding: 8px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color); flex: 1;">
                             <button onclick="submitQuickDeposit()" class="action-btn" style="padding: 5px 15px; margin: 0; background-color: #28a745; color: white;">Deposit</button>
                         </div>
                     </div>
@@ -108,7 +108,7 @@
                             <option value="Utilities">Utilities</option>
                             <option value="Entertainment">Entertainment</option>
                         </select>
-                        <input type="number" id="g-amount" placeholder="Target ($)" step="0.01" required style="width: 100px; padding: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-color); border-radius: 4px;">
+                        <input type="text" inputmode="decimal" id="g-amount" class="currency-input" placeholder="Target ($)" required style="width: 100px; padding: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-color); border-radius: 4px;">
                         <button type="submit" class="action-btn" style="margin-top:0;">Save</button>
                     </form>
 
@@ -149,12 +149,19 @@
                             <option value="Utilities">Utilities</option>
                             <option value="Entertainment">Entertainment</option>
                         </select>
-                        <input type="number" id="t-amount" placeholder="Amount ($)" step="0.01" required>
+                        <input type="text" inputmode="decimal" id="t-amount" class="currency-input" placeholder="Amount ($)" required>
                         <button type="submit" id="t-submit-btn" class="action-btn" style="margin-top:0;">Add</button>
                     </form>
                     
-                    <ul class="transaction-list" id="transaction-list">
-                        </ul>
+                    <div id="loading-skeletons" style="margin-top: 20px;">
+                        <div class="skeleton skeleton-row"></div>
+                        <div class="skeleton skeleton-row"></div>
+                        <div class="skeleton skeleton-row"></div>
+                        <div class="skeleton skeleton-row"></div>
+                    </div>
+                    
+                    <ul class="transaction-list" id="transaction-list" style="display: none;">
+                    </ul>
                 </div>
 
                 <div class="dashboard-card">
