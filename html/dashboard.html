@@ -199,10 +199,10 @@
                     <table class="history-table">
                         <thead>
                             <tr>
-                                <th>Date</th>
-                                <th>Description</th>
-                                <th>Category</th>
-                                <th>Amount</th>
+                                <th class="sortable" onclick="sortTable('date')">Date <span id="sort-icon-date">▼</span></th>
+                                <th class="sortable" onclick="sortTable('desc')">Description <span id="sort-icon-desc"></span></th>
+                                <th class="sortable" onclick="sortTable('cat')">Category <span id="sort-icon-cat"></span></th>
+                                <th class="sortable" onclick="sortTable('amount')">Amount <span id="sort-icon-amount"></span></th>
                             </tr>
                         </thead>
                         <tbody id="full-history-body">

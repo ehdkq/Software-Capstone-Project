@@ -835,3 +835,20 @@ body.dark-theme .members-only-popup {
         border-bottom: none;
     }
 }
+/* --- SORTABLE TABLE HEADERS --- */
+th.sortable {
+    cursor: pointer;
+    user-select: none; /* Prevents text highlighting if they click too fast */
+    transition: color 0.2s;
+}
+
+th.sortable:hover {
+    color: #97dbff;
+}
+
+th.sortable span {
+    font-size: 0.8rem;
+    margin-left: 5px;
+    display: inline-block;
+    width: 10px; /* Keeps the header from jumping when the icon appears */
+}

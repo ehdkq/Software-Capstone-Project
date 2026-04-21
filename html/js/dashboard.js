@@ -1,6 +1,8 @@
 // --- Global Variables ---
 const API_BASE_URL = "https://software-capstone-project.onrender.com";
 let currentUserId = null;
+let currentSortCol = 'date';
+let currentSortAsc = false; // false = descending (newest first), true = ascending
 
 // 1. Your two data nests!
 let allTransactions = []; // The vault containing EVERYTHING
@@ -270,6 +272,31 @@ function renderRecentTransactions() {
     });
 }
 
+window.sortTable = function(column) {
+    // If clicking the same column, flip the direction. Otherwise, switch columns.
+    if (currentSortCol === column) {
+        currentSortAsc = !currentSortAsc; 
+    } else {
+        currentSortCol = column;
+        currentSortAsc = column === 'date' ? false : true; // Dates default to newest, text defaults to A-Z
+    }
+    
+    // Update the directional arrow icons
+    ['date', 'desc', 'cat', 'amount'].forEach(col => {
+        const iconEl = document.getElementById(`sort-icon-${col}`);
+        if (iconEl) {
+            if (col === currentSortCol) {
+                iconEl.textContent = currentSortAsc ? '▲' : '▼';
+            } else {
+                iconEl.textContent = ''; // Hide arrows on inactive columns
+            }
+        }
+    });
+
+    // Redraw the table!
+    renderFullHistoryTable();
+};
+
 function renderFullHistoryTable() {
     const tableBody = document.getElementById('full-history-body');
     if (!tableBody) return;
@@ -279,9 +306,36 @@ function renderFullHistoryTable() {
         return;
     }
 
-    const sortedTx = [...activeTransactions].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    // --- THE NEW SORTING ENGINE ---
+    let sortedTx = [...activeTransactions];
+    
+    sortedTx.sort((a, b) => {
+        let valA, valB;
+        
+        // Grab the right data based on what column is active
+        if (currentSortCol === 'date') {
+            valA = new Date(a.created_at).getTime();
+            valB = new Date(b.created_at).getTime();
+        } else if (currentSortCol === 'amount') {
+            valA = parseFloat(a.amount);
+            valB = parseFloat(b.amount);
+        } else if (currentSortCol === 'desc') {
+            valA = (a.description || a.merchant_name || '').toLowerCase();
+            valB = (b.description || b.merchant_name || '').toLowerCase();
+        } else if (currentSortCol === 'cat') {
+            valA = (a.type || a.transaction_type || '').toLowerCase();
+            valB = (b.type || b.transaction_type || '').toLowerCase();
+        }
+
+        // Compare the values and return the proper direction
+        if (valA < valB) return currentSortAsc ? -1 : 1;
+        if (valA > valB) return currentSortAsc ? 1 : -1;
+        return 0;
+    });
+
     tableBody.innerHTML = ''; 
 
+    // Draw the newly sorted rows
     sortedTx.forEach(t => {
         const dateObj = new Date(t.created_at);
         const niceDate = dateObj.toLocaleDateString();

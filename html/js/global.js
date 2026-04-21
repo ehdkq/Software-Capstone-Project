@@ -71,3 +71,33 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (dashboardBtn) dashboardBtn.style.display = "none";
     }
 });
+
+// --- 3. BANK-GRADE INACTIVITY TIMEOUT ---
+// (This goes completely outside and below the block above!)
+if (localStorage.getItem("isLoggedIn") === "true") {
+    let inactivityTimer;
+    
+    // Set for 5 minutes (300,000 milliseconds)
+    const maxIdleTime = 300000; 
+
+    function resetTimer() {
+        clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(() => {
+            // 1. Wipe the keys to the cage
+            localStorage.removeItem("isLoggedIn");
+            localStorage.removeItem("userId");
+            localStorage.removeItem("userEmail");
+            
+            // 2. Warn the user and kick them out
+            alert("For your security, Budgie has logged you out due to inactivity.");
+            window.location.replace("login.html");
+        }, maxIdleTime);
+    }
+
+    // Reset the clock if the user does literally anything
+    window.onload = resetTimer;
+    document.onmousemove = resetTimer;
+    document.onkeypress = resetTimer;
+    document.onclick = resetTimer;
+    document.ontouchstart = resetTimer; 
+}
