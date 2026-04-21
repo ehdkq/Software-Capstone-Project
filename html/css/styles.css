@@ -801,23 +801,37 @@ body.dark-theme .members-only-popup {
 
 @media (max-width: 768px) {
     .hamburger-btn {
-        display: block; /* Show icon on phones */
+        display: block; 
+        margin-left: auto; /* Pushes the button to the far right */
     }
     
     .nav-links {
-        display: none; /* Hide standard links */
+        display: none; 
         flex-direction: column;
         position: absolute;
-        top: 70px; /* Adjust based on your header height */
+        top: 100%; /* Snaps exactly to the bottom of the header */
         right: 0;
-        background: var(--card-bg);
+        background: var(--card-bg, #ffffff); /* Ensure background is solid */
         width: 100%;
         text-align: center;
-        padding: 20px 0;
-        box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+        padding: 10px 0;
+        box-shadow: 0px 8px 15px rgba(0,0,0,0.1);
+        z-index: 1000; /* Keeps it above everything else on the page */
     }
 
     .nav-links.show {
-        display: flex; /* Class added by JS to drop the menu down */
+        display: flex; 
+    }
+
+    /* Force the text to be dark and spaced out nicely */
+    .nav-links.show a {
+        color: #333 !important; 
+        padding: 15px 20px;
+        display: block;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .nav-links.show a:last-child {
+        border-bottom: none;
     }
 }

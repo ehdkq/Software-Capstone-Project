@@ -174,8 +174,9 @@ window.toggleAddFundsForm = function() {
 
 window.submitQuickDeposit = async function() {
     const amountInput = document.getElementById('quick-deposit-input');
-    const amount = parseFloat(amountInput.value);
-    
+    // Strip everything except numbers and decimals!
+    const cleanAmount = amountInput.value.replace(/[^0-9.]/g, ''); 
+    const amount = parseFloat(cleanAmount);
     if (!amount || amount <= 0) {
         showToast("Please enter a valid deposit amount.", "error");
         return;
@@ -313,7 +314,8 @@ if (transactionForm) {
 
         const desc = document.getElementById('t-desc').value;
         const type = document.getElementById('t-type').value;
-        const amount = document.getElementById('t-amount').value;
+        const rawAmount = document.getElementById('t-amount').value;
+        const amount = rawAmount.replace(/[^0-9.]/g, ''); // Strip symbols!
         const tSubmitBtn = document.getElementById('t-submit-btn');
 
         if (editingTransactionId !== null) {
@@ -561,8 +563,8 @@ if (goalForm) {
     goalForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         const category = document.getElementById('g-category').value;
-        const amount = document.getElementById('g-amount').value;
-
+        const rawAmount = document.getElementById('g-amount').value;
+        const amount = rawAmount.replace(/[^0-9.]/g, ''); // Strip symbols!
         try {
             const response = await fetch(`${API_BASE_URL}/dashboard/add-goal?user_id=${currentUserId}&category=${encodeURIComponent(category)}&target_amount=${amount}`, { method: 'POST' });
             const data = await response.json();
