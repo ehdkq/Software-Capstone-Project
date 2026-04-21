@@ -184,8 +184,7 @@ window.submitQuickDeposit = async function() {
 
     try {
         const userEmail = localStorage.getItem("userEmail") || "user@example.com"; 
-        const url = `${API_BASE_URL}/transactions/add-transaction?email=${encodeURIComponent(userEmail)}&amount=${amount}&t_type=Deposit&m_id=0&m_name=Quick Deposit&m_code=0&desc=Quick Deposit&recurr=false`;
-        
+        const url = `${API_BASE_URL}/transactions/add-transaction?email=${encodeURIComponent(userEmail)}&amount=${amount}&t_type=Income&m_id=0&m_name=Quick Deposit&m_code=0&desc=Quick Deposit&recurr=false`;        
         const response = await fetch(url, { method: 'POST' });
         const data = await response.json();
         
@@ -515,7 +514,7 @@ function drawGamificationArena() {
     }
 
     if (isOverBudget) {
-        mascot.src = '/html/images/sad-budgie.png';
+        mascot.src = './images/sad-budgie.png';
         statusText.textContent = "Oh no! Seeds lost!";
         statusText.style.color = '#ff4d4d';
         
@@ -523,7 +522,7 @@ function drawGamificationArena() {
         setTimeout(() => jar.classList.add('over-budget-shake'), 10); 
         
     } else {
-        mascot.src = '/html/images/budgie-happy.png';
+        mascot.src = './images/budgie-happy.png';
         statusText.textContent = "Looking good!";
         statusText.style.color = '#28a745';
         
