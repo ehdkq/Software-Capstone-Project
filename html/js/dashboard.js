@@ -443,8 +443,8 @@ async function updateTransactionInBackend(id, desc, type, amount) {
 }
 
 window.deleteTransactionFromBackend = async function(id) {
-    if (!confirm("Are you sure you want to delete this transaction?")) return;
-    
+    const isConfirmed = await budgieConfirm("Delete Transaction?", "Are you absolutely sure you want to delete this transaction? This cannot be undone.");
+if (!isConfirmed) return;
     try {
         const response = await fetch(`${API_BASE_URL}/transactions/delete-transaction?transaction_id=${encodeURIComponent(id)}`, { method: 'POST' });
         const isDeleted = await response.json();
@@ -635,7 +635,8 @@ if (goalForm) {
 }
 
 window.deleteGoal = async function(goalId) {
-    if (!confirm("Remove this goal?")) return;
+    const isConfirmed = await budgieConfirm("Delete Goal?", "Are you sure you want to remove this savings goal permanently?");
+    if (!isConfirmed) return;
     try {
         const response = await fetch(`${API_BASE_URL}/dashboard/delete-goal?goal_id=${goalId}`, { method: 'POST' });
         const data = await response.json();

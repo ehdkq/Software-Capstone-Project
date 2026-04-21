@@ -30,6 +30,46 @@ window.showToast = function(message, type = "error") {
     }, 4000);
 };
 
+// --- CUSTOM DANGER MODAL ---
+window.budgieConfirm = function(title, message) {
+    return new Promise((resolve) => {
+        // Create the dark overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'budgie-modal-overlay';
+        
+        // Build the modal HTML inside it (featuring a sad Budgie!)
+        overlay.innerHTML = `
+            <div class="budgie-modal">
+                <img src="./images/worried-budgie.png" alt="Warning">
+                <h3>${title}</h3>
+                <p>${message}</p>
+                <div class="budgie-modal-btns">
+                    <button class="budgie-btn-cancel" id="budgie-cancel-btn">Cancel</button>
+                    <button class="budgie-btn-confirm" id="budgie-confirm-btn">Yes, I'm sure</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        // Animate it onto the screen
+        setTimeout(() => {
+            overlay.style.opacity = '1';
+            overlay.querySelector('.budgie-modal').classList.add('show');
+        }, 10);
+
+        // Handle the button clicks
+        const close = (result) => {
+            overlay.style.opacity = '0';
+            overlay.querySelector('.budgie-modal').classList.remove('show');
+            setTimeout(() => overlay.remove(), 200); // Wait for fade out to finish
+            resolve(result); // Return true or false
+        };
+
+        document.getElementById('budgie-cancel-btn').onclick = () => close(false);
+        document.getElementById('budgie-confirm-btn').onclick = () => close(true);
+    });
+};
+
 // --- AUTH & HEADER LOGIC ---
 document.addEventListener("DOMContentLoaded", async () => {
     // 1. Find the placeholder and inject the header HTML
