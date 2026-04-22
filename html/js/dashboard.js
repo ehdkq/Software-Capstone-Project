@@ -347,7 +347,11 @@ function renderFullHistoryTable() {
 
         const desc = t.description || t.merchant_name || 'Transaction';
         const cat = type || 'Uncategorized';
-
+        let flagHtml = "";
+        const showLargeTxFlag = localStorage.getItem('prefLargeTx') === 'true';
+        if (showLargeTxFlag && !isIncome && parseFloat(t.amount) >= 100) {
+            flagHtml = `<span title="Large Transaction" style="background: #ff4d4d; color: white; padding: 2px 5px; border-radius: 4px; font-size: 0.7rem; margin-left: 8px;">🚩 HIGH</span>`;
+        }
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${niceDate}</td>
@@ -553,7 +557,13 @@ function drawGamificationArena() {
     categoryTx.forEach(t => currentSpent += parseFloat(t.amount));
 
     const isOverBudget = currentSpent > target;
-
+    const wantsDangerAlerts = localStorage.getItem('prefGoalDanger') === 'true';
+    const percentSpent = currentSpent / target;
+    
+    // If they are between 90% and 99.9% spent, fire a warning toast!
+    if (wantsDangerAlerts && percentSpent >= 0.90 && percentSpent < 1.0) {
+        showToast(`Careful! You have spent ${Math.round(percentSpent * 100)}% of your ${category} budget.`, "warning");
+    }
     const mascot = document.getElementById('budgie-mascot');
     const statusText = document.getElementById('budgie-status-text');
     const jar = document.getElementById('the-jar');

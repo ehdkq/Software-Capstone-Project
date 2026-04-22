@@ -134,7 +134,7 @@
                 <label>Last Name</label>
                 <input type="text" id="set-last-name" class="settings-input" placeholder="Loading...">
                 
-                <button class="action-btn" style="margin-top: 20px;">Update Profile</button>
+                <button id="update-profile-btn" class="action-btn" style="margin-top: 20px;">Update Profile</button>
             </div>
 
             <div id="preferences" class="tab-content">
@@ -182,6 +182,7 @@
                     <label class="switch">
                         <input type="checkbox" id="toggle-weekly">
                         <span class="slider"></span>
+                        <button id="test-summary-btn" style="background: none; border: 1px solid #97dbff; color: #97dbff; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; margin-top: 5px;">Test Send Summary</button>
                     </label>
                 </div>
 
@@ -334,6 +335,47 @@
         savePref('toggle-weekly', 'prefWeeklySum', true);
         savePref('toggle-danger', 'prefGoalDanger', true);
         savePref('toggle-large-tx', 'prefLargeTx', true);
+
+        // --- UPDATE PROFILE LOGIC ---
+        document.getElementById('update-profile-btn').onclick = async function() {
+            const fName = document.getElementById('set-first-name').value;
+            const lName = document.getElementById('set-last-name').value;
+            const userId = localStorage.getItem("userId");
+
+            if (!fName || !lName) {
+                showToast("Names cannot be blank.", "error");
+                return;
+            }
+
+            this.textContent = "Updating...";
+            this.disabled = true;
+
+            try {
+                const formData = new FormData();
+                formData.append("user_id", userId);
+                formData.append("first_name", fName);
+                formData.append("last_name", lName);
+
+                const response = await fetch('https://software-capstone-project.onrender.com/account/update-profile', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    // Update local storage so the dashboard greeting changes instantly!
+                    localStorage.setItem("firstName", fName);
+                    localStorage.setItem("lastName", lName);
+                    showToast("Profile updated successfully!", "success");
+                } else {
+                    showToast("Failed to update profile.", "error");
+                }
+            } catch (err) {
+                showToast("Server error.", "error");
+            }
+            this.textContent = "Update Profile";
+            this.disabled = false;
+        };
 
         // --- 5. EXPORT CSV LOGIC ---
         document.getElementById('export-csv-btn').onclick = async function() {
@@ -532,6 +574,32 @@ if (wipeDataBtn) {
     });
 }
         
+document.getElementById('test-summary-btn').onclick = async function() {
+            const userEmail = localStorage.getItem("userEmail");
+            const userId = localStorage.getItem("userId");
+            const isEnabled = document.getElementById('toggle-weekly').checked;
+
+            if (!isEnabled) {
+                showToast("Please enable the toggle first!", "error");
+                return;
+            }
+
+            this.textContent = "Sending...";
+            try {
+                const formData = new FormData();
+                formData.append("email", userEmail);
+                formData.append("user_id", userId);
+
+                const res = await fetch('https://software-capstone-project.onrender.com/api/send-summary', { method: 'POST', body: formData });
+                const data = await res.json();
+                
+                if (data.success) showToast("Test summary sent to your email!", "success");
+                else showToast("Error sending email.", "error");
+            } catch(e) {
+                showToast("Server error.", "error");
+            }
+            this.textContent = "Test Send Summary";
+        };
     </script>
     <script src="./js/global.js"></script>
 </body>

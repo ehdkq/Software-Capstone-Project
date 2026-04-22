@@ -850,3 +850,48 @@ def verify_user_account(token: str, email: str):
             
     except Exception as e:
         return {"success": False, "error": "Server error during verification.", "details": str(e)}
+    
+@app.post("/account/update-profile")
+def update_profile(user_id: str = Form(...), first_name: str = Form(...), last_name: str = Form(...)):
+    try:
+        # Update the customer row with the new names
+        supabase.table("customers").update({
+            "first_name": first_name, 
+            "last_name": last_name
+        }).eq("user_id", user_id).execute()
+        
+        return {"success": True}
+    except Exception as e:
+        print(f"Error updating profile: {e}")
+        return {"success": False, "error": str(e)}
+    
+
+@app.post("/api/send-summary")
+def send_summary_email(email: str = Form(...), user_id: str = Form(...)):
+    try:
+        # Calculate their total balance
+        user_res = supabase.table("users").select("account_id").eq("user_id", user_id).execute()
+        balance = 0.0
+        if user_res.data:
+            acc_id = user_res.data[0].get("account_id")
+            acc_res = supabase.table("accounts").select("balance").eq("account_id", acc_id).execute()
+            if acc_res.data:
+                balance = float(acc_res.data[0].get("balance", 0))
+
+        # Send the email
+        sender_email = os.getenv("EMAIL_USER")
+        sender_password = os.getenv("EMAIL_PASS")
+
+        msg = EmailMessage()
+        msg['Subject'] = 'Your Weekly Budgie Summary'
+        msg['From'] = sender_email
+        msg['To'] = email
+        msg.set_content(f"Happy Sunday!\n\nHere is your Budgie snapshot for the week.\n\nCurrent Vault Balance: ${balance:.2f}\n\nKeep up the great work!\n- Budgie")
+
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+            smtp.login(sender_email, sender_password)
+            smtp.send_message(msg)
+
+        return {"success": True}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
