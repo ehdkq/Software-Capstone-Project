@@ -889,3 +889,36 @@ th.sortable span {
     background: #ff4c4c; border: none; padding: 10px 20px; 
     border-radius: 6px; cursor: pointer; color: white; font-weight: bold;
 }
+
+/* --- ONBOARDING TOUR --- */
+.tour-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 10000; display: none; justify-content: center; align-items: center;
+    backdrop-filter: blur(3px);
+}
+
+.tour-box {
+    background: var(--card-bg, #ffffff); padding: 30px; border-radius: 15px;
+    max-width: 450px; width: 90%; text-align: center; 
+    border: 3px solid #97dbff; box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+    position: relative; z-index: 10002;
+}
+
+.tour-box img { width: 100px; margin-bottom: 15px; }
+.tour-box h3 { margin-top: 0; color: var(--text-color); font-size: 1.5rem; }
+.tour-box p { color: var(--text-muted); line-height: 1.5; margin-bottom: 25px; }
+
+.tour-controls { display: flex; justify-content: space-between; align-items: center; }
+.tour-progress { font-size: 0.85rem; color: #888; font-weight: bold; }
+
+/* The magic class that makes dashboard items pop over the dark background! */
+.tour-highlight {
+    position: relative !important;
+    z-index: 10001 !important;
+    background: var(--card-bg) !important;
+    box-shadow: 0 0 0 10px rgba(151, 219, 255, 0.3), 0 0 20px #97dbff !important;
+    border-radius: 12px !important;
+    pointer-events: none; /* Stops them from clicking it during the tour */
+    transition: all 0.3s ease;
+}
