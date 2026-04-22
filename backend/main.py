@@ -843,7 +843,7 @@ def verify_user_account(token: str, email: str):
             }).eq("user_id", user_id).execute()
             
             # 4. Success! Redirect them to the login page
-            return RedirectResponse(url="https://budgiebudgeting.netlify.app/login.html")
+            return RedirectResponse(url="https://budgiebudgeting.netlify.app/login.html?verified=true")
         else:
             # If no match is found, the token is wrong or already used
             return {"success": False, "error": "Verification failed. The link may be expired or invalid."}

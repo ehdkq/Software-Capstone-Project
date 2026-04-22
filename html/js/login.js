@@ -115,3 +115,16 @@ forgotForm.addEventListener('submit', async (e) => {
     resetSubmitBtn.textContent = "Send Reset Link";
     resetSubmitBtn.disabled = false;
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+    // 1. Check the URL for our secret message
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    if (urlParams.get('verified') === 'true') {
+        // 2. Show the celebratory toast!
+        showToast("Email successfully verified! You may now log in.", "success");
+        
+        // 3. Clean up the URL so the toast doesn't trigger again if they refresh the page
+        window.history.replaceState(null, '', window.location.pathname);
+    }
+});
