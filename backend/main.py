@@ -510,26 +510,32 @@ def update_balance(user_id, new_balance):
         print(f"Error updating balance: {e}")
         return {"success": False, "error": str(e)}
     
-# Gets the user's profile information
 @app.get("/account/get-profile")
 def get_profile(user_id):
     try:
-        user_res = supabase.table("users").select("*").eq("user_id", user_id).execute()
+        # 1. Grab the email from the users table
+        user_res = supabase.table("users").select("email").eq("user_id", user_id).execute()
+        user_email = user_res.data[0].get("email") if user_res.data else ""
         
-        if user_res.data:
-            user = user_res.data[0]
-            # Looks for a column named 'name' or 'first_name'. If it's blank, it falls back to the email.
-            user_name = user.get('name') or user.get('first_name') or ""
-            user_email = user.get('email') or ""
+        # 2. Grab the actual names from the customers table!
+        cust_res = supabase.table("customers").select("first_name, last_name").eq("user_id", user_id).execute()
+        f_name = ""
+        l_name = ""
+        
+        if cust_res.data and len(cust_res.data) > 0:
+            f_name = cust_res.data[0].get("first_name") or ""
+            l_name = cust_res.data[0].get("last_name") or ""
             
-            return {"success": True, "name": user_name, "email": user_email}
-            
-        return {"success": False, "error": "User not found"}
+        return {
+            "success": True, 
+            "first_name": f_name, 
+            "last_name": l_name, 
+            "email": user_email
+        }
         
     except Exception as e:
         print(f"Error fetching profile: {e}")
         return {"success": False, "error": str(e)}
-
 # Gets all transactions tied to the specified user
 # Pre: takes a user ID as a parameter
 # Post: returns a list of dictionaries - each dictionary is a transaction

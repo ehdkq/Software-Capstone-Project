@@ -41,28 +41,31 @@ async function secureDashboard() {
             const fName = profileData.first_name;
             const lName = profileData.last_name;
             
-            const displayName = fName || profileData.email;
-            if (displayName) {
-                const firstLetter = displayName.charAt(0).toUpperCase();
-                const initialEl = document.getElementById("profile-initial");
-                if (initialEl) initialEl.textContent = firstLetter;
+            // 1. UPDATE THE PROFILE CIRCLE INITIAL
+            // If they have a first name, use it. Otherwise, fallback to email letter!
+            const displayName = fName || profileData.email || "U";
+            const firstLetter = displayName.charAt(0).toUpperCase();
+            
+            const initialEl = document.getElementById("profile-initial");
+            if (initialEl) initialEl.textContent = firstLetter;
+            
+            // 2. UPDATE THE DASHBOARD GREETING
+            const greetingEl = document.getElementById("dynamic-greeting");
+            if (greetingEl) {
+                const hour = new Date().getHours();
+                let timeGreeting = "Good evening"; 
                 
-                // New Time-Aware code:
-const greetingEl = document.getElementById("dynamic-greeting");
-if (greetingEl) {
-    const hour = new Date().getHours();
-    let timeGreeting = "Good evening"; // Default for night time (after 6 PM)
-    
-    if (hour < 12) {
-        timeGreeting = "Good morning"; // Before noon
-    } else if (hour < 18) {
-        timeGreeting = "Good afternoon"; // Between noon and 6 PM
-    }
-    
-    greetingEl.textContent = `${timeGreeting}, ${fName || 'User'}!`;
-}
+                if (hour < 12) {
+                    timeGreeting = "Good morning"; 
+                } else if (hour < 18) {
+                    timeGreeting = "Good afternoon"; 
+                }
+                
+                // Uses their First Name, or "User" if they left it blank
+                greetingEl.textContent = `${timeGreeting}, ${fName || 'User'}!`;
             }
             
+            // Save to local storage so Settings.html can use it too
             if (fName) localStorage.setItem("firstName", fName);
             if (lName) localStorage.setItem("lastName", lName);
         }
