@@ -813,7 +813,8 @@ def send_verification_email(user_email, token):
     msg['From'] = sender_email
     msg['To'] = user_email
     
-    verify_link = f"http://127.0.0.1:5500/login.html?token={token}"
+    # Swap out the local link for your live Netlify URL!
+    verify_link = f"https://budgiebudgeting.netlify.app//verify-success.html"
     msg.set_content(f"Welcome to Budgie! Please verify your email by clicking here:\n\n{verify_link}")
 
     try:

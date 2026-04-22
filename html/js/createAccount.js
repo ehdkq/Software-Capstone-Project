@@ -51,13 +51,19 @@ createAccountBtn.addEventListener("click", (event) => {
         if (data.success) {
             console.log("Success:", data);
             
-            // Show the success message
-            showToast(data.message || "Account created successfully!", "success");
+            // 1. Hide the signup form
+            document.getElementById("signup-section").style.display = "none";
             
-            // delay redirect
-            setTimeout(() => {
-                window.location.href = "login.html";
-            }, 2000); // Bumped to 2 seconds so they have time to read the toast!
+            // 2. Show the "Check your email" message
+            document.getElementById("verify-section").style.display = "block";
+            
+            // 3. Put their email address into the purple text!
+            document.getElementById("display-email").textContent = emailAddress;
+            
+            showToast("Secure link sent!", "success");
+            
+            // NOTE: We removed the setTimeout redirect to login.html here! 
+            // They will only go to login.html AFTER they click the email link.
         } else {
             showToast("Creation failed: " + (data.error || "Unknown error"), "error");
             console.error("Backend Error Details:", data.error);
