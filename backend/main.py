@@ -829,17 +829,24 @@ def send_verification_email(user_email, token):
 @app.get("/verify")
 def verify_user_account(token: str, email: str):
     try:
-        # 1. Tell Supabase to verify this specific email and token
-        response = supabase.auth.verify_otp({
-            "email": email,
-            "token": token,
-            "type": "signup"
-        })
+        # 1. Look up the user in YOUR custom database table
+        res = supabase.table("users").select("*").eq("email", email).eq("verification_token", token).execute()
         
-        # 2. If successful, automatically bounce them to your Netlify login page!
-        # Make sure to replace YOUR-NETLIFY-SITE with your actual Netlify domain
-        return RedirectResponse(url="https://budgiebudgeting.netlify.app/login.html")
-        
+        # 2. If a match is found, the token is valid!
+        if res.data and len(res.data) > 0:
+            user_id = res.data[0].get("user_id")
+            
+            # 3. Mark them as verified and destroy the token so it can't be reused
+            supabase.table("users").update({
+                "is_verified": True,
+                "verification_token": None
+            }).eq("user_id", user_id).execute()
+            
+            # 4. Success! Redirect them to the login page
+            return RedirectResponse(url="https://budgiebudgeting.netlify.app/login.html")
+        else:
+            # If no match is found, the token is wrong or already used
+            return {"success": False, "error": "Verification failed. The link may be expired or invalid."}
+            
     except Exception as e:
-        # If the link is expired or broken, let them know
-        return {"success": False, "error": "Verification failed. The link may be expired or invalid.", "details": str(e)}
+        return {"success": False, "error": "Server error during verification.", "details": str(e)}
