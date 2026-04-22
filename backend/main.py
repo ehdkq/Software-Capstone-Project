@@ -815,7 +815,7 @@ def send_verification_email(user_email, token):
     msg['To'] = user_email
     
     # Pass BOTH the token and the email in the URL
-    verify_link = f"https://software-capstone-project.onrender.com/verify?token={token}&email={emailAddress}"
+    verify_link = f"https://software-capstone-project.onrender.com/verify?token={token}&email={user_email}"
     msg.set_content(f"Welcome to Budgie! Please verify your email by clicking here:\n\n{verify_link}")
 
     try:
