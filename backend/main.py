@@ -814,8 +814,8 @@ def send_verification_email(user_email, token):
     msg['From'] = sender_email
     msg['To'] = user_email
     
-    # Point this to your Render API!
-    verify_link = f"https://software-capstone-project.onrender.com/verify?token={token}"
+    # Pass BOTH the token and the email in the URL
+    verify_link = f"https://software-capstone-project.onrender.com/verify?token={token}&email={email}"
     msg.set_content(f"Welcome to Budgie! Please verify your email by clicking here:\n\n{verify_link}")
 
     try:
@@ -825,3 +825,21 @@ def send_verification_email(user_email, token):
             print("Live email successfully sent!")
     except Exception as e:
         print(f"Failed to send real email: {e}")
+
+@app.get("/verify")
+def verify_user_account(token: str, email: str):
+    try:
+        # 1. Tell Supabase to verify this specific email and token
+        response = supabase.auth.verify_otp({
+            "email": email,
+            "token": token,
+            "type": "signup"
+        })
+        
+        # 2. If successful, automatically bounce them to your Netlify login page!
+        # Make sure to replace YOUR-NETLIFY-SITE with your actual Netlify domain
+        return RedirectResponse(url="https://budgiebudgeting.netlify.app//login.html")
+        
+    except Exception as e:
+        # If the link is expired or broken, let them know
+        return {"success": False, "error": "Verification failed. The link may be expired or invalid.", "details": str(e)}
