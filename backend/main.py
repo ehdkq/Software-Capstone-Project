@@ -19,6 +19,7 @@ from dotenv import load_dotenv
 import smtplib
 import secrets
 from email.message import EmailMessage
+from fastapi.responses import RedirectResponse
 
 # --- SETUP & AI INIT ---
 load_dotenv() # Loads the hidden keys from your .env file
@@ -133,7 +134,7 @@ def verify_email(token: str):
                 "verification_token": None
             }).eq("user_id", user_id).execute()
             
-            return "Email successfully verified! You can now log in to Budgie."
+            return RedirectResponse(url="https://budgiebudgeting.netlify.app//login.html")
         else:
             return "Invalid or expired verification link."
     except Exception as e:
@@ -813,8 +814,8 @@ def send_verification_email(user_email, token):
     msg['From'] = sender_email
     msg['To'] = user_email
     
-    # Swap out the local link for your live Netlify URL!
-    verify_link = f"https://budgiebudgeting.netlify.app//verify-success.html"
+    # Point this to your Render API!
+    verify_link = f"https://software-capstone-project.onrender.com/verify?token={token}"
     msg.set_content(f"Welcome to Budgie! Please verify your email by clicking here:\n\n{verify_link}")
 
     try:

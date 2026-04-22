@@ -39,9 +39,7 @@ createAccountBtn.addEventListener("click", (event) => {
     // send data to FastApi endpoint 
     fetch(url , {
         method: 'POST',
-        headers: {
-            'Accept': 'application/json'
-        }
+        headers: { 'Accept': 'application/json' }
     })
     .then(response => {
         if (!response.ok) throw new Error("Server error");
@@ -57,13 +55,11 @@ createAccountBtn.addEventListener("click", (event) => {
             // 2. Show the "Check your email" message
             document.getElementById("verify-section").style.display = "block";
             
-            // 3. Put their email address into the purple text!
+            // 3. Display their email address on the screen
             document.getElementById("display-email").textContent = emailAddress;
             
-            showToast("Secure link sent!", "success");
+            showToast("Activation link sent!", "success");
             
-            // NOTE: We removed the setTimeout redirect to login.html here! 
-            // They will only go to login.html AFTER they click the email link.
         } else {
             showToast("Creation failed: " + (data.error || "Unknown error"), "error");
             console.error("Backend Error Details:", data.error);
@@ -73,4 +69,4 @@ createAccountBtn.addEventListener("click", (event) => {
         console.error('Error:', error);
         showToast('Could not connect to the server. Is Python running?', "error");
     });
-})
+});
