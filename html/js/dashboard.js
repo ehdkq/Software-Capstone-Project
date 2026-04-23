@@ -800,23 +800,53 @@ function renderTourStep() {
     const nextBtn = document.getElementById('tour-next');
     if (currentTourStep === tourSteps.length - 1) {
         nextBtn.textContent = "Finish ✓";
-        nextBtn.style.backgroundColor = "#28a745"; // Green finish button
+        nextBtn.style.backgroundColor = "#28a745"; 
     } else {
         nextBtn.textContent = "Next ➔";
-        nextBtn.style.backgroundColor = ""; // Reset to default
+        nextBtn.style.backgroundColor = ""; 
     }
 
     // Remove highlight from previous elements
     document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
 
-    // Highlight the new element (if there is one)
+    const tourBox = document.querySelector('.tour-box');
+
+    // Highlight and smartly position the new element
     if (step.targetId) {
         const targetEl = document.getElementById(step.targetId);
         if (targetEl) {
             targetEl.classList.add('tour-highlight');
-            // Scroll the page smoothly so the highlighted item is in the center of the screen
             targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // Give the browser 300ms to finish scrolling before we do the math
+            setTimeout(() => {
+                const rect = targetEl.getBoundingClientRect();
+                const boxRect = tourBox.getBoundingClientRect();
+
+                // 1. Try to place the box 20px below the highlighted item
+                let top = rect.bottom + 20;
+                let left = rect.left + (rect.width / 2) - (boxRect.width / 2);
+
+                // 2. If placing it below makes it fall off the bottom of the screen, put it ABOVE instead!
+                if (top + boxRect.height > window.innerHeight) {
+                    top = rect.top - boxRect.height - 20;
+                }
+
+                // 3. Keep it from flying off the left or right edges of mobile screens
+                if (left < 10) left = 10;
+                if (left + boxRect.width > window.innerWidth) left = window.innerWidth - boxRect.width - 10;
+
+                // 4. Apply the coordinates!
+                tourBox.style.top = `${top}px`;
+                tourBox.style.left = `${left}px`;
+                tourBox.style.transform = "none"; // Remove any centering
+            }, 300); 
         }
+    } else {
+        // If there is no target (like the Welcome screen), just put it dead center
+        tourBox.style.top = "50%";
+        tourBox.style.left = "50%";
+        tourBox.style.transform = "translate(-50%, -50%)";
     }
 }
 
