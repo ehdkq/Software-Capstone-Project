@@ -745,24 +745,34 @@ if (importBtn) {
 // --- 9. ONBOARDING TOUR LOGIC ---
 const tourSteps = [
     {
-        title: "Welcome to your Dashboard! 🐦",
-        text: "I'm Budgie! I'll be your wingman for getting your finances on track. This screen gives you a bird's-eye view of your money.",
-        targetId: null // No highlight, just central
+        title: "Welcome to Budgie! 🐦",
+        text: "I'll be your wingman for getting your finances on track. Let's take a quick look around.",
+        targetId: null 
     },
     {
-        title: "Your Spending Breakdown 📊",
-        text: "As you log transactions, this chart will automatically categorize your spending so you know exactly where your money is going.",
-        targetId: "spending-chart" 
+        title: "Your Total Balance 💰",
+        text: "This is your command center. Your balance updates automatically whenever you add income or expenses.",
+        targetId: "tour-balance-card" // Points to the whole card
     },
     {
         title: "Log Your Transactions 💳",
-        text: "Use this form to manually log your expenses or income. (Pro Tip: You can also ask the Budgie AI to import your bank statements automatically!)",
-        targetId: "transaction-form" 
+        text: "Use this area to manually enter your expenses or income.",
+        targetId: "tour-transaction-area" // Points to the whole section
     },
     {
-        title: "The Gamified Goal Jar 🍯",
-        text: "Set a savings goal! Every time you spend money in that category, I'll drop a seed in the jar. Keep your spending under budget so the jar doesn't overflow!",
-        targetId: "gamification-arena" 
+        title: "The Goal Visualizer 🎯",
+        text: "Select a category from this dropdown to watch the physics engine drop seeds into your goal jar!",
+        targetId: "tour-goal-dropdown" // Points to the dropdown wrapper
+    },
+    {
+        title: "Ask Budgie AI 🤖",
+        text: "Need financial advice or help reading a bank statement? Click here to chat with me anytime!",
+        targetId: "tour-ai-button" // Points to the nav link
+    },
+    {
+        title: "Settings & Profile ⚙️",
+        text: "Customize your theme, download your data, or update your password right here.",
+        targetId: "profile-circle" // Points to your profile circle
     }
 ];
 

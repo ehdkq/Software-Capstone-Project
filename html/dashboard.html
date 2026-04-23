@@ -86,17 +86,19 @@
             <div class="dashboard-grid">
                 
                 <div class="dashboard-card">
-                    <h3>Total Balance</h3>
                     
-                    <div style="display: flex; align-items: center; gap: 15px; margin: 10px 0;">
-                        <h2 class="card-amount" id="display-balance" style="margin: 0;">$0.00</h2>
-                        <button onclick="toggleAddFundsForm()" class="action-btn" style="padding: 5px 10px; font-size: 0.8rem; background-color: #28a745; color: white;">+ Add Funds</button>
-                    </div>
-                    
-                    <div id="add-funds-form" style="display: none; margin-bottom: 20px;">
-                        <div style="display: flex; gap: 10px;">
-                            <input type="text" inputmode="decimal" id="quick-deposit-input" class="currency-input" placeholder="Amount to add ($)" style="padding: 8px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color); flex: 1;">
-                            <button onclick="submitQuickDeposit()" class="action-btn" style="padding: 5px 15px; margin: 0; background-color: #28a745; color: white;">Deposit</button>
+                    <div id="tour-balance-card">
+                        <h3>Total Balance</h3>
+                        <div style="display: flex; align-items: center; gap: 15px; margin: 10px 0;">
+                            <h2 class="card-amount" id="display-balance" style="margin: 0;">$0.00</h2>
+                            <button onclick="toggleAddFundsForm()" class="action-btn" style="padding: 5px 10px; font-size: 0.8rem; background-color: #28a745; color: white;">+ Add Funds</button>
+                        </div>
+                        
+                        <div id="add-funds-form" style="display: none; margin-bottom: 20px;">
+                            <div style="display: flex; gap: 10px;">
+                                <input type="text" inputmode="decimal" id="quick-deposit-input" class="currency-input" placeholder="Amount to add ($)" style="padding: 8px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color); flex: 1;">
+                                <button onclick="submitQuickDeposit()" class="action-btn" style="padding: 5px 15px; margin: 0; background-color: #28a745; color: white;">Deposit</button>
+                            </div>
                         </div>
                     </div>
                     <h3 style="margin-top: 15px; padding-bottom: 10px;">Create a Goal</h3>
@@ -114,32 +116,33 @@
 
                     <h3 style="padding-bottom: 10px;">Goal Tracker</h3>
                     
-                    <select id="goal-visualizer-select" style="padding: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-color); border-radius: 4px; margin-bottom: 15px; width: 100%; font-weight: bold; outline: none;">
-                        <option value="">Select a Goal...</option>
+                    <div id="tour-goal-dropdown">
+                        <select id="goal-visualizer-select" style="padding: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-color); border-radius: 4px; margin-bottom: 15px; width: 100%; font-weight: bold; outline: none;">
+                            <option value="">Select a Goal...</option>
                         </select>
-                    
+                        
+                        <div id="gamification-arena" style="display: none; background: var(--bg-color); border-radius: 12px; padding: 20px; border: 1px solid var(--border-color); text-align: center;">
+                            <div style="display: flex; justify-content: center; align-items: flex-end; gap: 30px; margin-bottom: 20px; height: 150px;">
+                                
+                                <div style="display: flex; flex-direction: column; align-items: center;">
+                                    <img id="budgie-mascot" src="./images/happy-budgie.png" alt="Budgie" style="width: 80px; height: 80px; transition: all 0.3s; background: white; border-radius: 50%; padding: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                                    <span id="budgie-status-text" style="margin-top: 10px; font-weight: bold; font-size: 0.9rem;">Looking good!</span>
+                                </div>
 
-                    <div id="gamification-arena" style="display: none; background: var(--bg-color); border-radius: 12px; padding: 20px; border: 1px solid var(--border-color); text-align: center;">
-                        <div style="display: flex; justify-content: center; align-items: flex-end; gap: 30px; margin-bottom: 20px; height: 150px;">
-                            
-                            <div style="display: flex; flex-direction: column; align-items: center;">
-                                <img id="budgie-mascot" src="./images/happy-budgie.png" alt="Budgie" style="width: 80px; height: 80px; transition: all 0.3s; background: white; border-radius: 50%; padding: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-                                <span id="budgie-status-text" style="margin-top: 10px; font-weight: bold; font-size: 0.9rem;">Looking good!</span>
-                            </div>
-
-                            <div style="position: relative; width: 150px; height: 180px;">
-                                <div id="the-jar" style="position: absolute; bottom: 0; width: 100%; height: 100%; background-image: url('./images/empty-jar.png'); background-size: contain; background-repeat: no-repeat; background-position: bottom center; z-index: 1;">
+                                <div style="position: relative; width: 150px; height: 180px;">
+                                    <div id="the-jar" style="position: absolute; bottom: 0; width: 100%; height: 100%; background-image: url('./images/empty-jar.png'); background-size: contain; background-repeat: no-repeat; background-position: bottom center; z-index: 1;">
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div id="goal-math-readout" style="font-size: 1.1rem; color: var(--text-color);">
-                            Spent: <strong>$0.00</strong> / Target: $0.00
+                            <div id="goal-math-readout" style="font-size: 1.1rem; color: var(--text-color);">
+                                Spent: <strong>$0.00</strong> / Target: $0.00
+                            </div>
                         </div>
                     </div>
-                </div>
+                    </div>
 
-                <div class="dashboard-card">
+                <div class="dashboard-card" id="tour-transaction-area">
                     <h3>Manage Transactions</h3>
                     <form id="transaction-form" class="transaction-form">
                         <input type="text" id="t-desc" placeholder="Description (e.g. Target)" required>
@@ -185,7 +188,7 @@
                     </div>
                 </div>
 
-                <div class="dashboard-card ai-teaser-card">
+                <div class="dashboard-card ai-teaser-card" id="tour-ai-button">
                     <h3>Ask Budgie AI</h3>
                     <p>Have a question about your spending? Budgie is here to help.</p>
                     <img src="./images/budgie-ai.png" alt ="Budgie AI Assistant" class="ai-assistant-img">
@@ -231,6 +234,7 @@
             </div>
         </div>
     </footer>
+    
     <div id="tour-overlay" class="tour-overlay">
         <div class="tour-box">
             <img src="./images/happy-budgie.png" alt="Budgie Guide">
@@ -243,6 +247,7 @@
             </div>
         </div>
     </div>
+    
     <script src="./js/dashboard.js"></script>
     <script src="./js/global.js"></script>
 </body>
