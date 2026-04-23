@@ -35,6 +35,21 @@ createAccountBtn.addEventListener("click", (event) => {
         return; // Stop the entire function
     }
 
+    if (fName == null){
+        showToast("Please enter your first name.", "error");
+        return; 
+    }
+
+    if (lName == null){
+        showToast("Please enter your last name.", "error");
+        return; 
+    }
+
+    if (email == null){
+        showToast("Please enter a valid email.", "error");
+        return; 
+    }
+
     console.log("Passwords match and are secure! Proceeding with account creation...");
     // send data to FastApi endpoint 
     fetch(url , {

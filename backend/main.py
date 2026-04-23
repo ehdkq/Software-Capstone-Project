@@ -115,7 +115,7 @@ def create_account(email, passw, firstN, lastN):
         # Send the email!
         send_verification_email(email, verification_token)
 
-        return {"success": True, "message": "Account created! Please check your email to verify."}
+        return {"success": True, "message": "Account created! Please check your email to verify.", "user_id": user_id}
     except Exception as e:
         return {"success": False, "error": str(e)}
 
@@ -633,16 +633,14 @@ def delete_goal(goal_id):
         print(f"Error in delete_goal: {e}")
         return {"success": False, "error": str(e)}
 
-
+'''
 # Gets balance tied to the specified user
 # Pre: takes a user ID as a parameter
 # Post: returns a float
 @app.get("/dashboard/get-balance")
 def get_balance(user_id):
     try:
-        print(f'Querying for user_id: {user_id}')
         user_response = supabase.table("users").select("*").eq("user_id", user_id).execute()
-        
         
         if user_response.data:
             acc_id = user_response.data[0].get('account_id')
@@ -655,9 +653,9 @@ def get_balance(user_id):
     except Exception as e:
         print(f'Error: {e}')
         return False
+'''
 
-
-
+'''
 # Updates the specified user's balance
 # Pre: takes a user ID and new balance as parameters
 # Post: returns success or failure
@@ -680,7 +678,7 @@ def update_balance(user_id, new_balance):
     except Exception as e:
         print(f"Error updating balance: {e}")
         return {"success": False, "error": str(e)}
-
+'''
 @app.post("/api/import-statement")
 async def import_statement(file: UploadFile = File(...), user_id: str = Form(None)):
     try:
@@ -755,6 +753,7 @@ async def import_statement(file: UploadFile = File(...), user_id: str = Form(Non
     except Exception as e:
         print(f"Import Error: {e}")
         return {"success": False, "error": "Failed to parse PDF. The AI couldn't read the format."}
+
 @app.post("/api/chat")
 async def chat_with_budgie(message: str = Form(""), user_id: Optional[str] = Form(None), file: UploadFile = File(None)):
     try:
@@ -805,6 +804,7 @@ async def chat_with_budgie(message: str = Form(""), user_id: Optional[str] = For
     except Exception as e:
         print(f"Detailed API Error: {e}") # This will show in your Render logs!
         return {"success": False, "reply": "My bird brain is having a connection hiccup! Double-check the Render Environment Variables."}
+
 def send_verification_email(user_email, token):
     sender_email = os.getenv("EMAIL_USER")
     sender_password = os.getenv("EMAIL_PASS")
