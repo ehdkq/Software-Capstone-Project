@@ -44,7 +44,7 @@ createAccountBtn.addEventListener("click", (event) => {
         return; 
     }
 
-    console.log(emailAddress)
+    console.log(typeof emailAddress)
 
     console.log("Passwords match and are secure! Proceeding with account creation...");
 
