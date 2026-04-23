@@ -39,7 +39,7 @@ createAccountBtn.addEventListener("click", (event) => {
         return; 
     }
 
-    if (email == null){
+    if (emailAddress == null){
         showToast("Please enter a valid email.", "error");
         return; 
     }
