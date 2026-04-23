@@ -41,28 +41,31 @@ async function secureDashboard() {
             const fName = profileData.first_name;
             const lName = profileData.last_name;
             
-            const displayName = fName || profileData.email;
-            if (displayName) {
-                const firstLetter = displayName.charAt(0).toUpperCase();
-                const initialEl = document.getElementById("profile-initial");
-                if (initialEl) initialEl.textContent = firstLetter;
+            // 1. UPDATE THE PROFILE CIRCLE INITIAL
+            // If they have a first name, use it. Otherwise, fallback to email letter!
+            const displayName = fName || profileData.email || "U";
+            const firstLetter = displayName.charAt(0).toUpperCase();
+            
+            const initialEl = document.getElementById("profile-initial");
+            if (initialEl) initialEl.textContent = firstLetter;
+            
+            // 2. UPDATE THE DASHBOARD GREETING
+            const greetingEl = document.getElementById("dynamic-greeting");
+            if (greetingEl) {
+                const hour = new Date().getHours();
+                let timeGreeting = "Good evening"; 
                 
-                // New Time-Aware code:
-const greetingEl = document.getElementById("dynamic-greeting");
-if (greetingEl) {
-    const hour = new Date().getHours();
-    let timeGreeting = "Good evening"; // Default for night time (after 6 PM)
-    
-    if (hour < 12) {
-        timeGreeting = "Good morning"; // Before noon
-    } else if (hour < 18) {
-        timeGreeting = "Good afternoon"; // Between noon and 6 PM
-    }
-    
-    greetingEl.textContent = `${timeGreeting}, ${fName || 'User'}!`;
-}
+                if (hour < 12) {
+                    timeGreeting = "Good morning"; 
+                } else if (hour < 18) {
+                    timeGreeting = "Good afternoon"; 
+                }
+                
+                // Uses their First Name, or "User" if they left it blank
+                greetingEl.textContent = `${timeGreeting}, ${fName || 'User'}!`;
             }
             
+            // Save to local storage so Settings.html can use it too
             if (fName) localStorage.setItem("firstName", fName);
             if (lName) localStorage.setItem("lastName", lName);
         }
@@ -72,6 +75,8 @@ if (greetingEl) {
 
     await loadUserData();
     await loadGoals();
+
+    setTimeout(startTour, 500);
 }
 
 // --- 2. Data Loading & Filtering ---
@@ -347,7 +352,11 @@ function renderFullHistoryTable() {
 
         const desc = t.description || t.merchant_name || 'Transaction';
         const cat = type || 'Uncategorized';
-
+        let flagHtml = "";
+        const showLargeTxFlag = localStorage.getItem('prefLargeTx') === 'true';
+        if (showLargeTxFlag && !isIncome && parseFloat(t.amount) >= 100) {
+            flagHtml = `<span title="Large Transaction" style="background: #ff4d4d; color: white; padding: 2px 5px; border-radius: 4px; font-size: 0.7rem; margin-left: 8px;">🚩 HIGH</span>`;
+        }
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${niceDate}</td>
@@ -553,7 +562,13 @@ function drawGamificationArena() {
     categoryTx.forEach(t => currentSpent += parseFloat(t.amount));
 
     const isOverBudget = currentSpent > target;
-
+    const wantsDangerAlerts = localStorage.getItem('prefGoalDanger') === 'true';
+    const percentSpent = currentSpent / target;
+    
+    // If they are between 90% and 99.9% spent, fire a warning toast!
+    if (wantsDangerAlerts && percentSpent >= 0.90 && percentSpent < 1.0) {
+        showToast(`Careful! You have spent ${Math.round(percentSpent * 100)}% of your ${category} budget.`, "warning");
+    }
     const mascot = document.getElementById('budgie-mascot');
     const statusText = document.getElementById('budgie-status-text');
     const jar = document.getElementById('the-jar');
@@ -727,5 +742,89 @@ if (importBtn) {
     });
 }
 
+// --- 9. ONBOARDING TOUR LOGIC ---
+const tourSteps = [
+    {
+        title: "Welcome to your Dashboard! 🐦",
+        text: "I'm Budgie! I'll be your wingman for getting your finances on track. This screen gives you a bird's-eye view of your money.",
+        targetId: null // No highlight, just central
+    },
+    {
+        title: "Your Spending Breakdown 📊",
+        text: "As you log transactions, this chart will automatically categorize your spending so you know exactly where your money is going.",
+        targetId: "spending-chart" 
+    },
+    {
+        title: "Log Your Transactions 💳",
+        text: "Use this form to manually log your expenses or income. (Pro Tip: You can also ask the Budgie AI to import your bank statements automatically!)",
+        targetId: "transaction-form" 
+    },
+    {
+        title: "The Gamified Goal Jar 🍯",
+        text: "Set a savings goal! Every time you spend money in that category, I'll drop a seed in the jar. Keep your spending under budget so the jar doesn't overflow!",
+        targetId: "gamification-arena" 
+    }
+];
+
+let currentTourStep = 0;
+
+function startTour() {
+    // Check if they've already taken the tour
+    if (localStorage.getItem("hasSeenBudgieTour") === "true") return;
+
+    const overlay = document.getElementById('tour-overlay');
+    if (!overlay) return;
+
+    overlay.style.display = 'flex';
+    renderTourStep();
+
+    document.getElementById('tour-next').onclick = () => {
+        currentTourStep++;
+        if (currentTourStep >= tourSteps.length) {
+            endTour();
+        } else {
+            renderTourStep();
+        }
+    };
+
+    document.getElementById('tour-skip').onclick = endTour;
+}
+
+function renderTourStep() {
+    const step = tourSteps[currentTourStep];
+    
+    document.getElementById('tour-title').textContent = step.title;
+    document.getElementById('tour-text').textContent = step.text;
+    document.getElementById('tour-progress').textContent = `${currentTourStep + 1} / ${tourSteps.length}`;
+    
+    const nextBtn = document.getElementById('tour-next');
+    if (currentTourStep === tourSteps.length - 1) {
+        nextBtn.textContent = "Finish ✓";
+        nextBtn.style.backgroundColor = "#28a745"; // Green finish button
+    } else {
+        nextBtn.textContent = "Next ➔";
+        nextBtn.style.backgroundColor = ""; // Reset to default
+    }
+
+    // Remove highlight from previous elements
+    document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
+
+    // Highlight the new element (if there is one)
+    if (step.targetId) {
+        const targetEl = document.getElementById(step.targetId);
+        if (targetEl) {
+            targetEl.classList.add('tour-highlight');
+            // Scroll the page smoothly so the highlighted item is in the center of the screen
+            targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+}
+
+function endTour() {
+    document.getElementById('tour-overlay').style.display = 'none';
+    document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
+    // Permanently save that they finished it so it never bothers them again
+    localStorage.setItem("hasSeenBudgieTour", "true");
+}
 // Kick off the application!
 secureDashboard();

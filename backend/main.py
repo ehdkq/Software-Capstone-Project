@@ -510,26 +510,32 @@ def update_balance(user_id, new_balance):
         print(f"Error updating balance: {e}")
         return {"success": False, "error": str(e)}
     
-# Gets the user's profile information
 @app.get("/account/get-profile")
 def get_profile(user_id):
     try:
-        user_res = supabase.table("users").select("*").eq("user_id", user_id).execute()
+        # 1. Grab the email from the users table
+        user_res = supabase.table("users").select("email").eq("user_id", user_id).execute()
+        user_email = user_res.data[0].get("email") if user_res.data else ""
         
-        if user_res.data:
-            user = user_res.data[0]
-            # Looks for a column named 'name' or 'first_name'. If it's blank, it falls back to the email.
-            user_name = user.get('name') or user.get('first_name') or ""
-            user_email = user.get('email') or ""
+        # 2. Grab the actual names from the customers table!
+        cust_res = supabase.table("customers").select("first_name, last_name").eq("user_id", user_id).execute()
+        f_name = ""
+        l_name = ""
+        
+        if cust_res.data and len(cust_res.data) > 0:
+            f_name = cust_res.data[0].get("first_name") or ""
+            l_name = cust_res.data[0].get("last_name") or ""
             
-            return {"success": True, "name": user_name, "email": user_email}
-            
-        return {"success": False, "error": "User not found"}
+        return {
+            "success": True, 
+            "first_name": f_name, 
+            "last_name": l_name, 
+            "email": user_email
+        }
         
     except Exception as e:
         print(f"Error fetching profile: {e}")
         return {"success": False, "error": str(e)}
-
 # Gets all transactions tied to the specified user
 # Pre: takes a user ID as a parameter
 # Post: returns a list of dictionaries - each dictionary is a transaction
@@ -829,17 +835,69 @@ def send_verification_email(user_email, token):
 @app.get("/verify")
 def verify_user_account(token: str, email: str):
     try:
-        # 1. Tell Supabase to verify this specific email and token
-        response = supabase.auth.verify_otp({
-            "email": email,
-            "token": token,
-            "type": "signup"
-        })
+        # 1. Look up the user in YOUR custom database table
+        res = supabase.table("users").select("*").eq("email", email).eq("verification_token", token).execute()
         
-        # 2. If successful, automatically bounce them to your Netlify login page!
-        # Make sure to replace YOUR-NETLIFY-SITE with your actual Netlify domain
-        return RedirectResponse(url="https://budgiebudgeting.netlify.app/login.html")
-        
+        # 2. If a match is found, the token is valid!
+        if res.data and len(res.data) > 0:
+            user_id = res.data[0].get("user_id")
+            
+            # 3. Mark them as verified and destroy the token so it can't be reused
+            supabase.table("users").update({
+                "is_verified": True,
+                "verification_token": None
+            }).eq("user_id", user_id).execute()
+            
+            # 4. Success! Redirect them to the login page
+            return RedirectResponse(url="https://budgiebudgeting.netlify.app/login.html?verified=true")
+        else:
+            # If no match is found, the token is wrong or already used
+            return {"success": False, "error": "Verification failed. The link may be expired or invalid."}
+            
     except Exception as e:
-        # If the link is expired or broken, let them know
-        return {"success": False, "error": "Verification failed. The link may be expired or invalid.", "details": str(e)}
+        return {"success": False, "error": "Server error during verification.", "details": str(e)}
+    
+@app.post("/account/update-profile")
+def update_profile(user_id: str = Form(...), first_name: str = Form(...), last_name: str = Form(...)):
+    try:
+        # Update the customer row with the new names
+        supabase.table("customers").update({
+            "first_name": first_name, 
+            "last_name": last_name
+        }).eq("user_id", user_id).execute()
+        
+        return {"success": True}
+    except Exception as e:
+        print(f"Error updating profile: {e}")
+        return {"success": False, "error": str(e)}
+    
+
+@app.post("/api/send-summary")
+def send_summary_email(email: str = Form(...), user_id: str = Form(...)):
+    try:
+        # Calculate their total balance
+        user_res = supabase.table("users").select("account_id").eq("user_id", user_id).execute()
+        balance = 0.0
+        if user_res.data:
+            acc_id = user_res.data[0].get("account_id")
+            acc_res = supabase.table("accounts").select("balance").eq("account_id", acc_id).execute()
+            if acc_res.data:
+                balance = float(acc_res.data[0].get("balance", 0))
+
+        # Send the email
+        sender_email = os.getenv("EMAIL_USER")
+        sender_password = os.getenv("EMAIL_PASS")
+
+        msg = EmailMessage()
+        msg['Subject'] = 'Your Weekly Budgie Summary'
+        msg['From'] = sender_email
+        msg['To'] = email
+        msg.set_content(f"Happy Sunday!\n\nHere is your Budgie snapshot for the week.\n\nCurrent Vault Balance: ${balance:.2f}\n\nKeep up the great work!\n- Budgie")
+
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+            smtp.login(sender_email, sender_password)
+            smtp.send_message(msg)
+
+        return {"success": True}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
