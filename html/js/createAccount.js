@@ -14,12 +14,6 @@ createAccountBtn.addEventListener("click", (event) => {
     const lName = document.getElementById('last-name').value;
     const reEnterPassword = document.getElementById('reenter-password').value;
 
-    const url = new URL("https://software-capstone-project.onrender.com/create-account"); // Likely will change this for when hosting on Netlify
-    url.searchParams.append('email',emailAddress);
-    url.searchParams.append('passw',newPassword);
-    url.searchParams.append('firstN',fName);
-    url.searchParams.append('lastN',lName);
-
     // Security check 1: Do the passwords match?
     if (newPassword !== reEnterPassword) {
         showToast("Whoops, passwords don't match. Please try again", "error");
@@ -51,6 +45,14 @@ createAccountBtn.addEventListener("click", (event) => {
     }
 
     console.log("Passwords match and are secure! Proceeding with account creation...");
+
+    const url = new URL("https://software-capstone-project.onrender.com/create-account"); // Likely will change this for when hosting on Netlify
+    url.searchParams.append('email',emailAddress);
+    url.searchParams.append('passw',newPassword);
+    url.searchParams.append('firstN',fName);
+    url.searchParams.append('lastN',lName);
+
+    
     // send data to FastApi endpoint 
     fetch(url , {
         method: 'POST',
