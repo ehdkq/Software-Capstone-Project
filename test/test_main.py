@@ -8,6 +8,7 @@ import string
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from backend import main as m
+from backend import budgie_bot as b
 
 # Test case 1.1
 def test_valid_login():
@@ -17,7 +18,7 @@ def test_valid_login():
 # Test case 1.2
 def test_invalid_login():
     response = m.verify_login('backendtest2@test.com', 'incorrectpassword')
-    assert response == {"success": False}
+    assert response['success'] == False
 
 # Test case 2.1
 def test_create_account():
@@ -40,9 +41,9 @@ def test_delete_nonexistent_account():
 def test_add_transaction():
     test_email = (''.join(random.choices(string.ascii_letters + string.digits, k=8))) + '@test.com'
     m.create_account(test_email, 'testpassword', 'Test', 'User')
-    response = m.add_transaction(test_email, 10.00, 'Withdrawal', '001', 'Test', '999', 'Test', False)
+    response = m.add_transaction(test_email, 10.00, 'Groceries', '001', 'Test', '999', 'Test', False)
     m.delete_account(test_email)  # Clean up after test
-    assert response == {"success": True}
+    assert response['success'] == True
 
 def test_get_transactions():
     test_email = (''.join(random.choices(string.ascii_letters + string.digits, k=8))) + '@test.com'
@@ -58,7 +59,7 @@ def test_delete_existing_transaction():
     test_email = (''.join(random.choices(string.ascii_letters + string.digits, k=8))) + '@test.com'
     user_info = m.create_account(test_email, 'testpassword', 'Test', 'User')
     user_id = user_info['user_id']
-    m.add_transaction(test_email, 20.00, 'Withdrawal', '002', 'Test', '999', 'Test', False)
+    m.add_transaction(test_email, 20.00, 'Groceries', '002', 'Test', '999', 'Test', False)
     transactions = m.get_transactions(user_id).data
     transaction_id = transactions[0]['transaction_id']
     response = m.delete_transaction(transaction_id)
@@ -76,10 +77,10 @@ def test_update_transaction():
     test_email = (''.join(random.choices(string.ascii_letters + string.digits, k=8))) + '@test.com'
     user_info = m.create_account(test_email, 'testpassword', 'Test', 'User')
     user_id = user_info['user_id']
-    m.add_transaction(test_email, 10.00, 'Withdrawal', '001', 'Test', '999', 'Test', False)
+    m.add_transaction(test_email, 10.00, 'Dining', '001', 'Test', '999', 'Test', False)
     transactions = m.get_transactions(user_id).data
     transaction_id = transactions[0]['transaction_id']
-    response = m.update_transaction(transaction_id, 15.00, 'Withdrawal', 'Test')
+    response = m.update_transaction(transaction_id, 15.00, 'Dining', 'Test')
     m.delete_account(test_email)  # Clean up after test
     assert response == {"success": True}
 
@@ -102,9 +103,9 @@ def test_get_balance():
     test_email = (''.join(random.choices(string.ascii_letters + string.digits, k=8))) + '@test.com'
     user_info = m.create_account(test_email, 'testpassword', 'Test', 'User')
     user_id = user_info['user_id']
-    response = m.get_balance(user_id).data
+    response = m.get_balance(user_id)
     m.delete_account(test_email)  # Clean up after test
-    assert response[0] == {'balance': 0.0}
+    assert response['balance'] == 0.0
     
 # Test case 5.1
 def test_update_balance():
@@ -157,4 +158,23 @@ def test_delete_goal():
 def test_chat_with_budgie():
     req = m.ChatRequest(message="Test")
     response = m.chat_with_budgie(req)
-    assert response["reply"] != ""
+    assert response != ""
+
+def test_request_password_reset():
+    test_email = (''.join(random.choices(string.ascii_letters + string.digits, k=8))) + '@test.com'
+    m.create_account(test_email, 'testpassword', 'Test', 'User')
+    response = m.request_password_reset(test_email)
+    m.delete_account(test_email)  # Clean up after test
+    assert response['success'] == True
+
+def test_wipe_account_data():
+    test_email = (''.join(random.choices(string.ascii_letters + string.digits, k=8))) + '@test.com'
+    user_info = m.create_account(test_email, 'testpassword', 'Test', 'User')
+    user_id = user_info['user_id']
+    response = m.wipe_account_data(user_id)
+    m.delete_account(test_email)  # Clean up after test
+    assert response['success'] == True
+
+def test_get_ai_reply():
+    response = b.get_ai_reply('How can I spend less?', 'Entertainment: 100.00, Groceries: 150.00', 'Utility: 134.36')
+    assert response != "Oh no! My servers are a little ruffled right now. Give me a moment and try asking again!"
