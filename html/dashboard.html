@@ -7,13 +7,16 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <title>Dashboard - Budgie</title>
+    <link rel="icon" type="image/png" href="./images/happy-budgie.png">
     
     <script>
-        if (localStorage.getItem('budgieTheme') === 'dark') {
+        const savedTheme = localStorage.getItem('budgieTheme');
+        if (savedTheme === 'dark') {
             document.documentElement.classList.add('dark-theme');
-            window.addEventListener('DOMContentLoaded', () => {
-                document.body.classList.add('dark-theme');
-            });
+            window.addEventListener('DOMContentLoaded', () => document.body.classList.add('dark-theme'));
+        } else if (savedTheme === 'high-contrast') {
+            document.documentElement.classList.add('high-contrast-theme');
+            window.addEventListener('DOMContentLoaded', () => document.body.classList.add('high-contrast-theme'));
         }
     </script>
 

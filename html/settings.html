@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="./css/styles.css">
     <title>Settings - Budgie</title>
+    <link rel="icon" type="image/png" href="./images/happy-budgie.png">
     <style>
         /* Specific layout for the Settings Page */
         .settings-container {
@@ -147,6 +148,7 @@
                 <select id="theme-selector" class="settings-input">
                     <option value="light">Light Mode (Default)</option>
                     <option value="dark">Night Owl (Dark Mode)</option>
+                    <option value="high-contrast">High Contrast (Accessibility)</option>
                 </select>
 
                 <label>Currency Display</label>
@@ -322,8 +324,15 @@
                 
                 // Immediate Theme Application
                 if (key === 'budgieTheme') {
-                    if (val === 'dark') document.body.classList.add('dark-theme');
-                    else document.body.classList.remove('dark-theme');
+                    // First, wipe the slate clean
+                    document.body.classList.remove('dark-theme', 'high-contrast-theme');
+                    
+                    // Then, apply the chosen theme!
+                    if (val === 'dark') {
+                        document.body.classList.add('dark-theme');
+                    } else if (val === 'high-contrast') {
+                        document.body.classList.add('high-contrast-theme');
+                    }
                 }
             });
         };

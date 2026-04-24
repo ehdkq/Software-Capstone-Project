@@ -1,3 +1,17 @@
+// --- UNIVERSAL THEME LOADER ---
+(function applySavedTheme() {
+    const savedTheme = localStorage.getItem('budgieTheme');
+    
+    // Safety wipe
+    document.body.classList.remove('dark-theme', 'high-contrast-theme');
+    
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark-theme');
+    } else if (savedTheme === 'high-contrast') {
+        document.body.classList.add('high-contrast-theme');
+    }
+})();
+
 // --- GLOBAL UI FUNCTIONS ---
 window.showToast = function(message, type = "error") {
     let container = document.getElementById('toast-container');

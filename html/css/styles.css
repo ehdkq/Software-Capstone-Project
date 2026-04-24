@@ -925,3 +925,26 @@ th.sortable span {
     pointer-events: none; /* Stops them from clicking it during the tour */
     transition: all 0.3s ease;
 }
+
+/* --- HIGH CONTRAST ACCESSIBILITY THEME --- */
+body.high-contrast-theme {
+    --bg-color: #000000;
+    --card-bg: #141414;
+    --text-color: #ffffff;
+    --text-muted: #dddddd;
+    --border-color: #ffff00; /* High visibility yellow borders */
+    --input-bg: #000000;
+    --input-border: #ffffff;
+}
+
+body.high-contrast-theme .action-btn {
+    background-color: #ffff00 !important;
+    color: #000000 !important;
+    font-weight: 900 !important;
+    border: 2px solid #ffffff !important;
+}
+
+body.high-contrast-theme a {
+    color: #ffff00 !important;
+    text-decoration: underline;
+}
