@@ -23,16 +23,14 @@ async function secureDashboard() {
     const isLoggedIn = localStorage.getItem("isLoggedIn");
     currentUserId = localStorage.getItem("userId");
 
+    // SET DEFAULT TIMEFRAME
     const savedTimeframe = localStorage.getItem('prefTimeframe');
     const filterDropdown = document.getElementById('timeframe-filter');
     
     if (savedTimeframe && filterDropdown) {
         filterDropdown.value = savedTimeframe;
-        
-        // If you have a function that updates your charts when the dropdown changes, 
-        // you would call it right here! For example:
-        // updateChartsForTimeframe(savedTimeframe); 
     }
+    
     if (isLoggedIn !== "true" || !currentUserId) {
         window.location.replace("login.html");
         return; 
@@ -52,7 +50,6 @@ async function secureDashboard() {
             const lName = profileData.last_name;
             
             // 1. UPDATE THE PROFILE CIRCLE INITIAL
-            // If they have a first name, use it. Otherwise, fallback to email letter!
             const displayName = fName || profileData.email || "U";
             const firstLetter = displayName.charAt(0).toUpperCase();
             
@@ -114,7 +111,7 @@ async function loadUserData() {
         // 2. Hide the skeletons and show the real data now that it's loaded!
         if (skeletons && transactionList) {
             skeletons.style.display = 'none';
-            transactionList.style.display = 'block'; // Or 'ul' depending on your CSS, but block usually works best!
+            transactionList.style.display = 'block'; 
         }
 
     } catch (error) {
@@ -126,16 +123,21 @@ async function loadUserData() {
     }
 }
 
+// --- TIMEFRAME MATH ENGINE ---
 function applyTimeFilter() {
     const timeframeFilter = document.getElementById('timeframe-filter');
-    const selectedDays = timeframeFilter ? timeframeFilter.value : "all";
+    const selectedTimeframe = timeframeFilter ? timeframeFilter.value : "all";
 
-    if (selectedDays === "all") {
+    if (selectedTimeframe === "all") {
         activeTransactions = [...allTransactions]; 
     } else {
-        const daysToSubtract = parseInt(selectedDays, 10);
         const cutoffDate = new Date();
-        cutoffDate.setDate(cutoffDate.getDate() - daysToSubtract);
+        
+        if (selectedTimeframe === "week") {
+            cutoffDate.setDate(cutoffDate.getDate() - 7); // Go back 7 days
+        } else if (selectedTimeframe === "month") {
+            cutoffDate.setMonth(cutoffDate.getMonth() - 1); // Go back 1 month
+        }
 
         activeTransactions = allTransactions.filter(tx => {
             const txDate = new Date(tx.created_at);
@@ -146,10 +148,14 @@ function applyTimeFilter() {
     refreshDashboardVisuals();
 }
 
+// --- TIMEFRAME FILTER LISTENER ---
 document.addEventListener('DOMContentLoaded', () => {
     const dropdown = document.getElementById('timeframe-filter');
     if (dropdown) {
-        dropdown.addEventListener('change', applyTimeFilter);
+        dropdown.addEventListener('change', (e) => {
+            localStorage.setItem('prefTimeframe', e.target.value);
+            applyTimeFilter();
+        });
     }
 });
 
@@ -191,7 +197,6 @@ window.toggleAddFundsForm = function() {
 
 window.submitQuickDeposit = async function() {
     const amountInput = document.getElementById('quick-deposit-input');
-    // Strip everything except numbers and decimals!
     const cleanAmount = amountInput.value.replace(/[^0-9.]/g, ''); 
     const amount = parseFloat(cleanAmount);
     if (!amount || amount <= 0) {
@@ -288,27 +293,24 @@ function renderRecentTransactions() {
 }
 
 window.sortTable = function(column) {
-    // If clicking the same column, flip the direction. Otherwise, switch columns.
     if (currentSortCol === column) {
         currentSortAsc = !currentSortAsc; 
     } else {
         currentSortCol = column;
-        currentSortAsc = column === 'date' ? false : true; // Dates default to newest, text defaults to A-Z
+        currentSortAsc = column === 'date' ? false : true; 
     }
     
-    // Update the directional arrow icons
     ['date', 'desc', 'cat', 'amount'].forEach(col => {
         const iconEl = document.getElementById(`sort-icon-${col}`);
         if (iconEl) {
             if (col === currentSortCol) {
                 iconEl.textContent = currentSortAsc ? '▲' : '▼';
             } else {
-                iconEl.textContent = ''; // Hide arrows on inactive columns
+                iconEl.textContent = ''; 
             }
         }
     });
 
-    // Redraw the table!
     renderFullHistoryTable();
 };
 
@@ -327,7 +329,6 @@ function renderFullHistoryTable() {
     sortedTx.sort((a, b) => {
         let valA, valB;
         
-        // Grab the right data based on what column is active
         if (currentSortCol === 'date') {
             valA = new Date(a.created_at).getTime();
             valB = new Date(b.created_at).getTime();
@@ -342,7 +343,6 @@ function renderFullHistoryTable() {
             valB = (b.type || b.transaction_type || '').toLowerCase();
         }
 
-        // Compare the values and return the proper direction
         if (valA < valB) return currentSortAsc ? -1 : 1;
         if (valA > valB) return currentSortAsc ? 1 : -1;
         return 0;
@@ -350,7 +350,6 @@ function renderFullHistoryTable() {
 
     tableBody.innerHTML = ''; 
 
-    // Draw the newly sorted rows
     sortedTx.forEach(t => {
         const dateObj = new Date(t.created_at);
         const niceDate = dateObj.toLocaleDateString();
@@ -370,7 +369,7 @@ function renderFullHistoryTable() {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${niceDate}</td>
-            <td><strong>${desc}</strong></td>
+            <td><strong>${desc}</strong> ${flagHtml}</td>
             <td>${cat}</td>
             <td class="${amountClass}">${sign}$${parseFloat(t.amount).toFixed(2)}</td>
         `;
@@ -387,7 +386,7 @@ if (transactionForm) {
         const desc = document.getElementById('t-desc').value;
         const type = document.getElementById('t-type').value;
         const rawAmount = document.getElementById('t-amount').value;
-        const amount = rawAmount.replace(/[^0-9.]/g, ''); // Strip symbols!
+        const amount = rawAmount.replace(/[^0-9.]/g, ''); 
         const tSubmitBtn = document.getElementById('t-submit-btn');
 
         if (editingTransactionId !== null) {
@@ -463,7 +462,7 @@ async function updateTransactionInBackend(id, desc, type, amount) {
 
 window.deleteTransactionFromBackend = async function(id) {
     const isConfirmed = await budgieConfirm("Delete Transaction?", "Are you absolutely sure you want to delete this transaction? This cannot be undone.");
-if (!isConfirmed) return;
+    if (!isConfirmed) return;
     try {
         const response = await fetch(`${API_BASE_URL}/transactions/delete-transaction?transaction_id=${encodeURIComponent(id)}`, { method: 'POST' });
         const isDeleted = await response.json();
@@ -601,7 +600,7 @@ function drawGamificationArena() {
         setTimeout(() => jar.classList.add('over-budget-shake'), 10); 
         
     } else {
-        mascot.src = './images/budgie-happy.png';
+        mascot.src = './images/happy-budgie.png';
         statusText.textContent = "Looking good!";
         statusText.style.color = '#28a745';
         
@@ -642,7 +641,7 @@ if (goalForm) {
         e.preventDefault();
         const category = document.getElementById('g-category').value;
         const rawAmount = document.getElementById('g-amount').value;
-        const amount = rawAmount.replace(/[^0-9.]/g, ''); // Strip symbols!
+        const amount = rawAmount.replace(/[^0-9.]/g, ''); 
         try {
             const response = await fetch(`${API_BASE_URL}/dashboard/add-goal?user_id=${currentUserId}&category=${encodeURIComponent(category)}&target_amount=${amount}`, { method: 'POST' });
             const data = await response.json();
@@ -763,13 +762,13 @@ const tourSteps = [
         title: "Your Total Balance 💰",
         text: "This is your command center. Your balance updates automatically whenever you add income or expenses.",
         targetId: "tour-balance-card",
-        placement: "right" // 👇 NEW: Tells it to sit to the right side!
+        placement: "right"
     },
     {
         title: "Log Your Transactions 💳",
         text: "Use this area to manually enter your expenses or income.",
         targetId: "tour-transaction-area",
-        placement: "left" // 👇 NEW: Sits to the left!
+        placement: "left"
     },
     {
         title: "The Goal Visualizer 🎯",
@@ -781,7 +780,7 @@ const tourSteps = [
         title: "Ask Budgie AI 🤖",
         text: "Need financial advice or help reading a bank statement? Click here to chat with me anytime!",
         targetId: "tour-ai-button",
-        placement: "left" // 👇 NEW: Keeps it from falling off the top!
+        placement: "left" 
     },
     {
         title: "Settings & Profile ⚙️",
@@ -847,10 +846,8 @@ function renderTourStep() {
                 const boxRect = tourBox.getBoundingClientRect();
                 let top, left;
 
-                // 1. Read the placement preference (default to bottom)
                 const placement = step.placement || "bottom";
 
-                // 2. Calculate coordinates based on the requested side
                 if (placement === "left") {
                     top = rect.top + (rect.height / 2) - (boxRect.height / 2);
                     left = rect.left - boxRect.width - 20;
@@ -865,24 +862,18 @@ function renderTourStep() {
                     left = rect.left + (rect.width / 2) - (boxRect.width / 2);
                 }
 
-                // 3. THE SAFETY NET: Keep it strictly inside the screen bounds!
-                // If it tries to go off the top, push it down to 10px
+                // THE SAFETY NET
                 if (top < 10) top = 10;
-                // If it tries to go off the left, push it right to 10px
                 if (left < 10) left = 10;
-                // If it tries to fall off the bottom, snap it above the bottom edge
                 if (top + boxRect.height > window.innerHeight) top = window.innerHeight - boxRect.height - 10;
-                // If it tries to fall off the right side, snap it inside the right edge
                 if (left + boxRect.width > window.innerWidth) left = window.innerWidth - boxRect.width - 10;
 
-                // 4. Apply the final safe coordinates
                 tourBox.style.top = `${top}px`;
                 tourBox.style.left = `${left}px`;
                 tourBox.style.transform = "none"; 
             }, 300); 
         }
     } else {
-        // Welcome screen: Dead center
         tourBox.style.top = "50%";
         tourBox.style.left = "50%";
         tourBox.style.transform = "translate(-50%, -50%)";
@@ -892,8 +883,8 @@ function renderTourStep() {
 function endTour() {
     document.getElementById('tour-overlay').style.display = 'none';
     document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
-    // Permanently save that they finished it so it never bothers them again
     localStorage.setItem("hasSeenBudgieTour", "true");
 }
+
 // Kick off the application!
 secureDashboard();
