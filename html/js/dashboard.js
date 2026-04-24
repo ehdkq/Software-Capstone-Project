@@ -752,27 +752,32 @@ const tourSteps = [
     {
         title: "Your Total Balance 💰",
         text: "This is your command center. Your balance updates automatically whenever you add income or expenses.",
-        targetId: "tour-balance-card" // Points to the whole card
+        targetId: "tour-balance-card",
+        placement: "right" // 👇 NEW: Tells it to sit to the right side!
     },
     {
         title: "Log Your Transactions 💳",
         text: "Use this area to manually enter your expenses or income.",
-        targetId: "tour-transaction-area" // Points to the whole section
+        targetId: "tour-transaction-area",
+        placement: "left" // 👇 NEW: Sits to the left!
     },
     {
         title: "The Goal Visualizer 🎯",
         text: "Select a category from this dropdown to watch the physics engine drop seeds into your goal jar!",
-        targetId: "tour-goal-dropdown" // Points to the dropdown wrapper
+        targetId: "tour-goal-dropdown",
+        placement: "right"
     },
     {
         title: "Ask Budgie AI 🤖",
         text: "Need financial advice or help reading a bank statement? Click here to chat with me anytime!",
-        targetId: "tour-ai-button" // Points to the nav link
+        targetId: "tour-ai-button",
+        placement: "left" // 👇 NEW: Keeps it from falling off the top!
     },
     {
         title: "Settings & Profile ⚙️",
         text: "Customize your theme, download your data, or update your password right here.",
-        targetId: "profile-circle" // Points to your profile circle
+        targetId: "profile-circle",
+        placement: "left"
     }
 ];
 
@@ -821,39 +826,53 @@ function renderTourStep() {
 
     const tourBox = document.querySelector('.tour-box');
 
-    // Highlight and smartly position the new element
     if (step.targetId) {
         const targetEl = document.getElementById(step.targetId);
         if (targetEl) {
             targetEl.classList.add('tour-highlight');
             targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-            // Give the browser 300ms to finish scrolling before we do the math
             setTimeout(() => {
                 const rect = targetEl.getBoundingClientRect();
                 const boxRect = tourBox.getBoundingClientRect();
+                let top, left;
 
-                // 1. Try to place the box 20px below the highlighted item
-                let top = rect.bottom + 20;
-                let left = rect.left + (rect.width / 2) - (boxRect.width / 2);
+                // 1. Read the placement preference (default to bottom)
+                const placement = step.placement || "bottom";
 
-                // 2. If placing it below makes it fall off the bottom of the screen, put it ABOVE instead!
-                if (top + boxRect.height > window.innerHeight) {
+                // 2. Calculate coordinates based on the requested side
+                if (placement === "left") {
+                    top = rect.top + (rect.height / 2) - (boxRect.height / 2);
+                    left = rect.left - boxRect.width - 20;
+                } else if (placement === "right") {
+                    top = rect.top + (rect.height / 2) - (boxRect.height / 2);
+                    left = rect.right + 20;
+                } else if (placement === "top") {
                     top = rect.top - boxRect.height - 20;
+                    left = rect.left + (rect.width / 2) - (boxRect.width / 2);
+                } else { // bottom
+                    top = rect.bottom + 20;
+                    left = rect.left + (rect.width / 2) - (boxRect.width / 2);
                 }
 
-                // 3. Keep it from flying off the left or right edges of mobile screens
+                // 3. THE SAFETY NET: Keep it strictly inside the screen bounds!
+                // If it tries to go off the top, push it down to 10px
+                if (top < 10) top = 10;
+                // If it tries to go off the left, push it right to 10px
                 if (left < 10) left = 10;
+                // If it tries to fall off the bottom, snap it above the bottom edge
+                if (top + boxRect.height > window.innerHeight) top = window.innerHeight - boxRect.height - 10;
+                // If it tries to fall off the right side, snap it inside the right edge
                 if (left + boxRect.width > window.innerWidth) left = window.innerWidth - boxRect.width - 10;
 
-                // 4. Apply the coordinates!
+                // 4. Apply the final safe coordinates
                 tourBox.style.top = `${top}px`;
                 tourBox.style.left = `${left}px`;
-                tourBox.style.transform = "none"; // Remove any centering
+                tourBox.style.transform = "none"; 
             }, 300); 
         }
     } else {
-        // If there is no target (like the Welcome screen), just put it dead center
+        // Welcome screen: Dead center
         tourBox.style.top = "50%";
         tourBox.style.left = "50%";
         tourBox.style.transform = "translate(-50%, -50%)";
