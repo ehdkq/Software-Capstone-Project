@@ -23,6 +23,16 @@ async function secureDashboard() {
     const isLoggedIn = localStorage.getItem("isLoggedIn");
     currentUserId = localStorage.getItem("userId");
 
+    const savedTimeframe = localStorage.getItem('prefTimeframe');
+    const filterDropdown = document.getElementById('timeframe-filter');
+    
+    if (savedTimeframe && filterDropdown) {
+        filterDropdown.value = savedTimeframe;
+        
+        // If you have a function that updates your charts when the dropdown changes, 
+        // you would call it right here! For example:
+        // updateChartsForTimeframe(savedTimeframe); 
+    }
     if (isLoggedIn !== "true" || !currentUserId) {
         window.location.replace("login.html");
         return; 

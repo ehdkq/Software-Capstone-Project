@@ -926,6 +926,25 @@ th.sortable span {
     transition: all 0.3s ease;
 }
 
+/* --- SETTINGS SIDEBAR THEME FIXES --- */
+
+/* 1. Give the Dark Theme a proper dark sidebar */
+body.dark-theme {
+    --sidebar-bg: #1e1e1e; 
+}
+
+/* 2. Give the High Contrast Theme a pitch-black sidebar */
+body.high-contrast-theme {
+    --sidebar-bg: #000000;
+}
+
+/* 3. Fix the "Active" tab highlight for High Contrast Mode 
+   (so it doesn't use the default light blue) */
+body.high-contrast-theme .settings-nav-item.active {
+    background-color: #ffff00 !important;
+    color: #000000 !important;
+    border-left: 5px solid #ffffff !important;
+}
 /* --- HIGH CONTRAST ACCESSIBILITY THEME --- */
 body.high-contrast-theme {
     --bg-color: #000000;
