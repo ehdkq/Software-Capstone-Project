@@ -582,7 +582,11 @@ function drawGamificationArena() {
     const statusText = document.getElementById('budgie-status-text');
     const jar = document.getElementById('the-jar');
     const readout = document.getElementById('goal-math-readout');
-
+    const restartBtn = document.getElementById('restart-goal-btn');
+    if (restartBtn) {
+        restartBtn.style.display = 'block';
+        restartBtn.onclick = () => restartCurrentGoal(category);
+    }
     jar.classList.remove('over-budget-shake');
     readout.innerHTML = `Spent: <strong style="color: ${isOverBudget ? '#ff4d4d' : 'var(--text-color)'}">$${currentSpent.toFixed(2)}</strong> / Target: $${target.toFixed(2)}`;
 
@@ -672,6 +676,31 @@ window.deleteGoal = async function(goalId) {
     }
 };
 
+window.restartCurrentGoal = async function(category) {
+    const isConfirmed = await budgieConfirm("Restart Goal?", `Are you sure you want to empty your ${category} jar? This will delete all transactions currently logged under this category to reset your progress to zero.`);
+    if (!isConfirmed) return;
+
+    const btn = document.getElementById('restart-goal-btn');
+    btn.textContent = "Restarting...";
+    btn.disabled = true;
+
+    const categoryTx = activeTransactions.filter(t => (t.type || t.transaction_type) === category);
+
+    try {
+        for (let t of categoryTx) {
+            await fetch(`${API_BASE_URL}/transactions/delete-transaction?transaction_id=${encodeURIComponent(t.transaction_id)}`, { method: 'POST' });
+        }
+        
+        showToast(`${category} goal restarted!`, "success");
+        await loadUserData(); 
+    } catch (err) {
+        console.error('Error restarting goal:', err);
+        showToast("Error restarting goal.", "error");
+    }
+    
+    btn.textContent = "↻ Restart Goal";
+    btn.disabled = false;
+};
 // --- 7. Global Logout Logic ---
 const logoutBtns = [document.getElementById('logout-btn-existing'), document.getElementById('logout-btn-new')];
 logoutBtns.forEach(btn => {
