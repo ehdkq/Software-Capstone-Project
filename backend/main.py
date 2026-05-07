@@ -852,7 +852,7 @@ def verify_user_account(token: str, email: str):
             return RedirectResponse(url="https://budgiebudgeting.netlify.app/login.html?verified=true")
         else:
             # If no match is found, the token is wrong or already used
-            return {"success": False, "error": "Verification failed. The link may be expired or invalid."}
+            RedirectResponse(url="https://budgiebudgeting.netlify.app/login.html")
             
     except Exception as e:
         return {"success": False, "error": "Server error during verification.", "details": str(e)}
