@@ -604,7 +604,7 @@ function drawGamificationArena() {
         setTimeout(() => jar.classList.add('over-budget-shake'), 10); 
         
     } else {
-        mascot.src = './images/happy-budgie.png';
+        mascot.src = './images/budgie-happy.png';
         statusText.textContent = "Looking good!";
         statusText.style.color = '#28a745';
         
